@@ -8,13 +8,14 @@ import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 
 public class Team {
 	private Server server;
 	private FileConfiguration config;
 	private String teamName;
 	private ChatColor teamChatColor;
-	private HashMap<String, String> players = new HashMap<String, String>();
+	private HashMap<String, Integer> teamMembers = new HashMap<String, Integer>();
 
 	public Team(Server s1, FileConfiguration f1, String n1,ChatColor c2) {
 		server = s1;
@@ -47,6 +48,31 @@ public class Team {
 		config.set("team." + teamName + ".z", l1.getZ());
 		config.set("team." + teamName + ".yaw", l1.getYaw());
 		config.set("team." + teamName + ".pitch", l1.getPitch());
+	}
+	
+	public void addPlayer(String playerName) {
+		addExistingPlayer(playerName, 0);
+	}
+	
+	public void addExistingPlayer(String playerName,int score) {
+		teamMembers.put(playerName, score);
+	}
+	
+	public void addExistingPlayers(HashMap<String, Integer> teamMembersToAdd) {
+		teamMembersToAdd.putAll(teamMembers);
+	}
+	
+	public int removePlayer(String playerName) {
+		int score = teamMembers.get(playerName);
+		teamMembers.remove(playerName);
+		return score;
+	}
+	
+	public boolean inTeam(String playerName) {
+		if (teamMembers.containsKey(playerName)) { 
+			return true;
+		}
+		return false;
 	}
 	
 	// Debugging method
