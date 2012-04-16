@@ -1,8 +1,6 @@
 package com.c45y.CutePVP;
 
-import java.io.Console;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.HashMap;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
