@@ -37,17 +37,17 @@ public class TeamManager {
 		}
 		if(value == 1) {
 			blueTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(redTeam.encodeTeamColor("Welcome to the BLUE team!"));
+			cp.getServer().getPlayer(player).sendMessage(blueTeam.encodeTeamColor("Welcome to the BLUE team!"));
 			return;
 		}
 		if(value == 2) { 
 			yellowTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(redTeam.encodeTeamColor("Welcome to the YELLOW team!"));
+			cp.getServer().getPlayer(player).sendMessage(yellowTeam.encodeTeamColor("Welcome to the YELLOW team!"));
 			return;
 		}
 		if(value == 3) { 
 			greenTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(redTeam.encodeTeamColor("Welcome to the GREEN team!"));
+			cp.getServer().getPlayer(player).sendMessage(greenTeam.encodeTeamColor("Welcome to the GREEN team!"));
 			return;
 		}
 	}
