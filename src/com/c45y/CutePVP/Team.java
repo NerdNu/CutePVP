@@ -4,24 +4,28 @@ import java.util.HashMap;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Player;
+import org.bukkit.material.Wool;
 
 public class Team {
 	private Server server;
 	private FileConfiguration config;
 	private String teamName;
 	private ChatColor teamChatColor;
+	private byte woolData;
 	private HashMap<String, Integer> teamMembers = new HashMap<String, Integer>();
+	private Location teamFlagHomePosition;
 
-	public Team(Server s1, FileConfiguration f1, String n1,ChatColor c2) {
+	public Team(Server s1, FileConfiguration f1, String n1, ChatColor c2, byte w1) {
 		server = s1;
 		config = f1;
 		teamName = n1;
 		teamChatColor = c2;
+		teamFlagHomePosition = getTeamFlag();
+		woolData = w1;
 	}
 	
 	public String getTeamName() {
@@ -32,23 +36,67 @@ public class Team {
 		return teamChatColor;
 	}
 	
+	public Block getTeamMaterial() {
+		return (Block) new Wool(53,woolData);
+	}
+	
+	/* Team location configuration */
+	
 	public Location getTeamSpawn() {
 		return new Location(
-				server.getWorlds().get(0),
-				config.getDouble("team." + teamName + ".x"),
-				config.getDouble("team." + teamName + ".y"),
-				config.getDouble("team." + teamName + ".z"),
-				(float)config.getDouble("team." + teamName + ".yaw"),
-				(float)config.getDouble("team." + teamName + ".pitch"));
+			server.getWorlds().get(0),
+			config.getDouble(teamName + "spawn.x"),
+			config.getDouble(teamName + "spawn.y"),
+			config.getDouble(teamName + "spawn.z"),
+			(float)config.getDouble(teamName + "spawn.yaw"),
+			(float)config.getDouble(teamName + "spawn.pitch"));
 	}
 	
 	public void setTeamSpawn(Location l1) {
-		config.set("team." + teamName + ".x", l1.getX());
-		config.set("team." + teamName + ".y", l1.getY());
-		config.set("team." + teamName + ".z", l1.getZ());
-		config.set("team." + teamName + ".yaw", l1.getYaw());
-		config.set("team." + teamName + ".pitch", l1.getPitch());
+		config.set(teamName + "spawn.x", l1.getX());
+		config.set(teamName + "spawn.y", l1.getY());
+		config.set(teamName + "spawn.z", l1.getZ());
+		config.set(teamName + "spawn.yaw", l1.getYaw());
+		config.set(teamName + "spawn.pitch", l1.getPitch());
 	}
+	
+	/* Flag manipulation */
+	
+	public Location getTeamFlag() {
+		return new Location(
+			server.getWorlds().get(0),
+			config.getDouble(teamName + "flag.x"),
+			config.getDouble(teamName + "flag.y"),
+			config.getDouble(teamName + "flag.z"),
+			(float)config.getDouble(teamName + "flag.yaw"),
+			(float)config.getDouble(teamName + "flag.pitch"));
+	}
+	
+	public void setTeamFlag(Location l1) {
+		config.set(teamName + "flag.x", l1.getX());
+		config.set(teamName + "flag.y", l1.getY());
+		config.set(teamName + "flag.z", l1.getZ());
+		config.set(teamName + "flag.yaw", l1.getYaw());
+		config.set(teamName + "flag.pitch", l1.getPitch());
+	}
+	
+	public boolean isTeamFlag(Location l1) {
+		Location teamFlag = getTeamFlag();
+		if (l1.getBlockX() == teamFlag.getBlockX() && l1.getBlockY() == teamFlag.getBlockY() &&	l1.getBlockZ() == teamFlag.getBlockZ()) {
+			return true;
+		}
+		return false;
+	}
+	
+	public void respawnTeamFlag() {
+		server.getWorlds().get(0).getBlockAt(getTeamFlag()).setType(Material.AIR);
+		Block flag_home = server.getWorlds().get(0).getBlockAt(teamFlagHomePosition);
+		flag_home.setTypeIdAndData(35, woolData, false);
+		setTeamFlag(teamFlagHomePosition);
+		
+	}
+	
+	/* Team player management */
 	
 	public void addPlayer(String playerName) {
 		addExistingPlayer(playerName, 0);
@@ -59,7 +107,7 @@ public class Team {
 	}
 	
 	public void addExistingPlayers(HashMap<String, Integer> teamMembersToAdd) {
-		teamMembersToAdd.putAll(teamMembers);
+		teamMembers.putAll(teamMembersToAdd);
 	}
 	
 	public int removePlayer(String playerName) {
@@ -75,7 +123,27 @@ public class Team {
 		return false;
 	}
 	
-	// Debugging method
+	/* Team scoring methods */
+	
+	public void addTeamScore(int inc) {
+		config.set(teamName + "score.total", getTeamScore() + inc);
+	}
+	
+	public int getTeamScore() {
+		return config.getInt(teamName + "score.total");
+	}
+	
+	public void addPlayerScore(String player, int inc) {
+		int playerScore = getPlayerScore(player);
+		teamMembers.put(player, playerScore + inc);
+	}
+	
+	public int getPlayerScore(String player) {
+		return teamMembers.get(player).intValue();
+	}
+	
+	/* Debugging method */
+	
 	private void print(String p1) {
 		System.out.println(p1);
 	}

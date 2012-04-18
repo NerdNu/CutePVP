@@ -24,6 +24,7 @@ public class CutePVP extends JavaPlugin {
         
 	@Override
 	public void onEnable() {
+		Team team = new Team(getServer(),getConfig(), "red", ChatColor.RED);
 		this.getConfig().options().copyDefaults(true);
 		// ALL spawn
 		this.getConfig().addDefault("spawn.all.x", getServer().getWorlds().get(0).getSpawnLocation().getX());
