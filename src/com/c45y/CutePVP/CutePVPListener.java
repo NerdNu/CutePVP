@@ -26,6 +26,7 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 
 public class CutePVPListener implements Listener{
 	public final CutePVP plugin;
@@ -91,16 +92,18 @@ public class CutePVPListener implements Listener{
 		event.setRespawnLocation(plugin.getRespawnTeamLocation(event.getPlayer().getName()));
 	}
 
+	/* Event reworked */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerJoin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
-		player.setDisplayName(plugin.colorName(event.getPlayer().getName()));
-		player.getInventory().setHelmet(plugin.returnWool(player.getName()));
+		Team playerTeam = plugin.tm.getTeamMemberOf(player.getName());
+		if( playerTeam == null || player.hasPlayedBefore()){
+			plugin.tm.onFirstJoin(player.getName());
+			playerTeam = plugin.tm.getTeamMemberOf(player.getName());
+		}
+		player.setDisplayName(playerTeam.encodeTeamColor(player.getName()));
+		player.getInventory().setHelmet(playerTeam.getTeamItemStack());
 		event.setJoinMessage(player.getDisplayName() + " joined the game.");
-        if (!event.getPlayer().hasPlayedBefore()) {
-        	event.getPlayer().sendMessage("Welcome! you are on " + plugin.teamName(event.getPlayer().getName()));
-            event.getPlayer().teleport(plugin.getRespawnTeamLocationByTeam("all"));
-        }
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
