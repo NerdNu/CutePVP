@@ -21,10 +21,11 @@ public class CutePVP extends JavaPlugin {
 	private final CutePVPListener loglistener = new CutePVPListener(this);
         HashMap<String, String> fposSet = new HashMap<String, String>();
         HashMap<String, Long> dropTime = new HashMap<String, Long>();
+        TeamManager tm;
         
 	@Override
 	public void onEnable() {
-		Team team = new Team(getServer(),getConfig(), "red", ChatColor.RED);
+		tm = new TeamManager(this);
 		this.getConfig().options().copyDefaults(true);
 		// ALL spawn
 		this.getConfig().addDefault("spawn.all.x", getServer().getWorlds().get(0).getSpawnLocation().getX());
