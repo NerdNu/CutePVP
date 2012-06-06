@@ -317,41 +317,6 @@ public class CutePVP extends JavaPlugin {
 				getConfig().getInt("spawn." + teamName + ".z"));
 	}
 
-	public boolean getInRangeOfEnemyTeamSpawn(Player player) {
-		int rad = getConfig().getInt("base.protection.radius");
-		Location player_loc = player.getLocation();
-		if (!teamName(player.getName()).equalsIgnoreCase("red")) {
-			Location _spawn = getRespawnTeamLocationByTeam("red");
-			double dx = _spawn.getX() - player_loc.getX();
-			double dz = _spawn.getZ() - player_loc.getZ();
-			if ((dx<rad && dx>-rad) && (dz<rad && dz>-rad)) {
-				return true;
-			}
-		} if (!teamName(player.getName()).equalsIgnoreCase("blue")) {
-			Location _spawn = getRespawnTeamLocationByTeam("blue");
-			double dx = _spawn.getX() - player_loc.getX();
-			double dz = _spawn.getZ() - player_loc.getZ();
-			if ((dx<rad && dx>-rad) && (dz<rad && dz>-rad)) {
-				return true;
-			}
-		} if (!teamName(player.getName()).equalsIgnoreCase("yellow")) {
-			Location _spawn = getRespawnTeamLocationByTeam("yellow");
-			double dx = _spawn.getX() - player_loc.getX();
-			double dz = _spawn.getZ() - player_loc.getZ();
-			if ((dx<rad && dx>-rad) && (dz<rad && dz>-rad)) {
-				return true;
-			}
-		} if (!teamName(player.getName()).equalsIgnoreCase("green")) {
-			Location _spawn = getRespawnTeamLocationByTeam("green");
-			double dx = _spawn.getX() - player_loc.getX();
-			double dz = _spawn.getZ() - player_loc.getZ();
-			if ((dx<rad && dx>-rad) && (dz<rad && dz>-rad)) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	public short woolColor(String inpt) {
 		return (short)teamNameToWoolColor(teamName(inpt));
 	}

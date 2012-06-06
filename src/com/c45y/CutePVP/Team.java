@@ -8,6 +8,7 @@ import org.bukkit.Material;
 import org.bukkit.Server;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Wool;
 
@@ -18,6 +19,7 @@ public class Team {
 	private ChatColor teamChatColor;
 	private byte woolData;
 	private HashMap<String, Integer> teamMembers = new HashMap<String, Integer>();
+	public Player flagHolder;
 
 	public Team(Server s1, FileConfiguration f1, String n1, ChatColor c2, byte w1) {
 		server = s1;
@@ -41,6 +43,10 @@ public class Team {
 
 	public ItemStack getTeamItemStack() {
 		return new ItemStack(35, 1, woolData);
+	}
+	
+	public short getTeamWoolData() {
+		return (short) woolData;
 	}
 
 	public String encodeTeamColor(String s1) {
@@ -66,6 +72,22 @@ public class Team {
 		config.set(teamName + "spawn.yaw", l1.getYaw());
 		config.set(teamName + "spawn.pitch", l1.getPitch());
 	}
+	
+	public boolean inTeamBase(Location l1) {
+		int rad = config.getInt("base.protection.radius");
+		return inTeamBase(l1,rad);
+	}
+	
+	public boolean inTeamBase(Location l1,int rad) {
+		Location playerLocation = l1;
+		Location spawnLocation = getTeamSpawn();
+		double dx = spawnLocation.getX() - playerLocation.getX();
+		double dz = spawnLocation.getZ() - playerLocation.getZ();
+		if ((dx<rad && dx>-rad) && (dz<rad && dz>-rad)) {
+			return true;
+		}
+		return false;
+	}
 
 	/* Flag manipulation */
 
@@ -75,6 +97,12 @@ public class Team {
 				config.getDouble(teamName + "flag.x"),
 				config.getDouble(teamName + "flag.y"),
 				config.getDouble(teamName + "flag.z"));
+	}
+	
+	public void dropTeamFlag(Location l1) {
+		Block flag = server.getWorlds().get(0).getBlockAt(l1); //Get a handle for the
+		flag.setTypeIdAndData(35, woolData, false);
+		setTeamFlag(l1);
 	}
 
 	public void setTeamFlag(Location l1) {
@@ -100,8 +128,8 @@ public class Team {
 	}
 
 	public void respawnTeamFlag() {
-		server.getWorlds().get(0).getBlockAt(getTeamFlag()).setType(Material.AIR);
-		Block flag_home = server.getWorlds().get(0).getBlockAt(getTeamFlagHome());
+		server.getWorlds().get(0).getBlockAt(getTeamFlag()).setType(Material.AIR); //Remove the placed flag
+		Block flag_home = server.getWorlds().get(0).getBlockAt(getTeamFlagHome()); //Get a handle for the
 		flag_home.setTypeIdAndData(35, woolData, false);
 		setTeamFlag(getTeamFlagHome());
 	}
@@ -137,6 +165,10 @@ public class Team {
 		for( String player: teamMembers.keySet() ){
 			server.getPlayer(player).sendMessage(m1);
 		}
+	}
+	
+	public void setHelmet(Player player) {
+		player.getInventory().setHelmet(getTeamItemStack());
 	}
 
 	/* Team scoring methods */

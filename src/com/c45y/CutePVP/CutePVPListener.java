@@ -26,7 +26,6 @@ import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.inventory.ItemStack;
 
 public class CutePVPListener implements Listener{
 	public final CutePVP plugin;
@@ -88,9 +87,10 @@ public class CutePVPListener implements Listener{
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		event.getPlayer().getInventory().setHelmet(plugin.returnWool(event.getPlayer().getName()));
-		event.setRespawnLocation(plugin.getRespawnTeamLocation(event.getPlayer().getName()));
-	}
+		Team playerTeam = plugin.tm.getTeamMemberOf(event.getPlayer().getName());
+		playerTeam.setHelmet(event.getPlayer());
+		event.setRespawnLocation(playerTeam.getTeamSpawn());
+	} //Reworked
 
 	/* Event reworked */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -102,28 +102,24 @@ public class CutePVPListener implements Listener{
 			playerTeam = plugin.tm.getTeamMemberOf(player.getName());
 		}
 		player.setDisplayName(playerTeam.encodeTeamColor(player.getName()));
-		player.getInventory().setHelmet(playerTeam.getTeamItemStack());
+		playerTeam.setHelmet(event.getPlayer());
 		event.setJoinMessage(player.getDisplayName() + " joined the game.");
-	}
-	
+	}//Reworked
+
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-	public void onPlayerQuit(PlayerJoinEvent event){
+	public void onPlayerQuit(PlayerQuitEvent event){
 		Player player = event.getPlayer();
-		event.setJoinMessage(player.getDisplayName() + " left the game.");
+		event.setQuitMessage(player.getDisplayName() + " left the game.");
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerMove(PlayerMoveEvent event) {
 		Player player = event.getPlayer();
 		Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-		if (block.getType() == Material.WOOL) {
-			if (block.getData() == 14 || block.getData() == 3 || block.getData() == 4 || block.getData() == 5) {
-				if (block.getData() != plugin.woolColor(player.getName())) {
-					player.damage(1);
-				}
-			}	
+		if (plugin.tm.shouldTakeDamageFromBlock(block, player.getName())) {
+			player.damage(1);
 		}
-	}
+	}//Reworked
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
@@ -133,119 +129,116 @@ public class CutePVPListener implements Listener{
 		if ((event.getDamager() instanceof Player)) {
 			Player attacker = (Player) event.getDamager();
 			Player player = (Player) event.getEntity();
-            if (plugin.getTeam(attacker.getName()) == plugin.getTeam(player.getName())) {
-                    event.setCancelled(true);
-            } else if(plugin.getInRangeOfEnemyTeamSpawn(attacker)){
-            		attacker.sendMessage(ChatColor.DARK_RED + "You cannot attack within another teams base");
-                    event.setCancelled(true);
-            }
+			Team attackerTeam = plugin.tm.getTeamMemberOf(attacker.getName());
+			if (attackerTeam.inTeam(player.getName())) {
+				event.setCancelled(true);
+			} else if(plugin.tm.inRangeOfEnemyTeamSpawn(attacker)){
+				attacker.sendMessage(ChatColor.DARK_RED + "You cannot attack within another teams base");
+				event.setCancelled(true);
+			}
 		}
 		else if (event.getDamager() instanceof Arrow) {
 			Arrow arrow = (Arrow) event.getDamager();
 			if (arrow.getShooter() instanceof Player) {
 				Player player = (Player) event.getEntity();
 				Player shooter = (Player) arrow.getShooter();
-	            if (plugin.getTeam(shooter.getName()) == plugin.getTeam(player.getName())) {
-	                    event.setCancelled(true);
-	            } else if(plugin.getInRangeOfEnemyTeamSpawn(shooter)){
-	            		shooter.sendMessage(ChatColor.DARK_RED + "You cannot attack within another teams base");
-	                    event.setCancelled(true);
-	            }
+				Team attackerTeam = plugin.tm.getTeamMemberOf(shooter.getName());
+				if (attackerTeam.inTeam(player.getName())) {
+					event.setCancelled(true);
+				} else if(plugin.tm.inRangeOfEnemyTeamSpawn(shooter)){
+					shooter.sendMessage(ChatColor.DARK_RED + "You cannot attack within another teams base");
+					event.setCancelled(true);
+				}
 			}
 		}
-	}
-        
-        @EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled = true)
-        public void onPlayerInteract(PlayerInteractEvent event) {
-            if (event.getPlayer().getGameMode() == GameMode.CREATIVE || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
-                return;
-            }
-            
-            Player player = event.getPlayer();
-            Block b = event.getClickedBlock();
-            if (b.getType() != Material.WOOL) {
-                return;
-            }
-            
-            String woolTeamName = plugin.woolColorToTeamName((short)b.getData());
-            Location blockLoc = plugin.getTeamFlagLoc(woolTeamName);
-            
-            if (plugin.fposSet.containsKey(player.getName())) {
-                plugin.setTeamFlagSpawnLoc(plugin.fposSet.get(player.getName()), b.getLocation());
-                plugin.setTeamFlagLoc(plugin.fposSet.get(player.getName()), b.getLocation());
-                plugin.fposSet.remove(player.getName());
-            }
-            else if (b.getLocation().getBlockX() == blockLoc.getBlockX() &&
-                    b.getLocation().getBlockY() == blockLoc.getBlockY() &&
-                    b.getLocation().getBlockZ() == blockLoc.getBlockZ()) {
-                String carrierTeamName = plugin.teamName(event.getPlayer().getName());
-                
-                if (carrierTeamName.equalsIgnoreCase(woolTeamName)) {
-                    
-                    Location flagSpawnLoc = plugin.getTeamFlagSpawnLoc(woolTeamName);
-                    
-                    if (b.getLocation().getBlockX() == flagSpawnLoc.getBlockX() &&
-                        b.getLocation().getBlockY() == flagSpawnLoc.getBlockY() &&
-                        b.getLocation().getBlockZ() == flagSpawnLoc.getBlockZ()) {
-                    
-                        String carryFor = plugin.carrierFor(player);
+	}//Reworked
 
-                        if (carryFor != null) {
-                            if (!carryFor.equalsIgnoreCase(carrierTeamName)) {
-                                plugin.capForTeam(carrierTeamName, carryFor);
-                                plugin.messageCap(carrierTeamName, carryFor);
-                            }
-                        }
-                    }
-                    else {
-                        plugin.returnFlag(woolTeamName);
-                        if (plugin.dropTime.containsKey(woolTeamName)) {
-                            plugin.dropTime.remove(woolTeamName);
-                        }
-                        plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeamName + " flag.");
-                    }
-                }
-                else {
-                    plugin.takeFlag(woolTeamName, player);
-                }
-            }
-        }
-        
-        @EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled= true)
-        public void onPlayerDisconnect(PlayerQuitEvent event) {
-            String carrierFor = plugin.carrierFor(event.getPlayer());
-            plugin.dropFlag(carrierFor, event.getPlayer());
-        }
-        
-        @EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled= true)
-        public void onPlayerKick(PlayerKickEvent event) {
-            String carrierFor = plugin.carrierFor(event.getPlayer());
-            plugin.dropFlag(carrierFor, event.getPlayer());
-        }
-        
-        @EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled= true)
-        public void onPlayerDeath(PlayerDeathEvent event) {
-            String carrierFor = plugin.carrierFor(event.getEntity());
-            plugin.dropFlag(carrierFor, event.getEntity());
-            
-            if (event.getEntity().getKiller() != null) {
-                String team = plugin.teamName(event.getEntity().getKiller().getName());
-                plugin.killForTeam(team);
-            }
-        }
-	
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerChat(PlayerChatEvent event) {
-		if ( event.getPlayer().getGameMode() == GameMode.CREATIVE ){
+	@EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName()) || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
 			return;
 		}
+
 		Player player = event.getPlayer();
+		Block b = event.getClickedBlock();
+		if (b.getType() != Material.WOOL) {
+			return;
+		}
+		if (b.getData() != (byte) 14 && b.getData() != (byte) 3 && b.getData() != (byte) 4 && b.getData() != (byte) 5 ) {
+			return;
+		}
+
+		Team woolTeam = plugin.tm.getTeamFromWool(b.getData());
+		Team attacker = plugin.tm.getTeamMemberOf(event.getPlayer().getName());
+		Location blockLoc = woolTeam.getTeamFlag();
+
+		if(woolTeam.isTeamFlag(blockLoc)) { //The block is the flag block
+			return;
+		}
+		//Own team
+		if(attacker == woolTeam){ //Returning a dropped flag
+			if( woolTeam.isTeamFlag(woolTeam.getTeamFlagHome())) { //Clicking a returned flag is pointless
+				return;
+			}
+			plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeam.getTeamName() + " flag.");
+			return;
+		}
+		//Opposing team
+		if(woolTeam.flagHolder != null) { //Someone currently has the flag, they must be placing it.
+			woolTeam.flagHolder = null; //They have placed the flag, nobody is in posession.
+			if(attacker.inTeamBase(player.getLocation())) { //Placing block in own base, flag cap
+				attacker.addTeamScore(10); //Increment the team score
+				attacker.addPlayerScore(player.getName(), 10);
+				woolTeam.respawnTeamFlag();//Reset the team flag
+				plugin.getServer().broadcastMessage(player.getDisplayName() + " captured the " + woolTeam.getTeamName() + " flag.");
+			}
+		} else {
+			woolTeam.flagHolder = player;
+			plugin.getServer().broadcastMessage(player.getDisplayName() + " has stolen the " + woolTeam.getTeamName() + " flag.");
+		}
+	}//Reworked
+
+	@EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled= true)
+	public void onPlayerDisconnect(PlayerQuitEvent event) {
+		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
+		if (flagOf != null) {
+			flagOf.dropTeamFlag(event.getPlayer().getLocation());
+			flagOf.flagHolder = null;
+		}
+	}
+
+	@EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled= true)
+	public void onPlayerKick(PlayerKickEvent event) {
+		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
+		if (flagOf != null) {
+			flagOf.dropTeamFlag(event.getPlayer().getLocation());
+			flagOf.flagHolder = null;
+		}
+	}
+
+	@EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled= true)
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		Team flagOf = plugin.tm.isFlagBearer(event.getEntity());
+		if (flagOf != null) {
+			flagOf.dropTeamFlag(event.getEntity().getLocation());
+			flagOf.flagHolder = null;
+		}
+
+		if (event.getEntity().getKiller() != null) {
+			plugin.tm.getTeamMemberOf(event.getEntity().getName()).addTeamScore(1);
+			plugin.tm.getTeamMemberOf(event.getEntity().getName()).addPlayerScore(event.getEntity().getName(), 5);
+		}
+	}
+
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onPlayerChat(PlayerChatEvent event) {
+		Player player = event.getPlayer();
+		Team playerTeam = plugin.tm.getTeamMemberOf(player.getName());
 		plugin.getLogger().info(player.getName() + ": " + ChatColor.stripColor(event.getMessage()));
 		event.setCancelled(true);
-		for (Player playeri : plugin.getServer().getOnlinePlayers()) {
-			if (plugin.getTeam(player.getName()) == plugin.getTeam(playeri.getName()) || playeri.hasPermission("CutePVP.mod")) {
-				playeri.sendMessage("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage()));
-			}
+		playerTeam.message("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage()));
+		if (playerTeam != plugin.tm.staffTeam) {
+			plugin.tm.staffTeam.message(playerTeam.message("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage())));
 		}
 	}
 
@@ -263,27 +256,27 @@ public class CutePVPListener implements Listener{
 			event.setCancelled(true);
 		}
 	}
-	
+
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event) {
 		if ( event.getPlayer().getGameMode() == GameMode.CREATIVE ) {
 			return;
 		}
-		Player player = event.getPlayer();
-                
-                int team = plugin.isFlagBlock(event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
+		//Player player = event.getPlayer();
+
+		int team = plugin.isFlagBlock(event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
 		if (team > 0) {
-                    event.setCancelled(true);
-                }
-                
+			event.setCancelled(true);
+		}
+
 		//Check if it's a flag
 		/*int team = plugin.isFlagBlock(event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
 		if (team != -1) {
 			System.out.println("Destroyed a flag block!");
-			
+
 			String woolTeamName = plugin.teamNameFromInt(team);
 			String carrierTeamName = plugin.teamName(event.getPlayer().getName());
-			
+
 			//Enemy player...
 			if(woolTeamName != carrierTeamName) {
 				plugin.getServer().broadcastMessage(player.getDisplayName() + " has the " + woolTeamName + " team flag!");
@@ -298,11 +291,11 @@ public class CutePVPListener implements Listener{
 				event.setCancelled(true);
 			}
 		} else {*/
-			//If they're in an enemy base...
-			if (plugin.getInRangeOfEnemyTeamSpawn(event.getPlayer())) {
-				event.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
-				event.setCancelled(true);
-			}
+		//If they're in an enemy base...
+		if (plugin.getInRangeOfEnemyTeamSpawn(event.getPlayer())) {
+			event.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
+			event.setCancelled(true);
+		}
 		//}
 	}
 }

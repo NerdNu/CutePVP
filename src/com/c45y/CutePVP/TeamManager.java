@@ -1,10 +1,14 @@
 package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Player;
 
 public class TeamManager {
 	private CutePVP cp;
-	private Team staffTeam;
+	public Team staffTeam;
 	public Team redTeam;
 	public Team blueTeam;
 	public Team yellowTeam;
@@ -115,5 +119,75 @@ public class TeamManager {
 			return greenTeam;
 		}
 		return null;
+	}
+	
+	public Team getTeamFromWool(byte data) {
+		if (redTeam.getTeamWoolData() == data) {
+			return redTeam;
+		}
+		if (blueTeam.getTeamWoolData() == data) {
+			return blueTeam;
+		}
+		if (yellowTeam.getTeamWoolData() == data) {
+			return yellowTeam;
+		}
+		if (greenTeam.getTeamWoolData() == data) {
+			return greenTeam;
+		}
+		return null;
+	}
+	
+	public boolean inRangeOfEnemyTeamSpawn(Player player) {
+		int rad = cp.getConfig().getInt("base.protection.radius");
+		Location playerLocation = player.getLocation();
+		Team playerTeam = getTeamMemberOf(player.getName());
+		if(playerTeam != redTeam) {
+			if(redTeam.inTeamBase(playerLocation, rad)) {
+				return true;
+			}
+		}
+		if(playerTeam != blueTeam) {
+			if(blueTeam.inTeamBase(playerLocation, rad)) {
+				return true;
+			}
+		}
+		if(playerTeam != yellowTeam) {
+			if(yellowTeam.inTeamBase(playerLocation, rad)) {
+				return true;
+			}
+		}
+		if(playerTeam != greenTeam) {
+			if(greenTeam.inTeamBase(playerLocation, rad)) {
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	public Team isFlagBearer(Player player) {
+		if (redTeam.flagHolder == player) {
+			return redTeam;
+		}
+		if (blueTeam.flagHolder == player) {
+			return blueTeam;
+		}
+		if (yellowTeam.flagHolder == player) {
+			return yellowTeam;
+		}
+		if (greenTeam.flagHolder == player) {
+			return greenTeam;
+		}
+		return null;
+	}
+	
+	public boolean shouldTakeDamageFromBlock(Block block,String player) {
+		if (block.getType() == Material.WOOL) {
+			if (block.getData() == 14 || block.getData() == 3 || block.getData() == 4 || block.getData() == 5) {
+				if (block.getData() != getTeamMemberOf(player).getTeamWoolData()) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 }
