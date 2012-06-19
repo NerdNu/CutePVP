@@ -180,6 +180,23 @@ public class TeamManager {
 		return null;
 	}
 	
+	public Team isFlagBlock(Location loc) {
+		if (redTeam.getTeamFlag() == loc) {
+			return redTeam;
+		}
+		if (blueTeam.getTeamFlag() == loc) {
+			return blueTeam;
+		}
+		if (yellowTeam.getTeamFlag() == loc) {
+			return yellowTeam;
+		}
+		if (greenTeam.getTeamFlag() == loc) {
+			return greenTeam;
+		}
+		return null;
+	}
+	
+	
 	public boolean shouldTakeDamageFromBlock(Block block,String player) {
 		if (block.getType() == Material.WOOL) {
 			if (block.getData() == 14 || block.getData() == 3 || block.getData() == 4 || block.getData() == 5) {

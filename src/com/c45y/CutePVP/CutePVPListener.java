@@ -238,20 +238,20 @@ public class CutePVPListener implements Listener{
 		event.setCancelled(true);
 		playerTeam.message("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage()));
 		if (playerTeam != plugin.tm.staffTeam) {
-			plugin.tm.staffTeam.message(playerTeam.message("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage())));
+			plugin.tm.staffTeam.message("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage()));
 		}
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event) {
-		if ( event.getPlayer().getGameMode() == GameMode.CREATIVE ) {
+		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
 			return;
 		}
 		int team = plugin.isFlagBlock(event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
 		if (team != -1) {
 			event.setCancelled(true);
 		}
-		if (plugin.getInRangeOfEnemyTeamSpawn(event.getPlayer())) {
+		if (plugin.tm.inRangeOfEnemyTeamSpawn(event.getPlayer())) {
 			event.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
 			event.setCancelled(true);
 		}
@@ -259,43 +259,17 @@ public class CutePVPListener implements Listener{
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event) {
-		if ( event.getPlayer().getGameMode() == GameMode.CREATIVE ) {
+		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
 			return;
 		}
-		//Player player = event.getPlayer();
-
-		int team = plugin.isFlagBlock(event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
-		if (team > 0) {
+		Team team = plugin.tm.isFlagBlock(event.getBlock().getLocation());
+		if (team != null) {
 			event.setCancelled(true);
 		}
-
-		//Check if it's a flag
-		/*int team = plugin.isFlagBlock(event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
-		if (team != -1) {
-			System.out.println("Destroyed a flag block!");
-
-			String woolTeamName = plugin.teamNameFromInt(team);
-			String carrierTeamName = plugin.teamName(event.getPlayer().getName());
-
-			//Enemy player...
-			if(woolTeamName != carrierTeamName) {
-				plugin.getServer().broadcastMessage(player.getDisplayName() + " has the " + woolTeamName + " team flag!");
-				plugin.setFlagCarrier(woolTeamName, player.getName());
-				//event.getBlock().setTypeIdAndData(35, event.getBlock().getData(), true);
-				ItemStack stack = new ItemStack(35, 1, (short)event.getBlock().getData());
-				Inventory inv = event.getPlayer().getInventory();
-				inv.addItem(stack);
-				event.getBlock().setTypeId(0);
-				event.setCancelled(true);
-			} else {
-				event.setCancelled(true);
-			}
-		} else {*/
 		//If they're in an enemy base...
-		if (plugin.getInRangeOfEnemyTeamSpawn(event.getPlayer())) {
+		if (plugin.tm.inRangeOfEnemyTeamSpawn(event.getPlayer())) {
 			event.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
 			event.setCancelled(true);
 		}
-		//}
 	}
 }
