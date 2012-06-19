@@ -1,6 +1,7 @@
 package com.c45y.CutePVP;
 
 import java.util.HashMap;
+import java.util.Set;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -160,6 +161,10 @@ public class Team {
 		}
 		return false;
 	}
+	
+	public Set<String> getTeamMembers() {
+		return teamMembers.keySet();
+	}
 
 	public void message(String m1) {
 		for( String player: teamMembers.keySet() ){
@@ -169,6 +174,12 @@ public class Team {
 	
 	public void setHelmet(Player player) {
 		player.getInventory().setHelmet(getTeamItemStack());
+	}
+	
+	public void setCompassTarget() {
+		for( String player: teamMembers.keySet() ){
+			server.getPlayer(player).setCompassTarget(getTeamFlag());
+		}
 	}
 
 	/* Team scoring methods */

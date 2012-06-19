@@ -39,7 +39,7 @@ public class CutePVPListener implements Listener{
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onInventoryClick(InventoryClickEvent event) {
 		Player player = (Player) event.getWhoClicked();
-		if ( player.getGameMode() == GameMode.CREATIVE ){
+		if ( plugin.tm.staffTeam.inTeam(event.getWhoClicked().getName())) {
 			return;
 		}
 		if (player.getInventory().getHelmet() == null) {
@@ -55,17 +55,11 @@ public class CutePVPListener implements Listener{
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onInventoryClose(InventoryCloseEvent event) {
 		Player player = (Player) event.getPlayer();
-		if ( player.getGameMode() == GameMode.CREATIVE ){
+		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
 			return;
 		}
-		if (player.getInventory().getHelmet() == null) {
-			player.getInventory().setHelmet(plugin.returnWool(player.getName()));
-			return;
-		}
-		if (player.getInventory().getHelmet().getType() != Material.WOOL) {
-			player.getInventory().setHelmet(plugin.returnWool(player.getName()));
-			return;
-		}
+		Team team = plugin.tm.getTeamMemberOf(player.getName());
+		team.setHelmet(player);
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -247,8 +241,8 @@ public class CutePVPListener implements Listener{
 		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
 			return;
 		}
-		int team = plugin.isFlagBlock(event.getBlock().getX(), event.getBlock().getY(), event.getBlock().getZ());
-		if (team != -1) {
+		Team team = plugin.tm.isFlagBlock(event.getBlock().getLocation());
+		if (team != null) {
 			event.setCancelled(true);
 		}
 		if (plugin.tm.inRangeOfEnemyTeamSpawn(event.getPlayer())) {
