@@ -91,7 +91,7 @@ public class CutePVPListener implements Listener{
 	public void onPlayerJoin(PlayerJoinEvent event){
 		Player player = event.getPlayer();
 		Team playerTeam = plugin.tm.getTeamMemberOf(player.getName());
-		if( playerTeam == null || player.hasPlayedBefore()){
+		if( playerTeam == null || !player.hasPlayedBefore()){
 			plugin.tm.onFirstJoin(player.getName());
 			playerTeam = plugin.tm.getTeamMemberOf(player.getName());
 		}
@@ -164,9 +164,8 @@ public class CutePVPListener implements Listener{
 
 		Team woolTeam = plugin.tm.getTeamFromWool(b.getData());
 		Team attacker = plugin.tm.getTeamMemberOf(event.getPlayer().getName());
-		Location blockLoc = woolTeam.getTeamFlag();
 
-		if(woolTeam.isTeamFlag(blockLoc)) { //The block is the flag block
+		if(!woolTeam.isTeamFlag(b.getLocation())) { //The block is the flag block
 			return;
 		}
 		//Own team
@@ -175,6 +174,8 @@ public class CutePVPListener implements Listener{
 				return;
 			}
 			plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeam.getTeamName() + " flag.");
+			woolTeam.respawnTeamFlag();
+			b.setType(Material.AIR);
 			return;
 		}
 		//Opposing team
@@ -184,10 +185,12 @@ public class CutePVPListener implements Listener{
 				attacker.addTeamScore(10); //Increment the team score
 				attacker.addPlayerScore(player.getName(), 10);
 				woolTeam.respawnTeamFlag();//Reset the team flag
+				b.setType(Material.AIR);
 				plugin.getServer().broadcastMessage(player.getDisplayName() + " captured the " + woolTeam.getTeamName() + " flag.");
 			}
 		} else {
 			woolTeam.flagHolder = player;
+			b.setType(Material.AIR);
 			plugin.getServer().broadcastMessage(player.getDisplayName() + " has stolen the " + woolTeam.getTeamName() + " flag.");
 		}
 	}//Reworked
@@ -218,9 +221,10 @@ public class CutePVPListener implements Listener{
 			flagOf.flagHolder = null;
 		}
 
-		if (event.getEntity().getKiller() != null) {
-			plugin.tm.getTeamMemberOf(event.getEntity().getName()).addTeamScore(1);
-			plugin.tm.getTeamMemberOf(event.getEntity().getName()).addPlayerScore(event.getEntity().getName(), 5);
+		if (event.getEntity().getKiller() instanceof Player) {
+			String killer = event.getEntity().getKiller().getName();
+			plugin.tm.getTeamMemberOf(killer).addTeamScore(1);
+			plugin.tm.getTeamMemberOf(killer).addPlayerScore(killer, 5);
 		}
 	}
 
