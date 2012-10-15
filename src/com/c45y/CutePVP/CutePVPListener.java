@@ -2,7 +2,6 @@ package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
-import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -38,44 +37,23 @@ public class CutePVPListener implements Listener{
 
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onInventoryClick(InventoryClickEvent event) {
-		Player player = (Player) event.getWhoClicked();
 		if ( plugin.tm.staffTeam.inTeam(event.getWhoClicked().getName())) {
 			return;
 		}
-		if (player.getInventory().getHelmet() == null) {
+		if (event.getSlot() == 39 /* Helmet slot */) {
 			event.setCancelled(true);
-			return;
-		}
-		if (player.getInventory().getHelmet().getType() != Material.WOOL) {
-			event.setCancelled(true);
-			return;
-		}
+		};
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-	public void onInventoryClose(InventoryCloseEvent event) {
-		Player player = (Player) event.getPlayer();
-		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
-			return;
-		}
-		Team team = plugin.tm.getTeamMemberOf(player.getName());
-		team.setHelmet(player);
-	}
-
-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
-	public void onPlayerDropItem(PlayerDropItemEvent event) {
-		Player player = (Player) event.getPlayer();
-		if(player.isDead()) {
-			return;
-		}
-		if ( player.getGameMode() == GameMode.CREATIVE ){
-			return;
-		}
-		if (event.getItemDrop().getItemStack().getType() == Material.WOOL) {
-			event.getItemDrop().remove();
-			return;
-		}
-	}
+//	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+//	public void onInventoryClose(InventoryCloseEvent event) {
+//		Player player = (Player) event.getPlayer();
+//		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
+//			return;
+//		}
+//		Team team = plugin.tm.getTeamMemberOf(player.getName());
+//		team.setHelmet(player);
+//	}
 
 	/* END - Inventory crap, locking the wool in place */
 
