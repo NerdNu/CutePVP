@@ -203,11 +203,19 @@ public class Team {
 	public void addTeamScore(int inc) {
 		config.set(teamName + "score.total", getTeamScore() + inc);
 	}
+        
+        public void addTeamKill() {
+            config.set(teamName + "kills.total", getTeamKills() + 1);
+        }
+        
+        public int getTeamKills() {
+            return config.getInt(teamName + "kills.total");
+        }
 
 	public int getTeamScore() {
 		return config.getInt(teamName + "score.total");
 	}
-
+        
 	public void addPlayerScore(String player, int inc) {
 		int playerScore = getPlayerScore(player);
 		teamMembers.put(player, playerScore + inc);

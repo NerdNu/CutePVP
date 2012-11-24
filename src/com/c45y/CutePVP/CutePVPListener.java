@@ -161,7 +161,7 @@ public class CutePVPListener implements Listener{
 		if(woolTeam.flagHolder != null) { //Someone currently has the flag, they must be placing it.
 			woolTeam.flagHolder = null; //They have placed the flag, nobody is in posession.
 			if(attacker.inTeamBase(player.getLocation())) { //Placing block in own base, flag cap
-				attacker.addTeamScore(10); //Increment the team score
+				attacker.addTeamScore(1); //Increment the team score
 				attacker.addPlayerScore(player.getName(), 10);
 				woolTeam.respawnTeamFlag();//Reset the team flag
 				b.setType(Material.AIR);
@@ -202,8 +202,8 @@ public class CutePVPListener implements Listener{
 
 		if (event.getEntity().getKiller() instanceof Player) {
 			String killer = event.getEntity().getKiller().getName();
-			plugin.tm.getTeamMemberOf(killer).addTeamScore(1);
-			plugin.tm.getTeamMemberOf(killer).addPlayerScore(killer, 5);
+			plugin.tm.getTeamMemberOf(killer).addTeamKill();
+			plugin.tm.getTeamMemberOf(killer).addPlayerScore(killer, 1);
 		}
 	}
 
