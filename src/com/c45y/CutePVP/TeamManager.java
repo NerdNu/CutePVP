@@ -16,11 +16,11 @@ public class TeamManager {
 
 	public TeamManager(CutePVP cutePVP) {
 		cp = cutePVP;
-		staffTeam = new Team( cp.getServer(), cp.getConfig(), "staff", ChatColor.RED, (byte) 15);
-		redTeam = new Team( cp.getServer(), cp.getConfig(), "red", ChatColor.RED, (byte) 14);
-		blueTeam = new Team( cp.getServer(), cp.getConfig(), "blue", ChatColor.BLUE, (byte) 3);
-		yellowTeam = new Team( cp.getServer(), cp.getConfig(), "yellow", ChatColor.YELLOW, (byte) 4);
-		greenTeam = new Team( cp.getServer(), cp.getConfig(), "green", ChatColor.GREEN, (byte) 5);
+		staffTeam = new Team(cp,  cp.getServer(), cp.getConfig(), "staff", ChatColor.RED, (byte) 15);
+		redTeam = new Team(cp,  cp.getServer(), cp.getConfig(), "red", ChatColor.RED, (byte) 14);
+		blueTeam = new Team(cp,  cp.getServer(), cp.getConfig(), "blue", ChatColor.BLUE, (byte) 3);
+		yellowTeam = new Team(cp, cp.getServer(), cp.getConfig(), "yellow", ChatColor.YELLOW, (byte) 4);
+		greenTeam = new Team(cp, cp.getServer(), cp.getConfig(), "green", ChatColor.GREEN, (byte) 5);
 	}
 
 	public void onFirstJoin(String player) {
@@ -170,28 +170,53 @@ public class TeamManager {
 		}
 		return null;
 	}
-	
-	public boolean inRangeOfEnemyTeamSpawn(Player player) {
-		int rad = cp.getConfig().getInt("base.protection.radius");
-		Location playerLocation = player.getLocation();
+        
+        public boolean inEnemyTeamSpawn(Player player) {
+                Location playerLocation = player.getLocation();
 		Team playerTeam = getTeamMemberOf(player.getName());
 		if(playerTeam != redTeam) {
-			if(redTeam.inTeamBase(playerLocation, rad)) {
+			if(redTeam.inTeamSpawn(playerLocation)) {
 				return true;
 			}
 		}
 		if(playerTeam != blueTeam) {
-			if(blueTeam.inTeamBase(playerLocation, rad)) {
+			if(blueTeam.inTeamSpawn(playerLocation)) {
 				return true;
 			}
 		}
 		if(playerTeam != yellowTeam) {
-			if(yellowTeam.inTeamBase(playerLocation, rad)) {
+			if(yellowTeam.inTeamSpawn(playerLocation)) {
 				return true;
 			}
 		}
 		if(playerTeam != greenTeam) {
-			if(greenTeam.inTeamBase(playerLocation, rad)) {
+			if(greenTeam.inTeamSpawn(playerLocation)) {
+				return true;
+			}
+		}
+		return false;
+        }
+	
+	public boolean inRangeOfEnemyTeamSpawn(Player player) {
+		Location playerLocation = player.getLocation();
+		Team playerTeam = getTeamMemberOf(player.getName());
+		if(playerTeam != redTeam) {
+			if(redTeam.inTeamBase(playerLocation)) {
+				return true;
+			}
+		}
+		if(playerTeam != blueTeam) {
+			if(blueTeam.inTeamBase(playerLocation)) {
+				return true;
+			}
+		}
+		if(playerTeam != yellowTeam) {
+			if(yellowTeam.inTeamBase(playerLocation)) {
+				return true;
+			}
+		}
+		if(playerTeam != greenTeam) {
+			if(greenTeam.inTeamBase(playerLocation)) {
 				return true;
 			}
 		}
