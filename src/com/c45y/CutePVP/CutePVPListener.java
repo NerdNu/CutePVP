@@ -1,11 +1,11 @@
 package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -14,11 +14,12 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerChatEvent;
-import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -196,8 +197,16 @@ public class CutePVPListener implements Listener{
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		Team flagOf = plugin.tm.isFlagBearer(event.getEntity());
 		if (flagOf != null) {
-			flagOf.dropTeamFlag(event.getEntity().getLocation());
-			flagOf.setCarrier(null);
+                    Player p = (Player)event.getEntity();
+                    EntityDamageEvent p_de = p.getLastDamageCause();
+                    DamageCause p_dc = p_de.getCause();
+                    if (p_dc == DamageCause.VOID) {
+                        flagOf.respawnTeamFlag();
+                        flagOf.setCarrier(null);
+                    } else {
+                        flagOf.dropTeamFlag(event.getEntity().getLocation());
+                        flagOf.setCarrier(null);
+                    }
 		}
 
 		if (event.getEntity().getKiller() instanceof Player) {
