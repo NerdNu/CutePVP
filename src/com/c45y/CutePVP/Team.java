@@ -157,6 +157,12 @@ public class Team {
 				config.getDouble(teamName + "flag.home.z"));
 	}
 
+	public void setTeamFlagHome(Location l1) {
+		config.set(teamName + "flag.home.x", l1.getX());
+		config.set(teamName + "flag.home.y", l1.getY());
+		config.set(teamName + "flag.home.z", l1.getZ());
+	}
+
 	public boolean isTeamFlag(Location l1) {
 		Location teamFlag = getTeamFlag();
 		if (l1.getBlockX() == teamFlag.getBlockX() && l1.getBlockY() == teamFlag.getBlockY() &&	l1.getBlockZ() == teamFlag.getBlockZ()) {

@@ -235,26 +235,46 @@ public class CutePVP extends JavaPlugin {
 			}
 			return true;
 		}
-		else if (command.getName().equalsIgnoreCase("cutepvp")) {
-			if (sender.hasPermission("cutepvp.admin")) {
-				if (args.length == 1 && args[0] == "reload") {
-//					loadPlayers();
-					return true;
-				}
-				if (args.length == 3 && args[0] == "rmplayer") {
-					String playerName = args[2];
-					Team team = tm.getTeamMemberOf(playerName);
-					team.removePlayer(playerName);
-					return true;
-				}
-				if (args.length == 3 && args[0] == "setspawn") {
-					String team = args[2];
-					if (team == "red") { tm.redTeam.setTeamSpawn(player.getLocation()); }
-					if (team == "blue") { tm.redTeam.setTeamSpawn(player.getLocation()); }
-					if (team == "yellow") { tm.redTeam.setTeamSpawn(player.getLocation()); }
-					if (team == "green") { tm.redTeam.setTeamSpawn(player.getLocation()); }
-					return true;
-				}
+	else if (command.getName().equalsIgnoreCase("cutepvp")) {
+			if (args.length == 1 && new String("reload").equals(args[0])) {
+//				loadPlayers();
+				return true;
+			}
+			if (args.length == 1 && new String("save").equals(args[0])) {
+				savePlayers();
+				sender.sendMessage("[CutePVP] Saved");
+				return true;
+			}
+			if (args.length == 2 && new String("rmplayer").equals(args[0])) {
+				String playerName = args[1];
+				Team team = tm.getTeamMemberOf(playerName);
+				team.removePlayer(playerName);
+				sender.sendMessage("[CutePVP] Removed Player");
+				return true;
+			}
+			if (args.length == 2 && new String("setspawn").equals(args[0])) {
+				if (new String("red").equals(args[1])) { tm.redTeam.setTeamSpawn(player.getLocation()); }
+				if (new String("blue").equals(args[1])) { tm.blueTeam.setTeamSpawn(player.getLocation()); }
+				if (new String("yellow").equals(args[1])) { tm.yellowTeam.setTeamSpawn(player.getLocation()); }
+				if (new String("green").equals(args[1])) { tm.greenTeam.setTeamSpawn(player.getLocation()); }
+				sender.sendMessage("[CutePVP] Set Spawn");
+				return true;
+			}
+			if (args.length == 2 && new String("setflag").equals(args[0])) {
+				if (new String("red").equals(args[1])) { tm.redTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation()); }
+				if (new String("blue").equals(args[1])) { tm.blueTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation()); }
+				if (new String("yellow").equals(args[1])) { tm.yellowTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation()); }
+				if (new String("green").equals(args[1])) { tm.greenTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation()); }
+				sender.sendMessage("[CutePVP] Set flag loc");
+				return true;
+			}
+			if (args.length == 2 && new String("setflaghome").equals(args[0])) {
+				if (new String("red").equals(args[1])) { tm.redTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation()); }
+				if (new String("blue").equals(args[1])) { tm.blueTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation()); }
+				if (new String("yellow").equals(args[1])) { tm.yellowTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation()); }
+				if (new String("green").equals(args[1])) { tm.greenTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation()); }
+				sender.sendMessage("[CutePVP] Set flag home loc");
+				return true;
 			}
 		}
 		/*else if (command.getName().equalsIgnoreCase("fpos")) {

@@ -10,6 +10,9 @@ permissions:
     CutePVP.user:
         description: a user
         default: true
+    CutePVP.admin:
+        description: admin
+        default: op
 commands:
   asdf:
     description: set config things
