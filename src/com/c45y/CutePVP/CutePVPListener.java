@@ -159,8 +159,8 @@ public class CutePVPListener implements Listener{
 		}
 		//Opposing team
 		if(woolTeam.flagHolder != null) { //Someone currently has the flag, they must be placing it.
-			woolTeam.flagHolder = null; //They have placed the flag, nobody is in posession.
-			if(attacker.inTeamBase(player.getLocation())) { //Placing block in own base, flag cap
+			woolTeam.setCarrier(player); //They have placed the flag, nobody is in posession.
+			if(attacker.isTeamFlagRegion(player.getLocation())) { //Placing block in own base, flag cap
 				attacker.addTeamScore(1); //Increment the team score
 				attacker.addPlayerScore(player.getName(), 10);
 				woolTeam.respawnTeamFlag();//Reset the team flag
@@ -168,7 +168,7 @@ public class CutePVPListener implements Listener{
 				plugin.getServer().broadcastMessage(player.getDisplayName() + " captured the " + woolTeam.getTeamName() + " flag.");
 			}
 		} else {
-			woolTeam.flagHolder = player;
+			woolTeam.setCarrier(player);
 			b.setType(Material.AIR);
 			plugin.getServer().broadcastMessage(player.getDisplayName() + " has stolen the " + woolTeam.getTeamName() + " flag.");
 		}
@@ -179,7 +179,7 @@ public class CutePVPListener implements Listener{
 		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
 		if (flagOf != null) {
 			flagOf.dropTeamFlag(event.getPlayer().getLocation());
-			flagOf.flagHolder = null;
+			flagOf.setCarrier(null);
 		}
 	}
 
@@ -188,7 +188,7 @@ public class CutePVPListener implements Listener{
 		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
 		if (flagOf != null) {
 			flagOf.dropTeamFlag(event.getPlayer().getLocation());
-			flagOf.flagHolder = null;
+			flagOf.setCarrier(null);
 		}
 	}
 
@@ -197,7 +197,7 @@ public class CutePVPListener implements Listener{
 		Team flagOf = plugin.tm.isFlagBearer(event.getEntity());
 		if (flagOf != null) {
 			flagOf.dropTeamFlag(event.getEntity().getLocation());
-			flagOf.flagHolder = null;
+			flagOf.setCarrier(null);
 		}
 
 		if (event.getEntity().getKiller() instanceof Player) {

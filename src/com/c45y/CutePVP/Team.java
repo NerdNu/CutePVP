@@ -96,6 +96,24 @@ public class Team {
 		return false;
 	}
         
+        public void setCarrier(Player player) {
+            flagHolder = player;
+            config.set("carrier." + teamName + "flag", player);
+        }
+        
+        public boolean isTeamFlagRegion(Location l1) {
+                RegionManager mgr = plugin.getWorldGuard().getGlobalRegionManager().get(l1.getWorld());
+                Vector pt = new Vector(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ());
+                ApplicableRegionSet set = mgr.getApplicableRegions(pt);
+                
+                for (ProtectedRegion r : set) {
+                    if (r.getId().equalsIgnoreCase(teamName + "_flag"))
+                        return true;
+                }
+                
+		return false;
+	}
+        
         public boolean inTeamSpawn(Location l1) {
                 RegionManager mgr = plugin.getWorldGuard().getGlobalRegionManager().get(l1.getWorld());
                 Vector pt = new Vector(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ());
