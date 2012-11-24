@@ -1,5 +1,6 @@
 package com.c45y.CutePVP;
 
+import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import java.util.HashMap;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
@@ -18,12 +19,30 @@ import org.bukkit.potion.PotionEffectType;
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 public class CutePVP extends JavaPlugin {
 	private final CutePVPListener loglistener = new CutePVPListener(this);
 	HashMap<String, String> fposSet = new HashMap<String, String>();
 	TeamManager tm;
-
+        WorldGuardPlugin wgPlugin = null;
+        
+        public WorldGuardPlugin getWorldGuard() {
+            if (wgPlugin == null) {
+                wgPlugin = (WorldGuardPlugin)getServer().getPluginManager().getPlugin("WorldGuard");
+                if (wgPlugin != null) {
+                    if (!wgPlugin.isEnabled()) {
+                        getPluginLoader().enablePlugin(wgPlugin);
+                    }
+                }
+                else {
+                    getLogger().log(Level.INFO, "Could not load worldguard, disabling");
+                    wgPlugin = null;
+                }
+            }
+            return wgPlugin;
+        }
+        
 	public void loadPlayers() {
 		List<String> redPlayerNames = getConfig().getStringList("teams.red.players");
 		for (String redPlayerName : redPlayerNames) {

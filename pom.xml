@@ -17,6 +17,13 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+        <dependency>
+            <groupId>com.sk89q</groupId>
+            <artifactId>worldguard</artifactId>
+            <version>5.7-SNAPSHOT</version>
+            <type>jar</type>
+            <scope>compile</scope>
+        </dependency>
 	</dependencies>
 	<distributionManagement>
 		<repository>
@@ -36,6 +43,10 @@
 			<id>repobo-snap</id>
 			<url>http://repo.bukkit.org/content/groups/public</url>
 		</repository>
+        <repository>
+            <id>sk89q-repo</id>
+            <url>http://maven.sk89q.com/repo/</url>
+        </repository>
 	</repositories>
 
 	<pluginRepositories>

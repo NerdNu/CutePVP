@@ -1,5 +1,9 @@
 package com.c45y.CutePVP;
 
+import com.sk89q.worldedit.Vector;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
+import com.sk89q.worldguard.protection.managers.RegionManager;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
@@ -24,8 +28,10 @@ public class Team {
 	private byte woolData;
 	private HashMap<String, Integer> teamMembers = new HashMap<String, Integer>();
 	public Player flagHolder;
+        private CutePVP plugin;
 
-	public Team(Server s1, FileConfiguration f1, String n1, ChatColor c2, byte w1) {
+	public Team(CutePVP plugin, Server s1, FileConfiguration f1, String n1, ChatColor c2, byte w1) {
+            this.plugin = plugin;
 		server = s1;
 		config = f1;
 		teamName = n1;
@@ -78,18 +84,28 @@ public class Team {
 	}
 	
 	public boolean inTeamBase(Location l1) {
-		int rad = config.getInt("base.protection.radius");
-		return inTeamBase(l1,rad);
+                RegionManager mgr = plugin.getWorldGuard().getGlobalRegionManager().get(l1.getWorld());
+                Vector pt = new Vector(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ());
+                ApplicableRegionSet set = mgr.getApplicableRegions(pt);
+                
+                for (ProtectedRegion r : set) {
+                    if (r.getId().equalsIgnoreCase(teamName + "base"))
+                        return true;
+                }
+                
+		return false;
 	}
-	
-	public boolean inTeamBase(Location l1,int rad) {
-		Location playerLocation = l1;
-		Location spawnLocation = getTeamSpawn();
-		double dx = spawnLocation.getX() - playerLocation.getX();
-		double dz = spawnLocation.getZ() - playerLocation.getZ();
-		if ((dx<rad && dx>-rad) && (dz<rad && dz>-rad)) {
-			return true;
-		}
+        
+        public boolean inTeamSpawn(Location l1) {
+                RegionManager mgr = plugin.getWorldGuard().getGlobalRegionManager().get(l1.getWorld());
+                Vector pt = new Vector(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ());
+                ApplicableRegionSet set = mgr.getApplicableRegions(pt);
+                
+                for (ProtectedRegion r : set) {
+                    if (r.getId().equalsIgnoreCase(teamName + "spawn"))
+                        return true;
+                }
+                
 		return false;
 	}
 
