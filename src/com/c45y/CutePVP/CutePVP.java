@@ -49,6 +49,12 @@ public class CutePVP extends JavaPlugin {
 		getConfig().set("teams.blue.players", new ArrayList<String>(tm.blueTeam.getTeamMembers()));
 		getConfig().set("teams.yellow.players", new ArrayList<String>(tm.yellowTeam.getTeamMembers()));
 		getConfig().set("teams.green.players", new ArrayList<String>(tm.greenTeam.getTeamMembers()));
+/*
+		getConfig().set("teams.red.online", new ArrayList<String>(tm.redTeam.getTeamMembersOnline()));
+		getConfig().set("teams.blue.online", new ArrayList<String>(tm.blueTeam.getTeamMembersOnline()));
+		getConfig().set("teams.yellow.online", new ArrayList<String>(tm.yellowTeam.getTeamMembersOnline()));
+		getConfig().set("teams.green.online", new ArrayList<String>(tm.greenTeam.getTeamMembersOnline()));
+*/
         saveConfig();
 	}
 
@@ -210,9 +216,26 @@ public class CutePVP extends JavaPlugin {
 			}
 			return true;
 		}
-		else if (command.getName().equalsIgnoreCase("cutepvp reload")) {
+		else if (command.getName().equalsIgnoreCase("cutepvp")) {
 			if (sender.hasPermission("cutepvp.admin")) {
-				loadPlayers();
+				if (args.length == 1 && args[0] == "reload") {
+//					loadPlayers();
+					return true;
+				}
+				if (args.length == 3 && args[0] == "rmplayer") {
+					String playerName = args[2];
+					Team team = tm.getTeamMemberOf(playerName);
+					team.removePlayer(playerName);
+					return true;
+				}
+				if (args.length == 3 && args[0] == "setspawn") {
+					String team = args[2];
+					if (team == "red") { tm.redTeam.setTeamSpawn(player.getLocation()); }
+					if (team == "blue") { tm.redTeam.setTeamSpawn(player.getLocation()); }
+					if (team == "yellow") { tm.redTeam.setTeamSpawn(player.getLocation()); }
+					if (team == "green") { tm.redTeam.setTeamSpawn(player.getLocation()); }
+					return true;
+				}
 			}
 		}
 		/*else if (command.getName().equalsIgnoreCase("fpos")) {
