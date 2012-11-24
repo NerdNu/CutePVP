@@ -57,6 +57,39 @@ public class TeamManager {
 	}
 
 	public int decideTeam(String inpt) {
+		int redSize = redTeam.getTeamMembersOnline().size();
+		int blueSize = redTeam.getTeamMembersOnline().size();
+		int yellowSize = redTeam.getTeamMembersOnline().size();
+		int greenSize = redTeam.getTeamMembersOnline().size();
+		int mostPlayers = Math.max(Math.max(redSize, blueSize), Math.max(yellowSize, greenSize));
+		int sumDelta = mostPlayers - redSize + mostPlayers - blueSize + mostPlayers - yellowSize + mostPlayers - greenSize;
+		int[] weights = {25, 25, 25, 25};
+		if (sumDelta > 0) {
+			weights[0] = (mostPlayers - redSize) / sumDelta * 100;
+			weights[1] = (mostPlayers - blueSize) / sumDelta * 100;
+			weights[2] = (mostPlayers - yellowSize) / sumDelta * 100;
+			weights[3] = (mostPlayers - greenSize) / sumDelta * 100;
+		}
+		int random = 0 + (int)(Math.random() * ((100 - 0) + 1));
+
+		int team = random / 25;
+		if (0 <= random && random <= weights[0]) {
+			team = 0;
+		}
+		if (weights[0] < random && random <= (weights[0]+weights[1])) {
+			team = 1;
+		}
+		if ((weights[0]+weights[1]) < random && random <= (weights[0]+weights[1]+weights[2])) {
+			team = 2;
+		}
+		if ((weights[0]+weights[1]+weights[2]) < random && random <= 100) {
+			team = 3;
+		}
+
+		cp.getLogger().info("Player=" + inpt + " Team=" + team + " Random=" + random + " weights=" + weights[0] + "," + weights[1] + "," + weights[2] + "," + weights[3] + " Red=" + redSize + " Blue=" + blueSize + " Yellow=" + yellowSize + " Green=" + greenSize);
+		return team;
+
+/*
 		int value = Character.getNumericValue(ChatColor.stripColor(inpt).charAt(inpt.length()-1));
 		for(int i: new int[] { 10, 11, 23, 30, 33 } ) {
 			if(value == i) {
@@ -79,6 +112,7 @@ public class TeamManager {
 			}
 		}
 		return 0;
+*/
 	}
 
 	public void messageTeam(String s1, String m1) {

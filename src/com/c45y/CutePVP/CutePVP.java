@@ -15,14 +15,55 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
+import java.io.File;
+import java.util.List;
+import java.util.ArrayList;
+
 public class CutePVP extends JavaPlugin {
 	private final CutePVPListener loglistener = new CutePVPListener(this);
 	HashMap<String, String> fposSet = new HashMap<String, String>();
 	TeamManager tm;
 
+	public void loadPlayers() {
+		List<String> redPlayerNames = getConfig().getStringList("teams.red.players");
+		for (String redPlayerName : redPlayerNames) {
+			tm.redTeam.addPlayer(redPlayerName);
+		}
+		List<String> bluePlayerNames = getConfig().getStringList("teams.blue.players");
+		for (String bluePlayerName : bluePlayerNames) {
+			tm.blueTeam.addPlayer(bluePlayerName);
+		}
+		List<String> yellowPlayerNames = getConfig().getStringList("teams.yellow.players");
+		for (String yellowPlayerName : yellowPlayerNames) {
+			tm.yellowTeam.addPlayer(yellowPlayerName);
+		}
+		List<String> greenPlayerNames = getConfig().getStringList("teams.green.players");
+		for (String greenPlayerName : greenPlayerNames) {
+			tm.greenTeam.addPlayer(greenPlayerName);
+		}
+		getLogger().info("Red:" + redPlayerNames.size() + " Blue:" + bluePlayerNames.size() + " Yellow:" + yellowPlayerNames.size() + " Green:" + greenPlayerNames.size());
+	}
+
+	public void savePlayers() {
+		getConfig().set("teams.red.players", new ArrayList<String>(tm.redTeam.getTeamMembers()));
+		getConfig().set("teams.blue.players", new ArrayList<String>(tm.blueTeam.getTeamMembers()));
+		getConfig().set("teams.yellow.players", new ArrayList<String>(tm.yellowTeam.getTeamMembers()));
+		getConfig().set("teams.green.players", new ArrayList<String>(tm.greenTeam.getTeamMembers()));
+        saveConfig();
+	}
+
 	@Override
 	public void onEnable() {
 		tm = new TeamManager(this);
+
+		File config_file = new File(getDataFolder(), "config.yml");
+		if (!config_file.exists()) {
+			getConfig().options().copyDefaults(true);
+			saveConfig();
+		}
+
+		loadPlayers();
+
 		PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(loglistener, this);
 		System.out.println(this.toString() + " enabled");
@@ -79,6 +120,7 @@ public class CutePVP extends JavaPlugin {
 	}
 
 	public void onDisable() {
+		savePlayers();
 		System.out.println(this.toString() + " disabled");
 	}
 	
@@ -167,6 +209,11 @@ public class CutePVP extends JavaPlugin {
 				playeri.sendMessage(ChatColor.RED + ">" + ChatColor.BLUE + ">" + ChatColor.GREEN + ">" + ChatColor.YELLOW + ">" + ChatColor.WHITE + " <" + tm.getTeamMemberOf(sender.getName()).encodeTeamColor(sender.getName()) + "> " + str);
 			}
 			return true;
+		}
+		else if (command.getName().equalsIgnoreCase("cutepvp reload")) {
+			if (sender.hasPermission("cutepvp.admin")) {
+				loadPlayers();
+			}
 		}
 		/*else if (command.getName().equalsIgnoreCase("fpos")) {
 			if (args.length == 0) {

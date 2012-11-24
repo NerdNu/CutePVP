@@ -76,6 +76,7 @@ public class CutePVPListener implements Listener{
 		player.setDisplayName(playerTeam.encodeTeamColor(player.getName()));
 		playerTeam.setHelmet(event.getPlayer());
 		event.setJoinMessage(player.getDisplayName() + " joined the game.");
+		plugin.savePlayers();
 	}//Reworked
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

@@ -2,6 +2,9 @@ package com.c45y.CutePVP;
 
 import java.util.HashMap;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ArrayList;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -165,9 +168,20 @@ public class Team {
 	public Set<String> getTeamMembers() {
 		return teamMembers.keySet();
 	}
+	
+	public Set<String> getTeamMembersOnline() {
+		List<String> online = new ArrayList<String>();
+		for (String playerName : teamMembers.keySet()) {
+			Player player = server.getPlayer(playerName);
+			if (player != null)
+				online.add(playerName);
+		}
+		return new HashSet<String>(online);
+//		return teamMembers.keySet();
+	}
 
 	public void message(String m1) {
-		for( String player: teamMembers.keySet() ){
+		for( String player: getTeamMembersOnline() ){
 			server.getPlayer(player).sendMessage(m1);
 		}
 	}
@@ -177,8 +191,10 @@ public class Team {
 	}
 	
 	public void setCompassTarget() {
-		for( String player: teamMembers.keySet() ){
-			server.getPlayer(player).setCompassTarget(getTeamFlag());
+		for( String playerName: teamMembers.keySet() ){
+			Player player = server.getPlayer(playerName);
+			if (player != null)
+				player.setCompassTarget(getTeamFlag());
 		}
 	}
 

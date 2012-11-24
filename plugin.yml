@@ -1,6 +1,6 @@
 name: CutePVP
 main: com.c45y.CutePVP.CutePVP
-version: 0.9
+version: 1.1
 permissions:
     CutePVP.mod:
         description: asdf
@@ -24,3 +24,8 @@ commands:
     permission: CutePVP.mod
     usage: |
            /fpos <red|blue|yellow|green>
+  cutepvp:
+    description: cutepvp stuff
+    permission: CutePVP.admin
+    usage: |
+           /cutepvp [stuff]
