@@ -160,7 +160,7 @@ public class CutePVPListener implements Listener{
 		//Opposing team
 		if(woolTeam.flagHolder != null) { //Someone currently has the flag, they must be placing it.
 			woolTeam.setCarrier(player); //They have placed the flag, nobody is in posession.
-			if(attacker.isTeamFlagRegion(player.getLocation())) { //Placing block in own base, flag cap
+			if(attacker.isTeamFlagRegion(b.getLocation())) { //Placing block in own base, flag cap
 				attacker.addTeamScore(1); //Increment the team score
 				attacker.addPlayerScore(player.getName(), 10);
 				woolTeam.respawnTeamFlag();//Reset the team flag
