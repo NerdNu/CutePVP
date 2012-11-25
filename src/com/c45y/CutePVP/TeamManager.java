@@ -197,23 +197,31 @@ public class TeamManager {
 		return false;
         }
 	
-	public boolean inRangeOfEnemyTeamSpawn(Player player) {
-		Location playerLocation = player.getLocation();
-		Team playerTeam = getTeamMemberOf(player.getName());
-                if(redTeam.inTeamBase(playerLocation)) {
-                        return playerTeam == redTeam;
-                }
-                if(blueTeam.inTeamBase(playerLocation)) {
-                        return playerTeam == blueTeam;
-                }
-                if(yellowTeam.inTeamBase(playerLocation)) {
-                        return playerTeam == yellowTeam;
-                }
-                if(greenTeam.inTeamBase(playerLocation)) {
-                        return playerTeam == greenTeam;
-                }
-		return false;
-	}
+    public boolean inRangeOfEnemyTeamSpawn(Player player) {
+        Location playerLocation = player.getLocation();
+        Team playerTeam = getTeamMemberOf(player.getName());
+        if (playerTeam != redTeam) {
+            if (redTeam.inTeamBase(playerLocation)) {
+                return true;
+            }
+        }
+        if (playerTeam != blueTeam) {
+            if (blueTeam.inTeamBase(playerLocation)) {
+                return true;
+            }
+        }
+        if (playerTeam != yellowTeam) {
+            if (yellowTeam.inTeamBase(playerLocation)) {
+                return true;
+            }
+        }
+        if (playerTeam != greenTeam) {
+            if (greenTeam.inTeamBase(playerLocation)) {
+                return true;
+            }
+        }
+        return false;
+    }
 	
 	public Team isFlagBearer(Player player) {
 		if (redTeam.flagHolder == player) {

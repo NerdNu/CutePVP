@@ -230,11 +230,13 @@ public class CutePVP extends JavaPlugin {
 				sender.sendMessage("[CutePVP] Saved");
 				return true;
 			}
-                        if (args.length == 1 && new String("setbuff").equals(args[0])) {
+                        if (args.length == 1 && args[0].equalsIgnoreCase("setbuff")) {
                             Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+                            player.sendMessage("Set to: " + block.getType().name());
                             getConfig().set("block.buff.x", block.getLocation().getX());
                             getConfig().set("block.buff.y", block.getLocation().getY());
                             getConfig().set("block.buff.z", block.getLocation().getZ());
+                            saveConfig();
                         }
 			if (args.length == 2 && new String("rmplayer").equals(args[0])) {
 				String playerName = args[1];
