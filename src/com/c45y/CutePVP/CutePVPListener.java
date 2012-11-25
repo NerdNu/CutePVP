@@ -1,11 +1,11 @@
 package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Arrow;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -14,12 +14,11 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerChatEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerKickEvent;
@@ -144,31 +143,37 @@ public class CutePVPListener implements Listener{
 
 		Team woolTeam = plugin.tm.getTeamFromWool(b.getData());
 		Team attacker = plugin.tm.getTeamMemberOf(event.getPlayer().getName());
+		Team carrier = plugin.tm.isFlagBearer(event.getPlayer());
 
-		if(!woolTeam.isTeamFlag(b.getLocation())) { //The block is the flag block
-			return;
-		}
-		//Own team
-		if(attacker == woolTeam){ //Returning a dropped flag
-			if( woolTeam.isTeamFlag(woolTeam.getTeamFlagHome())) { //Clicking a returned flag is pointless
-				return;
-			}
-			plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeam.getTeamName() + " flag.");
-			woolTeam.respawnTeamFlag();
-			b.setType(Material.AIR);
-			return;
-		}
+//		if (woolTeam.flagHolder == null)
+//			plugin.getServer().broadcastMessage("No flag holder for team yet duh");
+
+//		if(!woolTeam.isTeamFlag(b.getLocation())) { //The block is the flag block
+//			return;
+//		}
+
 		//Opposing team
-		if(woolTeam.flagHolder != null) { //Someone currently has the flag, they must be placing it.
-			woolTeam.setCarrier(player); //They have placed the flag, nobody is in posession.
+		if(carrier != null) { //Someone currently has the flag, they must be placing it.
+//			plugin.getServer().broadcastMessage("flag holder not null");
+			carrier.setCarrier(null); //They have placed the flag, nobody is in posession.
 			if(attacker.isTeamFlagRegion(b.getLocation())) { //Placing block in own base, flag cap
 				attacker.addTeamScore(1); //Increment the team score
 				attacker.addPlayerScore(player.getName(), 10);
-				woolTeam.respawnTeamFlag();//Reset the team flag
-				b.setType(Material.AIR);
-				plugin.getServer().broadcastMessage(player.getDisplayName() + " captured the " + woolTeam.getTeamName() + " flag.");
+				carrier.respawnTeamFlag();//Reset the team flag
+				plugin.getServer().broadcastMessage(player.getDisplayName() + " captured the " + carrier.getTeamName() + " flag.");
 			}
 		} else {
+			//Own team
+			if(attacker == woolTeam){ //Returning a dropped flag
+				if( woolTeam.isTeamFlag(woolTeam.getTeamFlagHome())) { //Clicking a returned flag is pointless
+					return;
+				}
+				plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeam.getTeamName() + " flag.");
+				woolTeam.respawnTeamFlag();
+				b.setType(Material.AIR);
+				return;
+			}
+
 			woolTeam.setCarrier(player);
 			b.setType(Material.AIR);
 			plugin.getServer().broadcastMessage(player.getDisplayName() + " has stolen the " + woolTeam.getTeamName() + " flag.");
@@ -197,16 +202,8 @@ public class CutePVPListener implements Listener{
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		Team flagOf = plugin.tm.isFlagBearer(event.getEntity());
 		if (flagOf != null) {
-                    Player p = (Player)event.getEntity();
-                    EntityDamageEvent p_de = p.getLastDamageCause();
-                    DamageCause p_dc = p_de.getCause();
-                    if (p_dc == DamageCause.VOID) {
-                        flagOf.respawnTeamFlag();
-                        flagOf.setCarrier(null);
-                    } else {
-                        flagOf.dropTeamFlag(event.getEntity().getLocation());
-                        flagOf.setCarrier(null);
-                    }
+			flagOf.dropTeamFlag(event.getEntity().getLocation());
+			flagOf.setCarrier(null);
 		}
 
 		if (event.getEntity().getKiller() instanceof Player) {
