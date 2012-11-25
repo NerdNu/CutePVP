@@ -98,7 +98,7 @@ public class Team {
         
         public void setCarrier(Player player) {
             flagHolder = player;
-            config.set("carrier." + teamName + "flag", player);
+            config.set("carrier." + teamName + "flag", player.getName());
         }
         
         public boolean isTeamFlagRegion(Location l1) {
