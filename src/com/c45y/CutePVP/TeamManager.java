@@ -16,7 +16,7 @@ public class TeamManager {
 
 	public TeamManager(CutePVP cutePVP) {
 		cp = cutePVP;
-		staffTeam = new Team(cp,  cp.getServer(), cp.getConfig(), "staff", ChatColor.RED, (byte) 15);
+		staffTeam = new Team(cp,  cp.getServer(), cp.getConfig(), "staff", ChatColor.WHITE, (byte) 15);
 		redTeam = new Team(cp,  cp.getServer(), cp.getConfig(), "red", ChatColor.RED, (byte) 14);
 		blueTeam = new Team(cp,  cp.getServer(), cp.getConfig(), "blue", ChatColor.BLUE, (byte) 3);
 		yellowTeam = new Team(cp, cp.getServer(), cp.getConfig(), "yellow", ChatColor.YELLOW, (byte) 4);
@@ -58,17 +58,19 @@ public class TeamManager {
 
 	public int decideTeam(String inpt) {
 		int redSize = redTeam.getTeamMembersOnline().size();
-		int blueSize = redTeam.getTeamMembersOnline().size();
-		int yellowSize = redTeam.getTeamMembersOnline().size();
-		int greenSize = redTeam.getTeamMembersOnline().size();
+		int blueSize = blueTeam.getTeamMembersOnline().size();
+		int yellowSize = yellowTeam.getTeamMembersOnline().size();
+		int greenSize = greenTeam.getTeamMembersOnline().size();
 		int mostPlayers = Math.max(Math.max(redSize, blueSize), Math.max(yellowSize, greenSize));
 		int sumDelta = mostPlayers - redSize + mostPlayers - blueSize + mostPlayers - yellowSize + mostPlayers - greenSize;
+//		cp.getLogger().info("R:" + redSize + " B:" + blueSize + " Y:" + yellowSize + " G:" + greenSize + " M:" + mostPlayers + " Sum:" + sumDelta);
 		int[] weights = {25, 25, 25, 25};
 		if (sumDelta > 0) {
-			weights[0] = (mostPlayers - redSize) / sumDelta * 100;
-			weights[1] = (mostPlayers - blueSize) / sumDelta * 100;
-			weights[2] = (mostPlayers - yellowSize) / sumDelta * 100;
-			weights[3] = (mostPlayers - greenSize) / sumDelta * 100;
+//			cp.getLogger().info("Creating weights");
+			weights[0] = (int)(((float)(mostPlayers - redSize) / sumDelta) * 100.0);
+			weights[1] = (int)(((float)(mostPlayers - blueSize) / sumDelta) * 100.0);
+			weights[2] = (int)(((float)(mostPlayers - yellowSize) / sumDelta) * 100.0);
+			weights[3] = (int)(((float)(mostPlayers - greenSize) / sumDelta) * 100.0);
 		}
 		int random = 0 + (int)(Math.random() * ((100 - 0) + 1));
 
@@ -195,7 +197,7 @@ public class TeamManager {
 			}
 		}
 		return false;
-        }
+    }
 	
     public boolean inRangeOfEnemyTeamSpawn(Player player) {
         Location playerLocation = player.getLocation();
@@ -222,6 +224,24 @@ public class TeamManager {
         }
         return false;
     }
+
+    public boolean inOwnTeamBase(Player player) {
+		Location playerLocation = player.getLocation();
+		Team playerTeam = getTeamMemberOf(player.getName());
+                if(redTeam.inTeamBase(playerLocation)) {
+                        return playerTeam == redTeam;
+                }
+                if(blueTeam.inTeamBase(playerLocation)) {
+                        return playerTeam == blueTeam;
+                }
+                if(yellowTeam.inTeamBase(playerLocation)) {
+                        return playerTeam == yellowTeam;
+                }
+                if(greenTeam.inTeamBase(playerLocation)) {
+                        return playerTeam == greenTeam;
+                }
+		return false;
+	}
 	
 	public Team isFlagBearer(Player player) {
 		if (redTeam.flagHolder == player) {
@@ -240,16 +260,28 @@ public class TeamManager {
 	}
 	
 	public Team isFlagBlock(Location loc) {
-		if (redTeam.getTeamFlag() == loc) {
+//		cp.getLogger().info(loc.getX() + " " + loc.getY() + " " + loc.getZ());
+//		cp.getLogger().info(redTeam.getTeamFlag().getX() + " " + redTeam.getTeamFlag().getY() + " " + redTeam.getTeamFlag().getZ());
+//		if (redTeam.getTeamFlag().getX() == loc.getX() && redTeam.getTeamFlag().getY() == loc.getY() && redTeam.getTeamFlag().getX() == loc.getZ()) {
+		if (redTeam.getTeamFlag().equals(loc)) {
 			return redTeam;
 		}
-		if (blueTeam.getTeamFlag() == loc) {
+//		cp.getLogger().info(blueTeam.getTeamFlag().getX() + " " + blueTeam.getTeamFlag().getZ());
+//		if (blueTeam.getTeamFlag() == loc) {
+//		if (blueTeam.getTeamFlag().getX() == loc.getX() && blueTeam.getTeamFlag().getY() == loc.getY() && blueTeam.getTeamFlag().getX() == loc.getZ()) {
+		if (blueTeam.getTeamFlag().equals(loc)) {
 			return blueTeam;
 		}
-		if (yellowTeam.getTeamFlag() == loc) {
+//		cp.getLogger().info(yellowTeam.getTeamFlag().getX() + " " + yellowTeam.getTeamFlag().getZ());
+//		if (yellowTeam.getTeamFlag() == loc) {
+//		if (yellowTeam.getTeamFlag().getX() == loc.getX() && yellowTeam.getTeamFlag().getY() == loc.getY() && yellowTeam.getTeamFlag().getX() == loc.getZ()) {
+		if (yellowTeam.getTeamFlag().equals(loc)) {
 			return yellowTeam;
 		}
-		if (greenTeam.getTeamFlag() == loc) {
+//		cp.getLogger().info(greenTeam.getTeamFlag().getX() + " " + greenTeam.getTeamFlag().getZ());
+//		if (greenTeam.getTeamFlag() == loc) {
+//		if (greenTeam.getTeamFlag().getX() == loc.getX() && greenTeam.getTeamFlag().getY() == loc.getY() && greenTeam.getTeamFlag().getX() == loc.getZ()) {
+		if (greenTeam.getTeamFlag().equals(loc)) {
 			return greenTeam;
 		}
 		return null;

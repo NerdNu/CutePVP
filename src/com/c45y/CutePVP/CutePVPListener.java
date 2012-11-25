@@ -153,39 +153,46 @@ public class CutePVPListener implements Listener{
 //		}
 
 		//Opposing team
-		if(carrier != null) { //Someone currently has the flag, they must be placing it.
+		if (carrier != null) { //Someone currently has the flag, they must be placing it.
 //			plugin.getServer().broadcastMessage("flag holder not null");
-			carrier.setCarrier(null); //They have placed the flag, nobody is in posession.
 			if(attacker.isTeamFlagRegion(b.getLocation())) { //Placing block in own base, flag cap
 				attacker.addTeamScore(1); //Increment the team score
 				attacker.addPlayerScore(player.getName(), 10);
 				carrier.respawnTeamFlag();//Reset the team flag
+				carrier.removeCarrier(); //They have placed the flag, nobody is in posession.
 				plugin.getServer().broadcastMessage(player.getDisplayName() + " captured the " + carrier.getTeamName() + " flag.");
-			}
-		} else {
-			//Own team
-			if(attacker == woolTeam){ //Returning a dropped flag
-				if( woolTeam.isTeamFlag(woolTeam.getTeamFlagHome())) { //Clicking a returned flag is pointless
-					return;
-				}
-				plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeam.getTeamName() + " flag.");
-				woolTeam.respawnTeamFlag();
-				b.setType(Material.AIR);
+				plugin.saveConfig();
 				return;
 			}
+		}
 
+		//Own team
+		if (attacker == woolTeam && woolTeam.isTeamFlag(b.getLocation())){ //Returning a dropped flag
+			if (woolTeam.isTeamFlag(woolTeam.getTeamFlagHome())) { //Clicking a returned flag is pointless
+				return;
+			}
+			plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeam.getTeamName() + " flag.");
+			woolTeam.respawnTeamFlag();
+			b.setType(Material.AIR);
+			plugin.saveConfig();
+			return;
+		}
+
+		if (plugin.tm.isFlagBlock(b.getLocation()) != null && carrier == null) {
 			woolTeam.setCarrier(player);
 			b.setType(Material.AIR);
 			plugin.getServer().broadcastMessage(player.getDisplayName() + " has stolen the " + woolTeam.getTeamName() + " flag.");
+			plugin.saveConfig();
+			return;
 		}
+		plugin.saveConfig();
 	}//Reworked
 
 	@EventHandler(priority= EventPriority.HIGHEST, ignoreCancelled= true)
 	public void onPlayerDisconnect(PlayerQuitEvent event) {
 		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
 		if (flagOf != null) {
-			flagOf.dropTeamFlag(event.getPlayer().getLocation());
-			flagOf.setCarrier(null);
+			flagOf.dropTeamFlag(event.getPlayer().getLocation().getBlock().getLocation());
 		}
 	}
 
@@ -193,8 +200,7 @@ public class CutePVPListener implements Listener{
 	public void onPlayerKick(PlayerKickEvent event) {
 		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
 		if (flagOf != null) {
-			flagOf.dropTeamFlag(event.getPlayer().getLocation());
-			flagOf.setCarrier(null);
+			flagOf.dropTeamFlag(event.getPlayer().getLocation().getBlock().getLocation());
 		}
 	}
 
@@ -202,8 +208,7 @@ public class CutePVPListener implements Listener{
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		Team flagOf = plugin.tm.isFlagBearer(event.getEntity());
 		if (flagOf != null) {
-			flagOf.dropTeamFlag(event.getEntity().getLocation());
-			flagOf.setCarrier(null);
+			flagOf.dropTeamFlag(event.getEntity().getLocation().getBlock().getLocation());
 		}
 
 		if (event.getEntity().getKiller() instanceof Player) {
@@ -227,9 +232,18 @@ public class CutePVPListener implements Listener{
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event) {
-		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
+		if (plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
 			return;
 		}
+
+		if (plugin.tm.inOwnTeamBase(event.getPlayer())) {
+			return;
+		}
+
+//		if (plugin.tm.getTeamMemberOf(event.getPlayer().getName()).inTeamBase(event.getBlock().getLocation())) {
+//			return;
+//		}
+
 		Team team = plugin.tm.isFlagBlock(event.getBlock().getLocation());
 		if (team != null) {
 			event.setCancelled(true);
@@ -245,6 +259,15 @@ public class CutePVPListener implements Listener{
 		if ( plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
 			return;
 		}
+
+		if (plugin.tm.inOwnTeamBase(event.getPlayer())) {
+			return;
+		}
+
+//		if (plugin.tm.getTeamMemberOf(event.getPlayer().getName()).inTeamBase(event.getBlock().getLocation())) {
+//			return;
+//		}
+
 		Team team = plugin.tm.isFlagBlock(event.getBlock().getLocation());
 		if (team != null) {
 			event.setCancelled(true);

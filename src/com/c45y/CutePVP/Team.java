@@ -99,8 +99,8 @@ public class Team {
         
         public void setCarrier(Player player) {
             flagHolder = player;
-            config.set("carrier." + teamName + "flag", player.getName());
-            plugin.saveConfig();
+            if (player != null)
+	            config.set("carrier." + teamName + "flag", player.getName());
         }
         
         public void removeCarrier() {
@@ -150,13 +150,14 @@ public class Team {
 		Block flag = server.getWorlds().get(0).getBlockAt(l1); //Get a handle for the
 		flag.setTypeIdAndData(35, woolData, false);
 		setTeamFlag(l1);
+		removeCarrier();
 	}
 
 	public void setTeamFlag(Location l1) {
 		config.set(teamName + "flag.x", l1.getX());
 		config.set(teamName + "flag.y", l1.getY());
 		config.set(teamName + "flag.z", l1.getZ());
-                plugin.saveConfig();
+        plugin.saveConfig();
 	}
 
 	public Location getTeamFlagHome() {

@@ -34,3 +34,24 @@ commands:
     permission: CutePVP.admin
     usage: |
            /cutepvp [stuff]
+  list:
+    description: lists teams
+    permissions: CutePVP.user
+    usage: |
+           /list
+  score:
+    description: teams score
+    permissions: CutePVP.user
+    usage: |
+           /score
+  drop:
+    description: drop flag
+    permissions: CutePVP.user
+    usage: |
+           /drop
+  flag:
+    description: displays flag location
+    permissions: CutePVP.user
+    usage: |
+           /flag
+
