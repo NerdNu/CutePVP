@@ -213,22 +213,7 @@ public class CutePVP extends JavaPlugin {
 			return true;
 		}
 		Player player = (Player) sender;
-		Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-		if (command.getName().equalsIgnoreCase("asdf")) {
-			if (args[0] != null) {
-				getConfig().set(args[0] + ".x", block.getLocation().getX());
-				getConfig().set(args[0] + ".y", block.getLocation().getY());
-				getConfig().set(args[0] + ".z", block.getLocation().getZ());
-			} else {
-				getConfig().set("block.buff.x", block.getLocation().getX());
-				getConfig().set("block.buff.y", block.getLocation().getY());
-				getConfig().set("block.buff.z", block.getLocation().getZ());
-			}
-			saveConfig();
-			player.sendMessage("Set to: " + block.getType().toString());
-			return true;
-		}
-		else if (command.getName().equalsIgnoreCase("g")) {
+		if (command.getName().equalsIgnoreCase("g")) {
 			String str = StringUtils.join(args, " ");
 			for (Player playeri : getServer().getOnlinePlayers()) {
 				playeri.sendMessage(ChatColor.RED + ">" + ChatColor.BLUE + ">" + ChatColor.GREEN + ">" + ChatColor.YELLOW + ">" + ChatColor.WHITE + " <" + tm.getTeamMemberOf(sender.getName()).encodeTeamColor(sender.getName()) + "> " + str);
@@ -245,6 +230,12 @@ public class CutePVP extends JavaPlugin {
 				sender.sendMessage("[CutePVP] Saved");
 				return true;
 			}
+                        if (args.length == 1 && new String("setbuff").equals(args[0])) {
+                            Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+                            getConfig().set("block.buff.x", block.getLocation().getX());
+                            getConfig().set("block.buff.y", block.getLocation().getY());
+                            getConfig().set("block.buff.z", block.getLocation().getZ());
+                        }
 			if (args.length == 2 && new String("rmplayer").equals(args[0])) {
 				String playerName = args[1];
 				Team team = tm.getTeamMemberOf(playerName);
