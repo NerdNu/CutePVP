@@ -103,6 +103,13 @@ public class Team {
             plugin.saveConfig();
         }
         
+        public void removeCarrier() {
+            flagHolder = null;
+            config.set("carrier." + teamName + "flag", null);
+            plugin.saveConfig();
+        }
+                
+        
         public boolean isTeamFlagRegion(Location l1) {
                 RegionManager mgr = plugin.getWorldGuard().getGlobalRegionManager().get(l1.getWorld());
                 Vector pt = new Vector(l1.getBlockX(), l1.getBlockY(), l1.getBlockZ());
@@ -180,6 +187,7 @@ public class Team {
 		Block flag_home = server.getWorlds().get(0).getBlockAt(getTeamFlagHome()); //Get a handle for the
 		flag_home.setTypeIdAndData(35, woolData, false);
 		setTeamFlag(getTeamFlagHome());
+                removeCarrier();
 	}
 
 	/* Team player management */
