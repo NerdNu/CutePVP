@@ -81,6 +81,7 @@ public class Team {
 		config.set(teamName + "spawn.z", l1.getZ());
 		config.set(teamName + "spawn.yaw", l1.getYaw());
 		config.set(teamName + "spawn.pitch", l1.getPitch());
+                plugin.saveConfig();
 	}
 	
 	public boolean inTeamBase(Location l1) {
@@ -99,7 +100,15 @@ public class Team {
         public void setCarrier(Player player) {
             flagHolder = player;
             config.set("carrier." + teamName + "flag", player.getName());
+            plugin.saveConfig();
         }
+        
+        public void removeCarrier() {
+            flagHolder = null;
+            config.set("carrier." + teamName + "flag", null);
+            plugin.saveConfig();
+        }
+                
         
         public boolean isTeamFlagRegion(Location l1) {
                 RegionManager mgr = plugin.getWorldGuard().getGlobalRegionManager().get(l1.getWorld());
@@ -147,6 +156,7 @@ public class Team {
 		config.set(teamName + "flag.x", l1.getX());
 		config.set(teamName + "flag.y", l1.getY());
 		config.set(teamName + "flag.z", l1.getZ());
+                plugin.saveConfig();
 	}
 
 	public Location getTeamFlagHome() {
@@ -161,6 +171,7 @@ public class Team {
 		config.set(teamName + "flag.home.x", l1.getX());
 		config.set(teamName + "flag.home.y", l1.getY());
 		config.set(teamName + "flag.home.z", l1.getZ());
+                plugin.saveConfig();
 	}
 
 	public boolean isTeamFlag(Location l1) {
@@ -176,6 +187,7 @@ public class Team {
 		Block flag_home = server.getWorlds().get(0).getBlockAt(getTeamFlagHome()); //Get a handle for the
 		flag_home.setTypeIdAndData(35, woolData, false);
 		setTeamFlag(getTeamFlagHome());
+                removeCarrier();
 	}
 
 	/* Team player management */
@@ -242,10 +254,12 @@ public class Team {
 
 	public void addTeamScore(int inc) {
 		config.set(teamName + "score.total", getTeamScore() + inc);
+                plugin.saveConfig();
 	}
         
         public void addTeamKill() {
             config.set(teamName + "kills.total", getTeamKills() + 1);
+            plugin.saveConfig();
         }
         
         public int getTeamKills() {
