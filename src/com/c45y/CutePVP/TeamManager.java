@@ -16,11 +16,11 @@ public class TeamManager {
 
 	public TeamManager(CutePVP cutePVP) {
 		cp = cutePVP;
-		staffTeam = new Team(cp, cp.getServer(), cp.getConfig(), "staff", ChatColor.WHITE, (byte) 15);
-		redTeam = new Team(cp, cp.getServer(), cp.getConfig(), "red", ChatColor.RED, (byte) 14);
-		blueTeam = new Team(cp, cp.getServer(), cp.getConfig(), "blue", ChatColor.BLUE, (byte) 3);
-		yellowTeam = new Team(cp, cp.getServer(), cp.getConfig(), "yellow", ChatColor.YELLOW, (byte) 4);
-		greenTeam = new Team(cp, cp.getServer(), cp.getConfig(), "green", ChatColor.GREEN, (byte) 5);
+		staffTeam = new Team(cp, "staff", ChatColor.WHITE, (byte) 15);
+		redTeam = new Team(cp, "red", ChatColor.RED, (byte) 14);
+		blueTeam = new Team(cp, "blue", ChatColor.BLUE, (byte) 3);
+		yellowTeam = new Team(cp, "yellow", ChatColor.YELLOW, (byte) 4);
+		greenTeam = new Team(cp, "green", ChatColor.GREEN, (byte) 5);
 	}
 
 	public void onFirstJoin(String player) {

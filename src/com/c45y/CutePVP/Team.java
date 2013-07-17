@@ -6,10 +6,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Server;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -22,8 +23,6 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 public class Team {
-	private Server server;
-	private FileConfiguration config;
 	private String teamName;
 	private ChatColor teamChatColor;
 	private byte woolData;
@@ -31,10 +30,8 @@ public class Team {
 	public Player flagHolder;
 	private CutePVP plugin;
 
-	public Team(CutePVP plugin, Server s1, FileConfiguration f1, String n1, ChatColor c2, byte w1) {
+	public Team(CutePVP plugin, String n1, ChatColor c2, byte w1) {
 		this.plugin = plugin;
-		server = s1;
-		config = f1;
 		teamName = n1;
 		teamChatColor = c2;
 		woolData = w1;
@@ -67,12 +64,14 @@ public class Team {
 	/* Team location configuration */
 
 	public Location getTeamSpawn() {
-		return new Location(server.getWorlds().get(0), config.getDouble(teamName + "spawn.x"), config.getDouble(teamName + "spawn.y"),
-						config.getDouble(teamName + "spawn.z"), (float) config.getDouble(teamName + "spawn.yaw"), (float) config.getDouble(teamName
-										+ "spawn.pitch"));
+		FileConfiguration config = plugin.getConfig();
+		World overworld = Bukkit.getWorlds().get(0);
+		return new Location(overworld, config.getDouble(teamName + "spawn.x"), config.getDouble(teamName + "spawn.y"), config.getDouble(teamName
+						+ "spawn.z"), (float) config.getDouble(teamName + "spawn.yaw"), (float) config.getDouble(teamName + "spawn.pitch"));
 	}
 
 	public void setTeamSpawn(Location l1) {
+		FileConfiguration config = plugin.getConfig();
 		config.set(teamName + "spawn.x", l1.getX());
 		config.set(teamName + "spawn.y", l1.getY());
 		config.set(teamName + "spawn.z", l1.getZ());
@@ -97,12 +96,12 @@ public class Team {
 	public void setCarrier(Player player) {
 		flagHolder = player;
 		if (player != null)
-			config.set("carrier." + teamName + "flag", player.getName());
+			plugin.getConfig().set("carrier." + teamName + "flag", player.getName());
 	}
 
 	public void removeCarrier() {
 		flagHolder = null;
-		config.set("carrier." + teamName + "flag", null);
+		plugin.getConfig().set("carrier." + teamName + "flag", null);
 		plugin.saveConfig();
 	}
 
@@ -135,19 +134,20 @@ public class Team {
 	/* Flag manipulation */
 
 	public Location getTeamFlag() {
-		return new Location(server.getWorlds().get(0), config.getDouble(teamName + "flag.x"), config.getDouble(teamName + "flag.y"),
+		FileConfiguration config = plugin.getConfig();
+		return new Location(Bukkit.getWorlds().get(0), config.getDouble(teamName + "flag.x"), config.getDouble(teamName + "flag.y"),
 						config.getDouble(teamName + "flag.z"));
 	}
 
 	public void dropTeamFlag(Location l1) {
-		Block flag = server.getWorlds().get(0).getBlockAt(l1); // Get a handle
-																// for the
+		Block flag = Bukkit.getWorlds().get(0).getBlockAt(l1);
 		flag.setTypeIdAndData(35, woolData, false);
 		setTeamFlag(l1);
 		removeCarrier();
 	}
 
 	public void setTeamFlag(Location l1) {
+		FileConfiguration config = plugin.getConfig();
 		config.set(teamName + "flag.x", l1.getX());
 		config.set(teamName + "flag.y", l1.getY());
 		config.set(teamName + "flag.z", l1.getZ());
@@ -155,11 +155,13 @@ public class Team {
 	}
 
 	public Location getTeamFlagHome() {
-		return new Location(server.getWorlds().get(0), config.getDouble(teamName + "flag.home.x"), config.getDouble(teamName + "flag.home.y"),
+		FileConfiguration config = plugin.getConfig();
+		return new Location(Bukkit.getWorlds().get(0), config.getDouble(teamName + "flag.home.x"), config.getDouble(teamName + "flag.home.y"),
 						config.getDouble(teamName + "flag.home.z"));
 	}
 
 	public void setTeamFlagHome(Location l1) {
+		FileConfiguration config = plugin.getConfig();
 		config.set(teamName + "flag.home.x", l1.getX());
 		config.set(teamName + "flag.home.y", l1.getY());
 		config.set(teamName + "flag.home.z", l1.getZ());
@@ -175,15 +177,8 @@ public class Team {
 	}
 
 	public void respawnTeamFlag() {
-		server.getWorlds().get(0).getBlockAt(getTeamFlag()).setType(Material.AIR); // Remove
-																					// the
-																					// placed
-																					// flag
-		Block flag_home = server.getWorlds().get(0).getBlockAt(getTeamFlagHome()); // Get
-																					// a
-																					// handle
-																					// for
-																					// the
+		Bukkit.getWorlds().get(0).getBlockAt(getTeamFlag()).setType(Material.AIR);
+		Block flag_home = Bukkit.getWorlds().get(0).getBlockAt(getTeamFlagHome());
 		flag_home.setTypeIdAndData(35, woolData, false);
 		setTeamFlag(getTeamFlagHome());
 		removeCarrier();
@@ -223,7 +218,7 @@ public class Team {
 	public Set<String> getTeamMembersOnline() {
 		List<String> online = new ArrayList<String>();
 		for (String playerName : teamMembers.keySet()) {
-			Player player = server.getPlayer(playerName);
+			Player player = Bukkit.getPlayer(playerName);
 			if (player != null)
 				online.add(playerName);
 		}
@@ -233,7 +228,7 @@ public class Team {
 
 	public void message(String m1) {
 		for (String player : getTeamMembersOnline()) {
-			server.getPlayer(player).sendMessage(m1);
+			Bukkit.getPlayer(player).sendMessage(m1);
 		}
 	}
 
@@ -243,7 +238,7 @@ public class Team {
 
 	public void setCompassTarget() {
 		for (String playerName : teamMembers.keySet()) {
-			Player player = server.getPlayer(playerName);
+			Player player = Bukkit.getPlayer(playerName);
 			if (player != null)
 				player.setCompassTarget(getTeamFlag());
 		}
@@ -252,21 +247,21 @@ public class Team {
 	/* Team scoring methods */
 
 	public void addTeamScore(int inc) {
-		config.set(teamName + "score.total", getTeamScore() + inc);
+		plugin.getConfig().set(teamName + "score.total", getTeamScore() + inc);
 		plugin.saveConfig();
 	}
 
 	public void addTeamKill() {
-		config.set(teamName + "kills.total", getTeamKills() + 1);
+		plugin.getConfig().set(teamName + "kills.total", getTeamKills() + 1);
 		plugin.saveConfig();
 	}
 
 	public int getTeamKills() {
-		return config.getInt(teamName + "kills.total");
+		return plugin.getConfig().getInt(teamName + "kills.total");
 	}
 
 	public int getTeamScore() {
-		return config.getInt(teamName + "score.total");
+		return plugin.getConfig().getInt(teamName + "score.total");
 	}
 
 	public void addPlayerScore(String player, int inc) {
