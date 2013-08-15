@@ -1,298 +1,312 @@
 package com.c45y.CutePVP;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.logging.Level;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
+import com.c45y.CutePVP.buff.BuffManager;
+import com.c45y.CutePVP.buff.TeamBuff;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 
+// ----------------------------------------------------------------------------
+/**
+ * Plugin class.
+ */
 public class CutePVP extends JavaPlugin {
-	private final CutePVPListener loglistener = new CutePVPListener(this);
-	HashMap<String, String> fposSet = new HashMap<String, String>();
-	TeamManager tm;
-	WorldGuardPlugin wgPlugin = null;
+	/**
+	 * The number of ticks in one minute.
+	 */
+	public static final int ONE_MINUTE_TICKS = 60 * 20;
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Return a reference to the WorldGuard plugin and enable it if necessary.
+	 * 
+	 * @return a reference to the WorldGuard plugin and enable it if necessary.
+	 */
 	public WorldGuardPlugin getWorldGuard() {
-		if (wgPlugin == null) {
-			wgPlugin = (WorldGuardPlugin) getServer().getPluginManager().getPlugin("WorldGuard");
-			if (wgPlugin != null) {
-				if (!wgPlugin.isEnabled()) {
-					getPluginLoader().enablePlugin(wgPlugin);
+		if (_worldGuard == null) {
+			_worldGuard = (WorldGuardPlugin) getServer().getPluginManager().getPlugin("WorldGuard");
+			if (_worldGuard != null) {
+				if (!_worldGuard.isEnabled()) {
+					getPluginLoader().enablePlugin(_worldGuard);
 				}
 			} else {
 				getLogger().log(Level.INFO, "Could not load worldguard, disabling");
-				wgPlugin = null;
+				_worldGuard = null;
 			}
 		}
-		return wgPlugin;
+		return _worldGuard;
 	}
 
-	public void loadPlayers() {
-		List<String> redPlayerNames = getConfig().getStringList("teams.red.players");
-		for (String redPlayerName : redPlayerNames) {
-			tm.redTeam.addPlayer(redPlayerName);
-		}
-		List<String> bluePlayerNames = getConfig().getStringList("teams.blue.players");
-		for (String bluePlayerName : bluePlayerNames) {
-			tm.blueTeam.addPlayer(bluePlayerName);
-		}
-		List<String> yellowPlayerNames = getConfig().getStringList("teams.yellow.players");
-		for (String yellowPlayerName : yellowPlayerNames) {
-			tm.yellowTeam.addPlayer(yellowPlayerName);
-		}
-		List<String> greenPlayerNames = getConfig().getStringList("teams.green.players");
-		for (String greenPlayerName : greenPlayerNames) {
-			tm.greenTeam.addPlayer(greenPlayerName);
-		}
-		getLogger().info(
-			"Red:" + redPlayerNames.size() + " Blue:" + bluePlayerNames.size() + " Yellow:" + yellowPlayerNames.size() + " Green:"
-							+ greenPlayerNames.size());
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the {@link TeamManager}.
+	 * 
+	 * @return the {@link TeamManager}.
+	 */
+	public TeamManager getTeamManager() {
+		return _teamManager;
 	}
 
-	public void savePlayers() {
-		getConfig().set("teams.red.players", new ArrayList<String>(tm.redTeam.getTeamMembers()));
-		getConfig().set("teams.blue.players", new ArrayList<String>(tm.blueTeam.getTeamMembers()));
-		getConfig().set("teams.yellow.players", new ArrayList<String>(tm.yellowTeam.getTeamMembers()));
-		getConfig().set("teams.green.players", new ArrayList<String>(tm.greenTeam.getTeamMembers()));
-		saveConfig();
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Return the {@link BuffManager}.
+	 * 
+	 * @return the {@link BuffManager}.
+	 */
+	public BuffManager getBuffManager() {
+		return _buffManager;
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Called when the plugin is enabled.
+	 */
 	@Override
 	public void onEnable() {
-		tm = new TeamManager(this);
+		saveDefaultConfig();
+		loadConfiguration();
 
-		File config_file = new File(getDataFolder(), "config.yml");
-		if (!config_file.exists()) {
-			getConfig().options().copyDefaults(true);
-			saveConfig();
-		}
-
-		loadPlayers();
-
-		PluginManager pm = getServer().getPluginManager();
-		pm.registerEvents(loglistener, this);
-		System.out.println(this.toString() + " enabled");
+		getServer().getPluginManager().registerEvents(_listener, this);
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
-				getLogger().info("Running buff");
-				Location powerblock = new Location(getServer().getWorlds().get(0), getConfig().getDouble("block.buff.x"), getConfig().getDouble(
-					"block.buff.y"), getConfig().getDouble("block.buff.z"));
-				if (getServer().getWorlds().get(0).getBlockAt(powerblock) != null) {
-					Block gPowerBlock = getServer().getWorlds().get(0).getBlockAt(powerblock);
-					if (gPowerBlock.getType() == Material.WOOL) {
-						Team winTeam = tm.getTeamFromWool(gPowerBlock.getData());
-						if (winTeam != null) {
-							getServer().broadcastMessage(ChatColor.DARK_PURPLE + "[NOTICE] " + winTeam.getTeamName() + " gets buff!");
-							for (Player playeri : getServer().getOnlinePlayers()) {
-								if (winTeam.inTeam(playeri.getName())) {
-									playeri.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 12000, 0));
-									playeri.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 1200, 1));
-								}
-							}
-						}
+				getBuffManager().applyTeamBuffs(_teamBuffTicks);
+				for (Team team : getTeamManager()) {
+					for (Flag flag : team.getFlags()) {
+						flag.checkReturn(_flagReturnTicks);
 					}
 				}
-				getLogger().info("End running buff");
-				if (tm.blueTeam.flagHolder == null) {
-					tm.blueTeam.respawnTeamFlag();
-				}
-				if (tm.redTeam.flagHolder == null) {
-					tm.redTeam.respawnTeamFlag();
-				}
-				if (tm.yellowTeam.flagHolder == null) {
-					tm.yellowTeam.respawnTeamFlag();
-				}
-				if (tm.greenTeam.flagHolder == null) {
-					tm.greenTeam.respawnTeamFlag();
-				}
 			}
-		}, 1200, 12000);
+		}, 0, 2 * ONE_MINUTE_TICKS);
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
-				if (tm.redTeam.flagHolder != null)
-					tm.redTeam.setTeamFlag(tm.redTeam.flagHolder.getLocation());
-
-				if (tm.blueTeam.flagHolder != null)
-					tm.blueTeam.setTeamFlag(tm.blueTeam.flagHolder.getLocation());
-
-				if (tm.greenTeam.flagHolder != null)
-					tm.greenTeam.setTeamFlag(tm.greenTeam.flagHolder.getLocation());
-
-				if (tm.yellowTeam.flagHolder != null)
-					tm.yellowTeam.setTeamFlag(tm.yellowTeam.flagHolder.getLocation());
-
-				tm.blueTeam.setCompassTarget();
-				tm.redTeam.setCompassTarget();
-				tm.yellowTeam.setCompassTarget();
-				tm.greenTeam.setCompassTarget();
-
+				for (Team team : getTeamManager()) {
+					team.updateCompasses();
+				}
 				saveConfig();
 			}
 		}, 5 * 20, 5 * 20);
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Called when the plugin is disabled.
+	 */
+	@Override
 	public void onDisable() {
-		savePlayers();
-		System.out.println(this.toString() + " disabled");
+		getTeamManager().save();
+		_worldGuard = null;
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Commands:
+	 * <ul>
+	 * <li>/g <message> - global chat</li>
+	 * <li>/teams - list all teams</li>
+	 * <li>/score - show scores</li>
+	 * <li>/flag - give coordinates of nearest flag</li>
+	 * <li>/drop - drop flag if carrying</li>
+	 * </ul>
+	 */
 	@Override
-	public boolean onCommand(CommandSender sender, Command command, String commandLabel, String[] args) {
+	public boolean onCommand(CommandSender sender, Command command, String alias, String[] args) {
 		if (!(sender instanceof Player)) {
 			sender.sendMessage("Sorry, this plugin cannot be used from console");
 			return true;
 		}
 		Player player = (Player) sender;
 		if (command.getName().equalsIgnoreCase("g")) {
-			String str = StringUtils.join(args, " ");
-			for (Player playeri : getServer().getOnlinePlayers()) {
-				playeri.sendMessage(ChatColor.RED + ">" + ChatColor.BLUE + ">" + ChatColor.GREEN + ">" + ChatColor.YELLOW + ">" + ChatColor.WHITE
-								+ " <" + tm.getTeamMemberOf(sender.getName()).encodeTeamColor(sender.getName()) + "> " + str);
+			String message = ChatColor.RED + ">" + ChatColor.BLUE + ">" +
+								ChatColor.GREEN + ">" + ChatColor.YELLOW + ">" + ChatColor.WHITE
+								+ " <" + player.getDisplayName() + "> " + StringUtils.join(args, " ");
+			for (Player recipient : getServer().getOnlinePlayers()) {
+				recipient.sendMessage(message);
 			}
 			return true;
-		} else if (command.getName().equalsIgnoreCase("cutepvp")) {
-			if (args.length == 1 && new String("reload").equals(args[0])) {
-				// loadPlayers();
-				return true;
-			}
-			if (args.length == 1 && new String("save").equals(args[0])) {
-				savePlayers();
-				sender.sendMessage("[CutePVP] Saved");
-				return true;
-			}
-			if (args.length == 1 && args[0].equalsIgnoreCase("setbuff")) {
-				Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-				player.sendMessage("Set to: " + block.getType().name());
-				getConfig().set("block.buff.x", block.getLocation().getX());
-				getConfig().set("block.buff.y", block.getLocation().getY());
-				getConfig().set("block.buff.z", block.getLocation().getZ());
-				saveConfig();
-			}
-			if (args.length == 2 && new String("rmplayer").equals(args[0])) {
-				String playerName = args[1];
-				Team team = tm.getTeamMemberOf(playerName);
-				team.removePlayer(playerName);
-				sender.sendMessage("[CutePVP] Removed Player");
-				return true;
-			}
-			if (args.length == 2 && new String("setspawn").equals(args[0])) {
-				if (new String("red").equals(args[1])) {
-					tm.redTeam.setTeamSpawn(player.getLocation());
-				}
-				if (new String("blue").equals(args[1])) {
-					tm.blueTeam.setTeamSpawn(player.getLocation());
-				}
-				if (new String("yellow").equals(args[1])) {
-					tm.yellowTeam.setTeamSpawn(player.getLocation());
-				}
-				if (new String("green").equals(args[1])) {
-					tm.greenTeam.setTeamSpawn(player.getLocation());
-				}
-				sender.sendMessage("[CutePVP] Set Spawn");
-				return true;
-			}
-			if (args.length == 2 && new String("setflag").equals(args[0])) {
-				if (new String("red").equals(args[1])) {
-					tm.redTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation());
-				}
-				if (new String("blue").equals(args[1])) {
-					tm.blueTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation());
-				}
-				if (new String("yellow").equals(args[1])) {
-					tm.yellowTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation());
-				}
-				if (new String("green").equals(args[1])) {
-					tm.greenTeam.setTeamFlag(player.getTargetBlock(null, 50).getLocation());
-				}
-				sender.sendMessage("[CutePVP] Set flag loc");
-				return true;
-			}
-			if (args.length == 2 && new String("setflaghome").equals(args[0])) {
-				if (new String("red").equals(args[1])) {
-					tm.redTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation());
-				}
-				if (new String("blue").equals(args[1])) {
-					tm.blueTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation());
-				}
-				if (new String("yellow").equals(args[1])) {
-					tm.yellowTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation());
-				}
-				if (new String("green").equals(args[1])) {
-					tm.greenTeam.setTeamFlagHome(player.getTargetBlock(null, 50).getLocation());
-				}
-				sender.sendMessage("[CutePVP] Set flag home loc");
-				return true;
-			}
-			if (args.length == 1 && new String("teams").equals(args[0])) {
-				sender.sendMessage("[CutePVP] Online: Red=" + tm.redTeam.getTeamMembersOnline().size() + " Blue="
-								+ tm.blueTeam.getTeamMembersOnline().size() + " Yellow=" + tm.yellowTeam.getTeamMembersOnline().size() + " Green="
-								+ tm.greenTeam.getTeamMembersOnline().size());
-				sender.sendMessage("[CutePVP] Total: Red=" + tm.redTeam.getTeamMembers().size() + " Blue=" + tm.blueTeam.getTeamMembers().size()
-								+ " Yellow=" + tm.yellowTeam.getTeamMembers().size() + " Green=" + tm.greenTeam.getTeamMembers().size());
-				return true;
-			}
-		} else if (command.getName().equalsIgnoreCase("list")) {
-			String message = "Red Team:";
-			for (String playerName : tm.redTeam.getTeamMembersOnline()) {
-				message += " " + playerName;
-			}
-			sender.sendMessage(message);
-			message = "Blue Team:";
-			for (String playerName : tm.blueTeam.getTeamMembersOnline()) {
-				message += " " + playerName;
-			}
-			sender.sendMessage(message);
-			message = "Yellow Team:";
-			for (String playerName : tm.yellowTeam.getTeamMembersOnline()) {
-				message += " " + playerName;
-			}
-			sender.sendMessage(message);
-			message = "Green Team:";
-			for (String playerName : tm.greenTeam.getTeamMembersOnline()) {
-				message += " " + playerName;
-			}
-			sender.sendMessage(message);
+
+		} else if (command.getName().equalsIgnoreCase("teams")) {
+			getTeamManager().sendList(player);
 			return true;
+
 		} else if (command.getName().equalsIgnoreCase("score")) {
-			sender.sendMessage("Score: " + tm.redTeam.encodeTeamColor("Red=" + tm.redTeam.getTeamScore())
-							+ tm.blueTeam.encodeTeamColor(" Blue=" + tm.blueTeam.getTeamScore())
-							+ tm.yellowTeam.encodeTeamColor(" Yellow=" + tm.yellowTeam.getTeamScore())
-							+ tm.greenTeam.encodeTeamColor(" Green=" + tm.greenTeam.getTeamScore()));
-			return true;
-		} else if (command.getName().equalsIgnoreCase("drop")) {
-			Team flagOf = tm.isFlagBearer(player);
-			if (flagOf != null) {
-				flagOf.dropTeamFlag(player.getLocation().getBlock().getLocation());
+			for (Team team : getTeamManager()) {
+				sender.sendMessage(team.encodeTeamColor(team.getName()) + ":-" + team.getScore());
+			}
+			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
+			if (teamPlayer != null) {
+				sender.sendMessage(player.getDisplayName() + ":-" + teamPlayer.getScore());
 			}
 			return true;
 		} else if (command.getName().equalsIgnoreCase("flag")) {
-			Team team = tm.getTeamMemberOf(player.getName());
-			Location flagLoc = team.getTeamFlag();
-			if (flagLoc.equals(team.getTeamFlagHome()))
-				sender.sendMessage("Flag Location: Home");
-			else
-				sender.sendMessage("Flag Location: " + (int) flagLoc.getX() + ", " + (int) flagLoc.getY() + ", " + (int) flagLoc.getZ());
+			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
+			if (teamPlayer != null) {
+				Flag flag = teamPlayer.getTeam().getNearestFlag(player);
+				if (flag.isHome()) {
+					Messages.success(player, null, "Flag Location: Home");
+				} else {
+					Location loc = flag.getLocation();
+					sender.sendMessage("Flag Location: " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+				}
+			}
 			return true;
+		} else if (command.getName().equalsIgnoreCase("drop")) {
+			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
+			if (teamPlayer != null && teamPlayer.getCarriedFlag() != null) {
+				Messages.failure(player, null, "Flag dropped.");
+				teamPlayer.getCarriedFlag().drop();
+			} else {
+				Messages.failure(player, null, "You're not carrying a flag.");
+			}
+			return true;
+		}
+		return false;
+	} // onCommand
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Handle the /cutepvp command.
+	 * 
+	 * <ul>
+	 * <li>/cutepvp reload|save - reload/save configuration</li>
+	 * <li>/cutepvp setspawn &lt;team&gt; - set spawn of team</li>
+	 * <li>/cutepvp flag list - list flag locations</li>
+	 * <li>/cutepvp flag set &lt;team&gt; &lt;id&gt; - set the location of the
+	 * flag with the specified ID.</li>
+	 * <li>/cutepvp buff list - list team buff locations</li>
+	 * <li>/cutepvp buff set &lt;id&gt; - set the location of the buff with the
+	 * specified ID.</li>
+	 * </ul>
+	 * 
+	 * @param sender the CommandSender.
+	 * @param args the command arguments.
+	 * @return true if the command was handled.
+	 */
+	protected boolean handleCutePvPCommand(CommandSender sender, String[] args) {
+		if (args.length == 1) {
+			if (args[0].equals("reload")) {
+				loadConfiguration();
+				Messages.success(sender, Messages.PREFIX, "Configuration reloaded.");
+				return true;
+			} else if (args[0].equals("save")) {
+				saveConfiguration();
+				Messages.success(sender, Messages.PREFIX, "Configuration saved.");
+				return true;
+			}
+		} else if (args.length == 2) {
+			if (args[0].equals("setspawn")) {
+				String teamId = args[1];
+				Team team = getTeamManager().getTeam(teamId);
+				if (team == null) {
+					Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
+				} else if (sender instanceof Player) {
+					Messages.success(sender, Messages.PREFIX, team.getName() + " spawn set.");
+					team.setSpawn(((Player) sender).getLocation());
+				} else {
+					Messages.failure(sender, Messages.PREFIX, teamId + " You need to be in game to set team spawns.");
+				}
+				return true;
+			} else if (args[0].equals("flag") && args[1].equals("list")) {
+				for (Team team : getTeamManager()) {
+					StringBuilder message = new StringBuilder();
+					message.append(team.getName()).append(' ').append("flags: ");
+					for (Flag flag : team.getFlags()) {
+						message.append(flag.getId()).append(" \"").append(flag.getName());
+						message.append("\" @ (").append(flag.getLocation().getBlockX()).append(',');
+						message.append(',').append(flag.getLocation().getBlockY());
+						message.append(',').append(flag.getLocation().getBlockZ()).append(") ");
+					}
+					Messages.success(sender, Messages.PREFIX, message.toString());
+				}
+				return true;
+			} else if (args[0].equals("buff") && args[1].equals("list")) {
+				StringBuilder message = new StringBuilder();
+				message.append("Team buffs: ");
+				for (TeamBuff teamBuff : getBuffManager()) {
+					message.append(teamBuff.getId()).append(" \"").append(teamBuff.getName());
+					message.append("\" @ (").append(teamBuff.getLocation().getBlockX()).append(',');
+					message.append(',').append(teamBuff.getLocation().getBlockY());
+					message.append(',').append(teamBuff.getLocation().getBlockZ()).append(") ");
+				}
+				Messages.success(sender, Messages.PREFIX, message.toString());
+				return true;
+			}
+		} else if (args.length == 3) {
+			if (args[0].equals("flag") && args[1].equals("set")) {
+
+				return true;
+			} else if (args[0].equals("buff") && args[1].equals("set")) {
+
+				return true;
+			}
 		}
 
 		return false;
+	} // handleCutePvPCommand
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Load all configuration.
+	 */
+	protected void loadConfiguration() {
+		getTeamManager().load();
+		getBuffManager().load();
+
+		_flagReturnTicks = getConfig().getInt("misc.flag_return_ticks", 5 * ONE_MINUTE_TICKS);
+		_teamBuffTicks = getConfig().getInt("misc.team_buff_ticks", 30 * ONE_MINUTE_TICKS);
 	}
-}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Save all configuration.
+	 */
+	protected void saveConfiguration() {
+		getTeamManager().save();
+		getBuffManager().save();
+
+		getConfig().set("misc.flag_return_ticks", _flagReturnTicks);
+		getConfig().set("misc.team_buff_ticks", _teamBuffTicks);
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Reference to the WorldGuard plugin.
+	 */
+	private WorldGuardPlugin _worldGuard = null;
+
+	/**
+	 * Event listener.
+	 */
+	private CutePVPListener _listener = new CutePVPListener(this);
+
+	/**
+	 * The {@link TeamManager}.
+	 */
+	private TeamManager _teamManager = new TeamManager(this);
+
+	/**
+	 * The {@link BuffManager}.
+	 */
+	private BuffManager _buffManager = new BuffManager(this);
+
+	/**
+	 * Number of ticks before a dropped flag is automatically returned.
+	 */
+	int _flagReturnTicks;
+
+	/**
+	 * The total number of ticks from the time a team buff is claimed to when it
+	 * expires.
+	 */
+	int _teamBuffTicks;
+} // class CutePVP

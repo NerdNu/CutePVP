@@ -1,56 +1,55 @@
 name: CutePVP
 main: com.c45y.CutePVP.CutePVP
-version: 1.1
+version: 2.0
 softdepend: [WorldGuard]
 
 permissions:
-    CutePVP.mod:
-        description: asdf
-        default: op
-    CutePVP.user:
-        description: a user
-        default: true
-    CutePVP.admin:
-        description: admin
-        default: op
+  CutePVP.admin:
+    description: Admin with access to all CutePVP commands, not allocated to teams.  A strict superset of the CutePVP.mod permission.
+    default: op
+    children:
+      CutePVP.mod: true
+#      Disabled so that staff can play-test.      
+#      CutePVP.exempt: true
+  CutePVP.mod:
+    description: Moderator, not allocated to teams. Can see all team chats.
+    default: op
+#    Disabled so that staff can play-test.      
+#    children:
+#      CutePVP.exempt: true
+  CutePVP.user:
+    description: An ordinary player, allocated to a team.
+    default: true
+  CutePVP.exempt:
+    description: Any player with this permission is not allocated to a team.
 commands:
-  asdf:
-    description: set config things
-    permission: CutePVP.mod
+  cutepvp:
+    description: Administrative commands.
+    permission: CutePVP.admin
     usage: |
-           /asdf: set config things
+           /cutepvp [subcommands]
   g:
     description: Global chat
     permission: CutePVP.user
     usage: |
            /g [message]
-  fpos:
-    description: enter set flag pos mode
-    permission: CutePVP.mod
-    usage: |
-           /fpos <red|blue|yellow|green>
-  cutepvp:
-    description: cutepvp stuff
-    permission: CutePVP.admin
-    usage: |
-           /cutepvp [stuff]
-  list:
-    description: lists teams
+  teams:
+    description: Lists teams.
     permissions: CutePVP.user
     usage: |
-           /list
+           /teams
   score:
-    description: teams score
+    description: Shows the current scores.
     permissions: CutePVP.user
     usage: |
            /score
   drop:
-    description: drop flag
+    description: Drops the flag, if held.
     permissions: CutePVP.user
     usage: |
            /drop
   flag:
-    description: displays flag location
+    description: Displays the location of the nearest flag owned by your team.
     permissions: CutePVP.user
     usage: |
            /flag

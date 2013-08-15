@@ -1,48 +1,92 @@
-spawn:
-  all:
-    x: 0.0
-    y: 4.0
-    z: 0.0
+misc:
+  flag_return_ticks: 6000
+  team_buff_ticks: 36000
+
+buffs:
+  team:
+    NE:
+      name: "North-East"
+      location:
+        x: 200
+        y: 64
+        z: 200
+        world: world
+      potions:
+        regeneration:
+          amplifier: 0  
+          duration: 600
+    SW:
+      name: "South-West"
+      location:
+        x: 300
+        y: 64
+        z: 300
+        world: world
+      potions:
+        speed:
+          amplifier: 1
+          duration: 600
+  friend:
+    damage_resistance:
+      amplifier: 0
+      duration: 60
+  enemy:
+    wither:
+      amplifier: 0
+      duration: 60
+  block:
+    
+  
+teams:
   red:
-    x: 100.0
-    y: 6.0
-    z: 100.0
+    name: Red Team
+    chat_color: red
+    material: wool
+    data: 14
+    regions: [red_base]
+    score:
+    spawn:
+      x: 100
+      y: 64
+      z: 100
+      pitch: 0
+      yaw: 0
+      world: world
+    flags:
+      nw:
+        description: "north-west" 
+        home: 
+          x: 50
+          y: 64
+          z: 50
+        current:
+          x: -20
+          y: 80
+          z: -30
+    members:
   blue:
-    x: 100.0
-    y: 3.0
-    z: -100.0
-  yellow:
-    x: -100.0
-    y: 4.0
-    z: -100.0
-  green:
-    x: -100.0
-    y: 4.0
-    z: 100.0
-block:
-  buff:
-    x: 0.0
-    y: 40.0
-    z: 0.0
-ctf:
-  red:
-    curr: {}
-  blue:
-    curr: {}
-  yellow:
-    curr: {}
-  green:
-    curr: {}
-kills:
-  red: 0
-  blue: 0
-  yellow: 0
-  green: 0
-base:
-  protection:
-    radius: 50
-count:
-  red: 0
-  blue: 0
-  yellow: 0
-  green: 0
+    name: Blue Team
+    chat_color: aqua
+    material: wool
+    data: 11
+    regions: [blue_base]
+    score:
+    spawn:
+      x: 100
+      y: 64
+      z: 100
+      pitch: 0
+      yaw: 0
+      world: world
+    flags:
+      nw:
+        description: "north-west" 
+        home: 
+          x: 50
+          y: 64
+          z: 50
+        current:
+          x: -20
+          y: 80
+          z: -30
+    members:

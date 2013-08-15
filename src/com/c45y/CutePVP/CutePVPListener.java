@@ -1,11 +1,11 @@
 package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
-import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -18,242 +18,359 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerKickEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
+import com.c45y.CutePVP.buff.TeamBuff;
+
+// ----------------------------------------------------------------------------
+/**
+ * Event listener implementation.
+ * 
+ * The synchronous PlayerChatEvent is deprecated but it's just so much easier to
+ * handle that way.
+ */
 @SuppressWarnings("deprecation")
 public class CutePVPListener implements Listener {
-	public final CutePVP plugin;
-
-	public CutePVPListener(CutePVP instance) {
-		plugin = instance;
+	// ------------------------------------------------------------------------
+	/**
+	 * Constructor.
+	 * 
+	 * @param plugin the plugin.
+	 */
+	public CutePVPListener(CutePVP plugin) {
+		_plugin = plugin;
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Cancel attempts to take off the woolen helmet.
+	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onInventoryClick(InventoryClickEvent event) {
-		if (plugin.tm.staffTeam.inTeam(event.getWhoClicked().getName())) {
-			return;
-		}
-		if (event.getSlot() == 39 /* Helmet slot */) {
+		Player player = (Player) event.getWhoClicked();
+		if (!_plugin.getTeamManager().isExempted(player) && event.getSlot() == 39) {
 			event.setCancelled(true);
 		}
-		;
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Respawn players in their team spawn.
+	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		Team playerTeam = plugin.tm.getTeamMemberOf(event.getPlayer().getName());
-		playerTeam.setHelmet(event.getPlayer());
-		event.setRespawnLocation(playerTeam.getTeamSpawn());
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(event.getPlayer());
+		if (teamPlayer != null) {
+			teamPlayer.setHelmet();
+			event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
+		}
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * On join, allocate players to a team if not exempted.
+	 */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerJoin(PlayerJoinEvent event) {
+		TeamManager tm = _plugin.getTeamManager();
 		Player player = event.getPlayer();
-		Team playerTeam = plugin.tm.getTeamMemberOf(player.getName());
-		if (playerTeam == null || !player.hasPlayedBefore()) {
-			plugin.tm.onFirstJoin(player.getName());
-			playerTeam = plugin.tm.getTeamMemberOf(player.getName());
+		if (player.hasPermission(Permissions.MOD)) {
+			tm.onStaffJoin(player);
 		}
-		player.setDisplayName(playerTeam.encodeTeamColor(player.getName()));
-		playerTeam.setHelmet(event.getPlayer());
+		if (tm.isExempted(player)) {
+			return;
+		}
+		
+		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
+		if (teamPlayer == null) {
+			// We don't care whether they have played before or not. If not
+			// exempted, allocate to a team now.
+			tm.onFirstJoin(player);
+			teamPlayer = tm.getTeamPlayer(player);
+		}
+
+		player.setDisplayName(teamPlayer.getTeam().encodeTeamColor(player.getName()));
+		teamPlayer.setHelmet();
 		event.setJoinMessage(player.getDisplayName() + " joined the game.");
-		plugin.savePlayers();
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * When leaving, show the (colorful) display name in the leave message.
+	 * 
+	 * Drop the flag if the player is carrying it.
+	 */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerQuit(PlayerQuitEvent event) {
 		Player player = event.getPlayer();
 		event.setQuitMessage(player.getDisplayName() + " left the game.");
+
+		TeamManager tm = _plugin.getTeamManager();
+		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
+		if (teamPlayer != null && teamPlayer.isCarryingFlag()) {
+			teamPlayer.getCarriedFlag().drop();
+		}
+		tm.onPlayerQuit(player);
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * When the player steps on a block with special properties, apply the
+	 * corresponding buff.
+	 */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerMove(PlayerMoveEvent event) {
 		Player player = event.getPlayer();
-		Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-		if (plugin.tm.shouldTakeDamageFromBlock(block, player.getName())) {
-			player.damage(1);
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
+		if (teamPlayer == null) {
+			return;
 		}
+
+		Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
+		_plugin.getBuffManager().applyFloorBuff(block, teamPlayer);
+
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Bar held and projectile weapon PvP damage in player's own team's base.
+	 * 
+	 * Also block damage from own team members, and between participants and
+	 * non-participants (both cases).
+	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onEntityDamageByEntity(EntityDamageByEntityEvent event) {
 		if (!(event.getEntity() instanceof Player)) {
 			return;
 		}
-		if ((event.getDamager() instanceof Player)) {
-			Player attacker = (Player) event.getDamager();
-			Player player = (Player) event.getEntity();
-			Team attackerTeam = plugin.tm.getTeamMemberOf(attacker.getName());
-			if (attackerTeam.inTeam(player.getName())) {
-				event.setCancelled(true);
-			} else if (plugin.tm.inRangeOfEnemyTeamSpawn(attacker)) {
-				attacker.sendMessage(ChatColor.DARK_RED + "You cannot attack within another teams base");
-				event.setCancelled(true);
+
+		if (event.getDamager() instanceof Player) {
+			TeamPlayer attacker = _plugin.getTeamManager().getTeamPlayer((Player) event.getDamager());
+			TeamPlayer victim = _plugin.getTeamManager().getTeamPlayer((Player) event.getEntity());
+			handlePvPDamage(event, attacker, victim);
+
+		} else if (event.getDamager() instanceof Projectile) {
+			Projectile projectile = (Projectile) event.getDamager();
+			if (projectile.getShooter() instanceof Player) {
+				TeamPlayer attacker = _plugin.getTeamManager().getTeamPlayer((Player) projectile.getShooter());
+				TeamPlayer victim = _plugin.getTeamManager().getTeamPlayer((Player) event.getEntity());
+				handlePvPDamage(event, attacker, victim);
 			}
-		} else if (event.getDamager() instanceof Arrow) {
-			Arrow arrow = (Arrow) event.getDamager();
-			if (arrow.getShooter() instanceof Player) {
-				Player player = (Player) event.getEntity();
-				Player shooter = (Player) arrow.getShooter();
-				Team attackerTeam = plugin.tm.getTeamMemberOf(shooter.getName());
-				if (attackerTeam.inTeam(player.getName())) {
-					event.setCancelled(true);
-				} else if (plugin.tm.inRangeOfEnemyTeamSpawn(shooter)) {
-					shooter.sendMessage(ChatColor.DARK_RED + "You cannot attack within another teams base");
-					event.setCancelled(true);
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Handle EntityDamageByEntityEvent by checking for PvP and disallowing PvP
+	 * damage when:
+	 * 
+	 * <ul>
+	 * <li>Between participants and non-participants, or</li>
+	 * <li>Between participants on the same team, or</li>
+	 * <li>When the victim is in his team's base.</li>
+	 * </ul>
+	 */
+	protected void handlePvPDamage(EntityDamageByEntityEvent event, TeamPlayer attacker, TeamPlayer victim) {
+		if (attacker == null || victim == null) {
+			// One or other player is not a participant. No damage dealt.
+			event.setCancelled(true);
+		} else if (attacker.getTeam() == victim.getTeam()) {
+			// Both players on the same team. No damage dealt.
+			event.setCancelled(true);
+		} else if (victim.getTeam().inTeamBase(victim.getPlayer().getLocation())) {
+			attacker.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot attack within another team's base.");
+			event.setCancelled(true);
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Handle flag steals, captures (scoring) and returns, which all require
+	 * that a player right clicks on a flag.
+	 * 
+	 * <ul>
+	 * <li>To steal a flag, a player must right click on the opposing team's
+	 * flag (whether dropped or at home).</li>
+	 * <li>To capture a flag, a player must be carrying an opposing team's flag
+	 * when he clicks on his own flag at home.</li>
+	 * <li>To return a flag, a player must click on his own flag when it is
+	 * dropped (not at home).</li>
+	 * </ul>
+	 * 
+	 * @param event the event.
+	 */
+	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	public void onPlayerInteract(PlayerInteractEvent event) {
+		Player player = event.getPlayer();
+		TeamManager tm = _plugin.getTeamManager();
+		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
+		if (teamPlayer == null || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+			return;
+		}
+
+		// Is the clicked block a team buff?
+		Block clickedBlock = event.getClickedBlock();
+		TeamBuff teamBuff = _plugin.getBuffManager().getTeamBuffFromBlock(clickedBlock);
+		if (teamBuff != null) {
+			teamBuff.claimBy(teamPlayer);
+			return;
+		}
+
+		// Is it a team block and therefore possibly a flag?
+		Team clickedBlockTeam = tm.getTeamFromBlock(clickedBlock);
+		if (clickedBlockTeam != null) {
+			// Block is of the same material as a team block. Is it a flag?
+			Flag flag = clickedBlockTeam.getFlagFromBlock(clickedBlock);
+			if (flag != null) {
+				// Player's own team flag?
+				if (clickedBlockTeam == teamPlayer.getTeam()) {
+					// Returning a dropped flag?
+					if (flag.isDropped()) {
+						flag.doReturn();
+						teamPlayer.getScore().returns.increment();
+						teamPlayer.getTeam().getScore().returns.increment();
+						Messages.broadcast(player.getDisplayName() + " returned " +
+											teamPlayer.getTeam().getName() + "'s flag.");
+					} else if (flag.isHome() && teamPlayer.isCarryingFlag()) {
+						// Capturing an opposition team's flag.
+						teamPlayer.getScore().captures.increment();
+						teamPlayer.getTeam().getScore().captures.increment();
+
+						Flag carriedFlag = teamPlayer.getCarriedFlag();
+						carriedFlag.doReturn();
+						Messages.broadcast(player.getDisplayName() + " captured " +
+											carriedFlag.getTeam().getName() + "'s " + carriedFlag.getName() + " flag.");
+					}
+				} else {
+					// An opposition team flag.
+					if (teamPlayer.isCarryingFlag()) {
+						player.sendMessage(ChatColor.RED + "You can only carry one flag at a time.");
+					} else {
+						flag.stealBy(teamPlayer);
+						teamPlayer.getScore().steals.increment();
+						teamPlayer.getTeam().getScore().steals.increment();
+						Messages.broadcast(player.getDisplayName() + " has stolen " + clickedBlockTeam.getName() + "'s flag.");
+					}
 				}
 			}
 		}
-	}
+	} // onPlayerInteract
 
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerInteract(PlayerInteractEvent event) {
-		if (plugin.tm.staffTeam.inTeam(event.getPlayer().getName()) || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
-			return;
-		}
-
-		Player player = event.getPlayer();
-		Block b = event.getClickedBlock();
-		if (b.getType() != Material.WOOL) {
-			return;
-		}
-		if (b.getData() != (byte) 14 && b.getData() != (byte) 3 && b.getData() != (byte) 4 && b.getData() != (byte) 5) {
-			return;
-		}
-
-		Team woolTeam = plugin.tm.getTeamFromWool(b.getData());
-		Team attacker = plugin.tm.getTeamMemberOf(event.getPlayer().getName());
-		Team carrier = plugin.tm.isFlagBearer(event.getPlayer());
-
-		// Opposing team
-		if (carrier != null) { // Someone currently has the flag, they must be
-								// placing it.
-			// plugin.getServer().broadcastMessage("flag holder not null");
-			if (attacker.isTeamFlagRegion(b.getLocation())) { // Placing block
-																// in own base,
-																// flag cap
-				attacker.addTeamScore(1); // Increment the team score
-				attacker.addPlayerScore(player.getName(), 10);
-				carrier.respawnTeamFlag();// Reset the team flag
-				carrier.removeCarrier(); // They have placed the flag, nobody is
-											// in posession.
-				plugin.getServer().broadcastMessage(player.getDisplayName() + " captured the " + carrier.getTeamName() + " flag.");
-				plugin.saveConfig();
-				return;
-			}
-		}
-
-		// Own team
-		if (attacker == woolTeam && woolTeam.isTeamFlag(b.getLocation())) { // Returning
-																			// a
-																			// dropped
-																			// flag
-			if (woolTeam.isTeamFlag(woolTeam.getTeamFlagHome())) { // Clicking a
-																	// returned
-																	// flag is
-																	// pointless
-				return;
-			}
-			plugin.getServer().broadcastMessage(player.getDisplayName() + " returned the " + woolTeam.getTeamName() + " flag.");
-			woolTeam.respawnTeamFlag();
-			b.setType(Material.AIR);
-			plugin.saveConfig();
-			return;
-		}
-
-		if (plugin.tm.isFlagBlock(b.getLocation()) != null && carrier == null) {
-			woolTeam.setCarrier(player);
-			b.setType(Material.AIR);
-			plugin.getServer().broadcastMessage(player.getDisplayName() + " has stolen the " + woolTeam.getTeamName() + " flag.");
-			plugin.saveConfig();
-			return;
-		}
-		plugin.saveConfig();
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerDisconnect(PlayerQuitEvent event) {
-		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
-		if (flagOf != null) {
-			flagOf.dropTeamFlag(event.getPlayer().getLocation().getBlock().getLocation());
-		}
-	}
-
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerKick(PlayerKickEvent event) {
-		Team flagOf = plugin.tm.isFlagBearer(event.getPlayer());
-		if (flagOf != null) {
-			flagOf.dropTeamFlag(event.getPlayer().getLocation().getBlock().getLocation());
-		}
-	}
-
+	// ------------------------------------------------------------------------
+	/**
+	 * When a player dies:
+	 * 
+	 * <ul>
+	 * <li>Drop the flag if he's carrying it.</li>
+	 * <li>Increment his and his team's kill scores if they are not on the same
+	 * team. Players can't hurt their team mates, so the check is redundant, but
+	 * cheap and future-proof.</li>
+	 * </ul>
+	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerDeath(PlayerDeathEvent event) {
-		Team flagOf = plugin.tm.isFlagBearer(event.getEntity());
-		if (flagOf != null) {
-			flagOf.dropTeamFlag(event.getEntity().getLocation().getBlock().getLocation());
-		}
+		Player player = event.getEntity();
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
+		if (teamPlayer != null) {
+			if (teamPlayer.isCarryingFlag()) {
+				teamPlayer.getCarriedFlag().drop();
+			}
 
-		if (event.getEntity().getKiller() != null) {
-			String killer = event.getEntity().getKiller().getName();
-			plugin.tm.getTeamMemberOf(killer).addTeamKill();
-			plugin.tm.getTeamMemberOf(killer).addPlayerScore(killer, 1);
+			Player killer = player.getKiller();
+			TeamPlayer teamKiller = _plugin.getTeamManager().getTeamPlayer(killer);
+			if (teamKiller != null && teamPlayer.getTeam() != teamKiller.getTeam()) {
+				teamKiller.getTeam().getScore().kills.increment();
+				teamKiller.getScore().kills.increment();
+			}
 		}
 	}
 
+	// ------------------------------------------------------------------------
+	/**
+	 * Handle chat by cancelling the normal event and directly messaging players
+	 * with team colors inserted.
+	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerChat(PlayerChatEvent event) {
-		Player player = event.getPlayer();
-		Team playerTeam = plugin.tm.getTeamMemberOf(player.getName());
-		plugin.getLogger().info(player.getName() + ": " + ChatColor.stripColor(event.getMessage()));
 		event.setCancelled(true);
-		playerTeam.message("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage()));
-		if (playerTeam != plugin.tm.staffTeam) {
-			plugin.tm.staffTeam.message("<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage()));
+		Player player = event.getPlayer();
+		_plugin.getLogger().info(player.getName() + ": " + ChatColor.stripColor(event.getMessage()));
+
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
+		String message = "<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage());
+		if (teamPlayer != null) {
+			// A match participant.
+			Team team = teamPlayer.getTeam();
+			team.message(message);
+		}
+
+		// Copy the message to staff (all non-participants).
+		for (Player staff : _plugin.getTeamManager().getOnlineStaff()) {
+			staff.sendMessage(message);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	// ------------------------------------------------------------------------
+	/**
+	 * Allow block placement per
+	 * {@link CutePVPListener#allowBlockEdit(Player, Location)}.
+	 */
+	@EventHandler(ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event) {
-		if (plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
-			return;
-		}
-
-		if (plugin.tm.inOwnTeamBase(event.getPlayer())) {
-			return;
-		}
-
-		Team team = plugin.tm.isFlagBlock(event.getBlock().getLocation());
-		if (team != null) {
-			event.setCancelled(true);
-		}
-		if (plugin.tm.inRangeOfEnemyTeamSpawn(event.getPlayer())) {
-			event.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
+		if (!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
 			event.setCancelled(true);
 		}
 	}
 
-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	// ------------------------------------------------------------------------
+	/**
+	 * Allow block breaks per
+	 * {@link CutePVPListener#allowBlockEdit(Player, Location)}.
+	 */
+	@EventHandler(ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event) {
-		if (plugin.tm.staffTeam.inTeam(event.getPlayer().getName())) {
-			return;
-		}
-
-		if (plugin.tm.inOwnTeamBase(event.getPlayer())) {
-			return;
-		}
-
-		Team team = plugin.tm.isFlagBlock(event.getBlock().getLocation());
-		if (team != null) {
-			event.setCancelled(true);
-		}
-		// If they're in an enemy base...
-		if (plugin.tm.inRangeOfEnemyTeamSpawn(event.getPlayer())) {
-			event.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
+		if (!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
 			event.setCancelled(true);
 		}
 	}
-}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return true if attempted edits should be allowed.
+	 * 
+	 * <ul>
+	 * <li>Staff can edit blocks anywhere.</li>
+	 * <li>Players in their own base regions can edit, except for the flag
+	 * blocks.</li>
+	 * <li>Players in the base regions of other teams cannot edit any blocks.</li>
+	 * </ul>
+	 * 
+	 * @param player the player doing the edit.
+	 * @param location the location of the edited block.
+	 * @return true if attempted edits should be allowed.
+	 */
+	protected boolean allowBlockEdit(Player player, Location location) {
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
+		if (teamPlayer == null) {
+			// Staff member.
+			return true;
+		}
+
+		if (teamPlayer.getTeam().inTeamBase(location)) {
+			return !teamPlayer.getTeam().isFlagHomeLocation(location);
+		} else if (_plugin.getTeamManager().inEnemyTeamBase(player)) {
+			player.sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Owning plugin.
+	 */
+	private final CutePVP _plugin;
+} // CutePVPListener

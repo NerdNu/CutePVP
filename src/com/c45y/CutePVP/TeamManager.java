@@ -1,263 +1,343 @@
 package com.c45y.CutePVP;
 
-import org.bukkit.ChatColor;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.logging.Logger;
+
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-public class TeamManager {
-	private CutePVP cp;
-	public Team staffTeam;
-	public Team redTeam;
-	public Team blueTeam;
-	public Team yellowTeam;
-	public Team greenTeam;
+import com.c45y.CutePVP.util.WeightedSelection;
 
-	public TeamManager(CutePVP cutePVP) {
-		cp = cutePVP;
-		staffTeam = new Team(cp, "staff", ChatColor.WHITE, (byte) 15);
-		redTeam = new Team(cp, "red", ChatColor.RED, (byte) 14);
-		blueTeam = new Team(cp, "blue", ChatColor.BLUE, (byte) 3);
-		yellowTeam = new Team(cp, "yellow", ChatColor.YELLOW, (byte) 4);
-		greenTeam = new Team(cp, "green", ChatColor.GREEN, (byte) 5);
+// ----------------------------------------------------------------------------
+/**
+ * Manages the allocation of players to teams.
+ */
+public class TeamManager implements Iterable<Team> {
+	// ------------------------------------------------------------------------
+	/**
+	 * Constructor.
+	 * 
+	 * @param plugin the owning plugin.
+	 */
+	public TeamManager(CutePVP plugin) {
+		_plugin = plugin;
 	}
 
-	public void onFirstJoin(String player) {
-		/* Throw all staff into one team, makes it easy to track them */
-		if (cp.getServer().getPlayer(player).hasPermission("CutePVP.mod")) {
-			staffTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(staffTeam.encodeTeamColor("Welcome to the STAFF team!"));
-			return;
+	// ------------------------------------------------------------------------
+	/**
+	 * Load the Teams and their membership from the configuration.
+	 */
+	public void load() {
+		_teams.clear();
+		_players.clear();
+		Logger logger = _plugin.getLogger();
+
+		// Load the teams.
+		ConfigurationSection teams = _plugin.getConfig().getConfigurationSection("teams");
+		for (String teamId : teams.getKeys(false)) {
+			ConfigurationSection teamSection = teams.getConfigurationSection(teamId);
+			Team team = new Team(_plugin);
+			team.load(teamSection);
+			_teams.put(teamId, team);
 		}
 
-		/* If not a staff member decide what team to put them in */
+		// Load the players.
+		ConfigurationSection players = _plugin.getConfig().getConfigurationSection("players");
+		for (String playerName : players.getKeys(false)) {
+			ConfigurationSection playerSection = players.getConfigurationSection(playerName);
+			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
+			if (offlinePlayer == null) {
+				logger.severe("Unknown player: " + playerName);
+				continue;
+			}
+			String teamId = playerSection.getString("team");
+			Team team = getTeam(teamId);
+			if (team == null) {
+				logger.severe("Player " + playerName + " assigned to unknown team " + teamId);
+				continue;
+			}
 
-		int value = decideTeam(player);
-		if (value == 0) {
-			redTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(redTeam.encodeTeamColor("Welcome to the RED team!"));
-			return;
-		}
-		if (value == 1) {
-			blueTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(blueTeam.encodeTeamColor("Welcome to the BLUE team!"));
-			return;
-		}
-		if (value == 2) {
-			yellowTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(yellowTeam.encodeTeamColor("Welcome to the YELLOW team!"));
-			return;
-		}
-		if (value == 3) {
-			greenTeam.addPlayer(player);
-			cp.getServer().getPlayer(player).sendMessage(greenTeam.encodeTeamColor("Welcome to the GREEN team!"));
-			return;
-		}
-	}
+			TeamPlayer teamPlayer = new TeamPlayer(offlinePlayer, team);
+			_players.put(offlinePlayer, teamPlayer);
+			teamPlayer.getScore().load(playerSection);
+		} // for
+	} // load
 
-	public int decideTeam(String inpt) {
-		int redSize = redTeam.getTeamMembersOnline().size();
-		int blueSize = blueTeam.getTeamMembersOnline().size();
-		int yellowSize = yellowTeam.getTeamMembersOnline().size();
-		int greenSize = greenTeam.getTeamMembersOnline().size();
-		int mostPlayers = Math.max(Math.max(redSize, blueSize), Math.max(yellowSize, greenSize));
-		int sumDelta = mostPlayers - redSize + mostPlayers - blueSize + mostPlayers - yellowSize + mostPlayers - greenSize;
-		int[] weights = { 25, 25, 25, 25 };
-		if (sumDelta > 0) {
-			weights[0] = (int) (((float) (mostPlayers - redSize) / sumDelta) * 100.0);
-			weights[1] = (int) (((float) (mostPlayers - blueSize) / sumDelta) * 100.0);
-			weights[2] = (int) (((float) (mostPlayers - yellowSize) / sumDelta) * 100.0);
-			weights[3] = (int) (((float) (mostPlayers - greenSize) / sumDelta) * 100.0);
-		}
-		int random = 0 + (int) (Math.random() * ((100 - 0) + 1));
-
-		int team = random / 25;
-		if (0 <= random && random <= weights[0]) {
-			team = 0;
-		}
-		if (weights[0] < random && random <= (weights[0] + weights[1])) {
-			team = 1;
-		}
-		if ((weights[0] + weights[1]) < random && random <= (weights[0] + weights[1] + weights[2])) {
-			team = 2;
-		}
-		if ((weights[0] + weights[1] + weights[2]) < random && random <= 100) {
-			team = 3;
+	// ------------------------------------------------------------------------
+	/**
+	 * Save the Teams and their membership to the configuration.
+	 */
+	public void save() {
+		// Save the teams. This is modification of a pre-existing section.
+		ConfigurationSection teams = _plugin.getConfig().getConfigurationSection("teams");
+		for (String teamId : _teams.keySet()) {
+			ConfigurationSection teamSection = teams.getConfigurationSection(teamId);
+			Team team = getTeam(teamId);
+			team.save(teamSection);
 		}
 
-		cp.getLogger().info(
-			"Player=" + inpt + " Team=" + team + " Random=" + random + " weights=" + weights[0] + "," + weights[1] + "," + weights[2] + ","
-							+ weights[3] + " Red=" + redSize + " Blue=" + blueSize + " Yellow=" + yellowSize + " Green=" + greenSize);
-		return team;
-	}
-
-	public void messageTeam(String s1, String m1) {
-		/* Make sure staff receive all messages. */
-		staffTeam.message(m1);
-		if (redTeam.getTeamName().equals(s1)) {
-			redTeam.message(m1);
-			return;
-		}
-		if (blueTeam.getTeamName().equals(s1)) {
-			blueTeam.message(m1);
-			return;
-		}
-		if (yellowTeam.getTeamName().equals(s1)) {
-			yellowTeam.message(m1);
-			return;
-		}
-		if (greenTeam.getTeamName().equals(s1)) {
-			greenTeam.message(m1);
-			return;
+		// Save the players. A new section is created for each player.
+		ConfigurationSection players = _plugin.getConfig().getConfigurationSection("players");
+		for (OfflinePlayer offlinePlayer : _players.keySet()) {
+			ConfigurationSection playerSection = players.createSection(offlinePlayer.getName());
+			TeamPlayer teamPlayer = getTeamPlayer(offlinePlayer);
+			playerSection.set("team", teamPlayer.getTeam().getId());
+			teamPlayer.getScore().save(playerSection);
 		}
 	}
 
-	public Team getTeamMemberOf(String player) {
-		if (staffTeam.inTeam(player)) {
-			return staffTeam;
-		}
-		if (redTeam.inTeam(player)) {
-			return redTeam;
-		}
-		if (blueTeam.inTeam(player)) {
-			return blueTeam;
-		}
-		if (yellowTeam.inTeam(player)) {
-			return yellowTeam;
-		}
-		if (greenTeam.inTeam(player)) {
-			return greenTeam;
+	// ------------------------------------------------------------------------
+	/**
+	 * Return an iterator over all Teams.
+	 * 
+	 * @return an iterator over all Teams.
+	 */
+	public Iterator<Team> iterator() {
+		return _teams.values().iterator();
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the Team with the specified ID.
+	 * 
+	 * @return the Team with the specified ID.
+	 */
+	public Team getTeam(String id) {
+		return _teams.get(id);
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the Team whose team block matches the material and data value of
+	 * the specified Block, or null if no team matches.
+	 * 
+	 * @param block the Block.
+	 * @return the Team whose team block matches the material and data value of
+	 *         the specified Block, or null if no team matches.
+	 */
+	public Team getTeamFromBlock(Block block) {
+		for (Team team : _teams.values()) {
+			if (team.isTeamBlock(block)) {
+				return team;
+			}
 		}
 		return null;
 	}
 
-	public Team getTeamFromWool(byte data) {
-		if (redTeam.getTeamWoolData() == data) {
-			return redTeam;
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the {@link TeamPlayer} representing the specified OfflinePlayer, 
+	 * or create a new instance if it does not exist.
+	 *  
+	 * @param offlinePlayer the player, whether online or offline.
+	 * @param team the player's {@link Team}.
+	 * @return the {@link TeamPlayer} representing the specified OfflinePlayer, 
+	 * or create a new instance if it does not exist. 
+	 */
+	public TeamPlayer createTeamPlayer(OfflinePlayer offlinePlayer, Team team) {
+		TeamPlayer teamPlayer = getTeamPlayer(offlinePlayer);
+		if (teamPlayer == null) {
+			teamPlayer = new TeamPlayer(offlinePlayer, team);
+			_players.put(offlinePlayer, teamPlayer);
+			team.addMember(offlinePlayer);
 		}
-		if (blueTeam.getTeamWoolData() == data) {
-			return blueTeam;
-		}
-		if (yellowTeam.getTeamWoolData() == data) {
-			return yellowTeam;
-		}
-		if (greenTeam.getTeamWoolData() == data) {
-			return greenTeam;
-		}
-		return null;
+		return teamPlayer;
 	}
 
-	public boolean inEnemyTeamSpawn(Player player) {
-		Location playerLocation = player.getLocation();
-		Team playerTeam = getTeamMemberOf(player.getName());
-		if (playerTeam != redTeam) {
-			if (redTeam.inTeamSpawn(playerLocation)) {
-				return true;
-			}
-		}
-		if (playerTeam != blueTeam) {
-			if (blueTeam.inTeamSpawn(playerLocation)) {
-				return true;
-			}
-		}
-		if (playerTeam != yellowTeam) {
-			if (yellowTeam.inTeamSpawn(playerLocation)) {
-				return true;
-			}
-		}
-		if (playerTeam != greenTeam) {
-			if (greenTeam.inTeamSpawn(playerLocation)) {
-				return true;
-			}
-		}
-		return false;
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the {@link TeamPlayer} representing the specified OfflinePlayer,
+	 * or null if the player has no assigned {@link Team}.
+	 * 
+	 * @param offlinePlayer the player, whether online or offline.
+	 * @return the {@link TeamPlayer} representing the specified OfflinePlayer,
+	 *         or null if the player has no assigned {@link Team}.
+	 */
+	public TeamPlayer getTeamPlayer(OfflinePlayer offlinePlayer) {
+		return _players.get(offlinePlayer);
 	}
 
-	public boolean inRangeOfEnemyTeamSpawn(Player player) {
-		Location playerLocation = player.getLocation();
-		Team playerTeam = getTeamMemberOf(player.getName());
-		if (playerTeam != redTeam) {
-			if (redTeam.inTeamBase(playerLocation)) {
-				return true;
-			}
-		}
-		if (playerTeam != blueTeam) {
-			if (blueTeam.inTeamBase(playerLocation)) {
-				return true;
-			}
-		}
-		if (playerTeam != yellowTeam) {
-			if (yellowTeam.inTeamBase(playerLocation)) {
-				return true;
-			}
-		}
-		if (playerTeam != greenTeam) {
-			if (greenTeam.inTeamBase(playerLocation)) {
-				return true;
-			}
-		}
-		return false;
+	// ------------------------------------------------------------------------
+	/**
+	 * Return true if the player is exempt from allocation to a team.
+	 * 
+	 * Staff (admins and moderators in ModMode) inherit this permission via the
+	 * CutePVP.admin and CutePVP.mod permissions, respectively.
+	 * 
+	 * @return true if the player is exempt from allocation to a team.
+	 */
+	public boolean isExempted(Player player) {
+		return player.hasPermission(Permissions.EXEMPT);
 	}
 
-	public boolean inOwnTeamBase(Player player) {
-		Location playerLocation = player.getLocation();
-		Team playerTeam = getTeamMemberOf(player.getName());
-		if (redTeam.inTeamBase(playerLocation)) {
-			return playerTeam == redTeam;
+	// ------------------------------------------------------------------------
+	/**
+	 * Allocate non-staff to a team on first join.
+	 * 
+	 * @param player the joining player.
+	 */
+	public void onFirstJoin(Player player) {
+		Team team = decideTeam(player);
+		if (team != null) {
+			TeamPlayer teamPlayer = new TeamPlayer(player, team);
+			_players.put(player, teamPlayer);
+			team.addMember(player);
+			player.sendMessage(team.getTeamChatColor() + "Welcome to " + team.getName() + "!");
 		}
-		if (blueTeam.inTeamBase(playerLocation)) {
-			return playerTeam == blueTeam;
-		}
-		if (yellowTeam.inTeamBase(playerLocation)) {
-			return playerTeam == yellowTeam;
-		}
-		if (greenTeam.inTeamBase(playerLocation)) {
-			return playerTeam == greenTeam;
-		}
-		return false;
 	}
 
-	public Team isFlagBearer(Player player) {
-		if (redTeam.flagHolder == player) {
-			return redTeam;
-		}
-		if (blueTeam.flagHolder == player) {
-			return blueTeam;
-		}
-		if (yellowTeam.flagHolder == player) {
-			return yellowTeam;
-		}
-		if (greenTeam.flagHolder == player) {
-			return greenTeam;
-		}
-		return null;
-	}
-
-	public Team isFlagBlock(Location loc) {
-		if (redTeam.getTeamFlag().equals(loc)) {
-			return redTeam;
-		}
-		if (blueTeam.getTeamFlag().equals(loc)) {
-			return blueTeam;
-		}
-		if (yellowTeam.getTeamFlag().equals(loc)) {
-			return yellowTeam;
-		}
-		if (greenTeam.getTeamFlag().equals(loc)) {
-			return greenTeam;
-		}
-		return null;
-	}
-
-	public boolean shouldTakeDamageFromBlock(Block block, String player) {
-		if (block.getType() == Material.WOOL) {
-			if (block.getData() == 14 || block.getData() == 3 || block.getData() == 4 || block.getData() == 5) {
-				if (block.getData() != getTeamMemberOf(player).getTeamWoolData()) {
+	// ------------------------------------------------------------------------
+	/**
+	 * Return true if the Player is in an enemy team's base.
+	 * 
+	 * @param player the Player.
+	 * @return true if the Player is in an enemy team's base.
+	 */
+	public boolean inEnemyTeamBase(Player player) {
+		TeamPlayer teamPlayer = getTeamPlayer(player);
+		if (teamPlayer != null) {
+			Location playerLocation = player.getLocation();
+			for (Team otherTeam : _teams.values()) {
+				if (teamPlayer.getTeam() != otherTeam && otherTeam.inTeamBase(playerLocation)) {
 					return true;
 				}
 			}
 		}
 		return false;
 	}
-}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return true if the player is in his own Team's base.
+	 * 
+	 * TODO: eliminate this trivial method.
+	 * 
+	 * @param player the Player.
+	 * @return true if the player is in his own Team's base.
+	 */
+	public boolean inOwnTeamBase(Player player) {
+		TeamPlayer teamPlayer = getTeamPlayer(player);
+		return teamPlayer != null && teamPlayer.getTeam().inTeamBase(player.getLocation());
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Send a list of all members of each team to the player.
+	 * 
+	 * TODO: rename as sendTeamLists().
+	 * 
+	 * @param player the player issuing the list command.
+	 */
+	public void sendList(Player player) {
+		for (Team team : _teams.values()) {
+			StringBuilder message = new StringBuilder();
+			message.append(team.encodeTeamColor(team.getName()));
+			message.append(" [").append(team.getOnlineMembers().size());
+			message.append(" of ").append(team.getMembers().size()).append("]: ");
+			message.append(team.getOnlineList());
+			player.sendMessage(message.toString());
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Handle staff (non-participants) joining the server by adding the player
+	 * to the set of online staff.
+	 * 
+	 * @param player the staff member who joined.
+	 */
+	public void onStaffJoin(Player player) {
+		_staff.add(player);
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Handle players disconnecting.
+	 * 
+	 * If the player is staff, remove him from the set of online staff.
+	 * 
+	 * @param player the player who left.
+	 */
+	public void onPlayerQuit(Player player) {
+		_staff.remove(player);
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return an immutable view of the set of online staff.
+	 * 
+	 * @return an immutable view of the set of online staff.
+	 */
+	public Set<Player> getOnlineStaff() {
+		return Collections.unmodifiableSet(_staff);
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the Team to which the player should be assigned.
+	 * 
+	 * Consider both the total number of players in a team and the number
+	 * currently online when assigning selection probabilities.
+	 * 
+	 * @param player the player to add.
+	 * @return the Team to which the player should be assigned.
+	 */
+	protected Team decideTeam(Player player) {
+		if (isExempted(player)) {
+			return null;
+		}
+		HashMap<Team, Integer> weights = new HashMap<Team, Integer>();
+		int totalWeight = 0;
+		for (Team team : _teams.values()) {
+			// Yes, I know that getMembers() includes the online ones. :)
+			// The intent is that neither figure should dominate the decision.
+			int teamWeight = team.getOnlineMembers().size() + team.getMembers().size();
+			totalWeight += teamWeight;
+			weights.put(team, teamWeight);
+		}
+
+		WeightedSelection<Team> chooser = new WeightedSelection<Team>();
+		if (totalWeight == 0) {
+			// Selection weights are 0 when there are no players.
+			// Assign equal weights to all teams.
+			for (Team team : _teams.values()) {
+				chooser.addChoice(team, 1.0);
+			}
+		} else {
+			for (Team team : weights.keySet()) {
+				chooser.addChoice(team, totalWeight - weights.get(team));
+			}
+		}
+		return chooser.choose();
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * The owning plugin.
+	 */
+	private CutePVP _plugin;
+
+	/**
+	 * Map from Team.getId() to Team instance.
+	 */
+	private LinkedHashMap<String, Team> _teams = new LinkedHashMap<String, Team>();
+
+	/**
+	 * Map from OfflinePlayer to corresponding {@link TeamPlayer}.
+	 */
+	private HashMap<OfflinePlayer, TeamPlayer> _players = new HashMap<OfflinePlayer, TeamPlayer>();
+
+	/**
+	 * Online staff in sorted order.
+	 */
+	private TreeSet<Player> _staff = new TreeSet<Player>();
+} // class TeamManager
