@@ -1,14 +1,13 @@
 package com.c45y.CutePVP;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.logging.Logger;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
@@ -39,7 +38,7 @@ public class TeamManager implements Iterable<Team> {
 	public void load() {
 		_teams.clear();
 		_players.clear();
-		Logger logger = _plugin.getLogger();
+		_staff.clear();
 
 		// Load the teams.
 		ConfigurationSection teams = _plugin.getConfig().getConfigurationSection("teams");
@@ -49,27 +48,6 @@ public class TeamManager implements Iterable<Team> {
 			team.load(teamSection);
 			_teams.put(teamId, team);
 		}
-
-		// Load the players.
-		ConfigurationSection players = _plugin.getConfig().getConfigurationSection("players");
-		for (String playerName : players.getKeys(false)) {
-			ConfigurationSection playerSection = players.getConfigurationSection(playerName);
-			OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(playerName);
-			if (offlinePlayer == null) {
-				logger.severe("Unknown player: " + playerName);
-				continue;
-			}
-			String teamId = playerSection.getString("team");
-			Team team = getTeam(teamId);
-			if (team == null) {
-				logger.severe("Player " + playerName + " assigned to unknown team " + teamId);
-				continue;
-			}
-
-			TeamPlayer teamPlayer = new TeamPlayer(offlinePlayer, team);
-			_players.put(offlinePlayer, teamPlayer);
-			teamPlayer.getScore().load(playerSection);
-		} // for
 	} // load
 
 	// ------------------------------------------------------------------------
@@ -83,15 +61,6 @@ public class TeamManager implements Iterable<Team> {
 			ConfigurationSection teamSection = teams.getConfigurationSection(teamId);
 			Team team = getTeam(teamId);
 			team.save(teamSection);
-		}
-
-		// Save the players. A new section is created for each player.
-		ConfigurationSection players = _plugin.getConfig().getConfigurationSection("players");
-		for (OfflinePlayer offlinePlayer : _players.keySet()) {
-			ConfigurationSection playerSection = players.createSection(offlinePlayer.getName());
-			TeamPlayer teamPlayer = getTeamPlayer(offlinePlayer);
-			playerSection.set("team", teamPlayer.getTeam().getId());
-			teamPlayer.getScore().save(playerSection);
 		}
 	}
 
@@ -135,13 +104,13 @@ public class TeamManager implements Iterable<Team> {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Return the {@link TeamPlayer} representing the specified OfflinePlayer, 
+	 * Return the {@link TeamPlayer} representing the specified OfflinePlayer,
 	 * or create a new instance if it does not exist.
-	 *  
+	 * 
 	 * @param offlinePlayer the player, whether online or offline.
 	 * @param team the player's {@link Team}.
-	 * @return the {@link TeamPlayer} representing the specified OfflinePlayer, 
-	 * or create a new instance if it does not exist. 
+	 * @return the {@link TeamPlayer} representing the specified OfflinePlayer,
+	 *         or create a new instance if it does not exist.
 	 */
 	public TeamPlayer createTeamPlayer(OfflinePlayer offlinePlayer, Team team) {
 		TeamPlayer teamPlayer = getTeamPlayer(offlinePlayer);
@@ -188,10 +157,9 @@ public class TeamManager implements Iterable<Team> {
 	public void onFirstJoin(Player player) {
 		Team team = decideTeam(player);
 		if (team != null) {
-			TeamPlayer teamPlayer = new TeamPlayer(player, team);
-			_players.put(player, teamPlayer);
-			team.addMember(player);
+			TeamPlayer teamPlayer = createTeamPlayer(player, team);
 			player.sendMessage(team.getTeamChatColor() + "Welcome to " + team.getName() + "!");
+			_plugin.getLogger().info(player.getName() + " was assigned to " + team.getName() + ".");
 		}
 	}
 
@@ -256,6 +224,7 @@ public class TeamManager implements Iterable<Team> {
 	 * @param player the staff member who joined.
 	 */
 	public void onStaffJoin(Player player) {
+		Messages.success(player, Messages.PREFIX, "Welcome, staff member.");
 		_staff.add(player);
 	}
 
@@ -339,5 +308,10 @@ public class TeamManager implements Iterable<Team> {
 	/**
 	 * Online staff in sorted order.
 	 */
-	private TreeSet<Player> _staff = new TreeSet<Player>();
+	private TreeSet<Player> _staff = new TreeSet<Player>(new Comparator<Player>() {
+		@Override
+		public int compare(Player a, Player b) {
+			return a.getName().compareTo(b.getName());
+		}
+	});
 } // class TeamManager

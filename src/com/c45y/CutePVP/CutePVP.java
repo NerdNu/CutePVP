@@ -93,7 +93,7 @@ public class CutePVP extends JavaPlugin {
 				for (Team team : getTeamManager()) {
 					team.updateCompasses();
 				}
-				saveConfig();
+				//saveConfig();
 			}
 		}, 5 * 20, 5 * 20);
 	}
@@ -104,7 +104,7 @@ public class CutePVP extends JavaPlugin {
 	 */
 	@Override
 	public void onDisable() {
-		getTeamManager().save();
+		saveConfiguration();
 		_worldGuard = null;
 	}
 
@@ -276,6 +276,7 @@ public class CutePVP extends JavaPlugin {
 
 		getConfig().set("misc.flag_return_ticks", _flagReturnTicks);
 		getConfig().set("misc.team_buff_ticks", _teamBuffTicks);
+		saveConfig();
 	}
 
 	// ------------------------------------------------------------------------

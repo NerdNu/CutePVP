@@ -8,9 +8,9 @@ import org.bukkit.entity.Player;
  * Represents the association between a player (whether online or not), his
  * {@link Team}, the {@link Flag} he is carrying and his personal Score.
  * 
- * Only Players assigned to a team have corresponding TeamPlayer instances. 
- * {@link TeamManager} manages the mapping from {@link OfflinePlayer}
- * to {@link TeamPlayer}.
+ * Only Players assigned to a team have corresponding TeamPlayer instances.
+ * {@link TeamManager} manages the mapping from {@link OfflinePlayer} to
+ * {@link TeamPlayer}.
  */
 public class TeamPlayer {
 	// ------------------------------------------------------------------------
@@ -31,6 +31,19 @@ public class TeamPlayer {
 	 */
 	public void setHelmet() {
 		getPlayer().getInventory().setHelmet(getTeam().getTeamItemStack());
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Set the OfflinePlayer reference.
+	 * 
+	 * When a player logs in, his OfflinePlayer instance changes to an actual
+	 * Player object. We need to update the stored OfflinePlayer instance.
+	 * 
+	 * @param offlinePlayer the new OfflinePlayer instance.
+	 */
+	public void setOfflinePlayer(OfflinePlayer offlinePlayer) {
+		_offlinePlayer = offlinePlayer;
 	}
 
 	// ------------------------------------------------------------------------

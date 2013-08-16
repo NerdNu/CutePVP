@@ -46,7 +46,7 @@ public class Team {
 		Logger logger = _plugin.getLogger();
 		ConfigHelper config = new ConfigHelper(logger);
 		_id = teamSection.getName();
-		_name = teamSection.getString(_name, "");
+		_name = teamSection.getString("name", "");
 		_chatColor = ChatColor.valueOf(teamSection.getString("chat_color", "white").toUpperCase());
 		try {
 			Material material = Material.matchMaterial(teamSection.getString("material", ""));
@@ -123,16 +123,23 @@ public class Team {
 		}
 
 		// Save the team members.
-		ConfigurationSection membersSection = teamSection.getConfigurationSection("members");
-		if (membersSection == null) {
-			membersSection = teamSection.createSection("members");
-		}
+		ConfigurationSection membersSection = teamSection.createSection("members");
 		for (OfflinePlayer player : _members) {
 			TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
-			teamPlayer.getScore().save(membersSection.createSection(player.getName()));
+			ConfigurationSection playerSection = membersSection.createSection(player.getName());
+			teamPlayer.getScore().save(playerSection);
 		}
-
 	} // save
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return a reference to the owning plugin.
+	 * 
+	 * @return a reference to the owning plugin.
+	 */
+	public CutePVP getPlugin() {
+		return _plugin;
+	}
 
 	// ------------------------------------------------------------------------
 	/**

@@ -63,6 +63,7 @@ public class CutePVPListener implements Listener {
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(event.getPlayer());
 		if (teamPlayer != null) {
+			_plugin.getLogger().info(event.getPlayer().getName() + " respawned on " + teamPlayer.getTeam().getName() + ".");
 			teamPlayer.setHelmet();
 			event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
 		}
@@ -78,19 +79,29 @@ public class CutePVPListener implements Listener {
 		Player player = event.getPlayer();
 		if (player.hasPermission(Permissions.MOD)) {
 			tm.onStaffJoin(player);
+			_plugin.getLogger().info(player.getName() + " has staff permissions.");
 		}
 		if (tm.isExempted(player)) {
+			_plugin.getLogger().info(player.getName() + " is exempted from team assignment.");
 			return;
 		}
-		
+
 		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
 		if (teamPlayer == null) {
 			// We don't care whether they have played before or not. If not
 			// exempted, allocate to a team now.
 			tm.onFirstJoin(player);
 			teamPlayer = tm.getTeamPlayer(player);
+		} else {
+			Team team = teamPlayer.getTeam();
+			player.sendMessage("You're on " + team.encodeTeamColor(team.getName()) + ".");
+			_plugin.getLogger().info(player.getName() + " rejoined " + team.getName() + ".");
 		}
 
+		// The old OfflinePlayer instance can't be used to reference the player.
+		// This new one can, so store that.
+		teamPlayer.setOfflinePlayer(event.getPlayer());
+		
 		player.setDisplayName(teamPlayer.getTeam().encodeTeamColor(player.getName()));
 		teamPlayer.setHelmet();
 		event.setJoinMessage(player.getDisplayName() + " joined the game.");
