@@ -35,8 +35,11 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 * Load all buffs.
 	 */
 	public void load() {
+		_floorBuffs.clear();
+		_teamBuffs.clear();
+
 		// Load the team buffs.
-		ConfigurationSection teamBuffsSection = _plugin.getConfig().getConfigurationSection("buffs.block");
+		ConfigurationSection teamBuffsSection = _plugin.getConfig().getConfigurationSection("buffs.team");
 		if (teamBuffsSection != null) {
 			for (String id : teamBuffsSection.getKeys(false)) {
 				ConfigurationSection section = teamBuffsSection.getConfigurationSection(id);
@@ -48,12 +51,12 @@ public class BuffManager implements Iterable<TeamBuff> {
 				}
 			}
 		}
-		
+
 		// Load the potion effects for own team and enemy team blocks.
 		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
 		_friendPotions = helper.loadPotions(_plugin.getConfig().getConfigurationSection("buffs.friend"), "", true);
 		_enemyPotions = helper.loadPotions(_plugin.getConfig().getConfigurationSection("buffs.enemy"), "", true);
-		
+
 		// Load the floor block buffs.
 		ConfigurationSection floorBuffsSection = _plugin.getConfig().getConfigurationSection("buffs.block");
 		if (floorBuffsSection != null) {
@@ -76,7 +79,7 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 * Only the team buffs can be be modified in-game - by admin commands.
 	 */
 	public void save() {
-		ConfigurationSection teamBuffsSection = _plugin.getConfig().getConfigurationSection("buffs.block");
+		ConfigurationSection teamBuffsSection = _plugin.getConfig().getConfigurationSection("buffs.team");
 		if (teamBuffsSection != null) {
 			for (TeamBuff teamBuff : _teamBuffs) {
 				ConfigurationSection section = teamBuffsSection.getConfigurationSection(teamBuff.getId());
@@ -93,6 +96,24 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 */
 	public Iterator<TeamBuff> iterator() {
 		return _teamBuffs.iterator();
+	}
+
+	// --------------------------------------------------------------------------
+	/**
+	 * Return the {@link TeamBuff} with the specified programmatic ID, or null
+	 * if not found.
+	 * 
+	 * @param buffId the requested ID.
+	 * @return the {@link TeamBuff} with the specified programmatic ID, or null
+	 *         if not found.
+	 */
+	public TeamBuff getTeamBuff(String buffId) {
+		for (TeamBuff buff : _teamBuffs) {
+			if (buff.getId().equals(buffId)) {
+				return buff;
+			}
+		}
+		return null;
 	}
 
 	// --------------------------------------------------------------------------

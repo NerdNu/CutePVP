@@ -64,8 +64,9 @@ public class TeamBuff extends Buff {
 		try {
 			ConfigHelper helper = new ConfigHelper(logger);
 			section.set("team", _team != null ? _team.getId() : "");
-			helper.saveBlockLocation(section, _location);
-			section.set("start_ticks", _startTicks);
+			section.set("start_ticks", _startTicks);			
+			ConfigurationSection locationSection = section.createSection("location");
+			helper.saveBlockLocation(locationSection, _location);
 		} catch (Exception ex) {
 			logger.severe("Unable to save team buff " + section.getName());
 		}
@@ -89,6 +90,16 @@ public class TeamBuff extends Buff {
 	 */
 	public String getName() {
 		return _name;
+	}
+
+	// --------------------------------------------------------------------------
+	/**
+	 * Set the location of this team buff.
+	 * 
+	 * @param location the location of the block.
+	 */
+	public void setLocation(Location location) {
+		_location = location.clone();
 	}
 
 	// ------------------------------------------------------------------------
@@ -183,4 +194,5 @@ public class TeamBuff extends Buff {
 	 * The full time when the buff block was claimed.
 	 */
 	private long _startTicks;
+
 } // class TeamBuff

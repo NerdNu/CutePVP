@@ -1,31 +1,34 @@
 misc:
   flag_return_ticks: 6000
   team_buff_ticks: 36000
-
 buffs:
   team:
     NE:
-      name: "North-East"
+      name: North-East
       location:
-        x: 200
-        y: 64
-        z: 200
+        x: 83
+        y: 69
+        z: -72
         world: world
       potions:
         regeneration:
-          amplifier: 0  
+          amplifier: 0
           duration: 600
+      team: ''
+      start_ticks: 0
     SW:
-      name: "South-West"
+      name: South-West
       location:
-        x: 300
-        y: 64
-        z: 300
+        x: -81
+        y: 69
+        z: -70
         world: world
       potions:
         speed:
           amplifier: 1
           duration: 600
+      team: ''
+      start_ticks: 0
   friend:
     damage_resistance:
       amplifier: 0
@@ -34,59 +37,99 @@ buffs:
     wither:
       amplifier: 0
       duration: 60
-  block:
-    
-  
 teams:
   red:
     name: Red Team
     chat_color: red
     material: wool
     data: 14
-    regions: [red_base]
-    score:
+    regions:
+    - red_base
     spawn:
-      x: 100
+      x: 13
       y: 64
-      z: 100
-      pitch: 0
-      yaw: 0
+      z: 29
+      pitch: 10.8826685
+      yaw: 181.37572
       world: world
     flags:
-      nw:
-        description: "north-west" 
-        home: 
-          x: 50
+      one:
+        description: first
+        home:
+          x: -7
           y: 64
-          z: 50
+          z: -18
+          world: world
         current:
-          x: -20
-          y: 80
-          z: -30
+          x: -7
+          y: 64
+          z: -18
+          world: world
+      two:
+        description: second
+        home:
+          x: 33
+          y: 64
+          z: -18
+          world: world
+        current:
+          x: 33
+          y: 64
+          z: -18
+          world: world
+    score:
+      kills: 0
+      steals: 0
+      returns: 0
+      captures: 0
     members:
+      totemo:
+        kills: 0
+        steals: 0
+        returns: 0
+        captures: 0
   blue:
     name: Blue Team
     chat_color: aqua
     material: wool
     data: 11
-    regions: [blue_base]
-    score:
+    regions:
+    - blue_base
     spawn:
-      x: 100
+      x: 13
       y: 64
-      z: 100
-      pitch: 0
-      yaw: 0
+      z: -171
+      pitch: 16.53436
+      yaw: 1.1937866
       world: world
     flags:
-      nw:
-        description: "north-west" 
-        home: 
-          x: 50
+      one:
+        description: first
+        home:
+          x: -7
           y: 64
-          z: 50
+          z: -123
+          world: world
         current:
-          x: -20
-          y: 80
-          z: -30
-    members:
+          x: -7
+          y: 64
+          z: -123
+          world: world
+      two:
+        description: second
+        home:
+          x: 33
+          y: 64
+          z: -123
+          world: world
+        current:
+          x: 33
+          y: 64
+          z: -123
+          world: world
+    score:
+      kills: 0
+      steals: 0
+      returns: 0
+      captures: 0
+    members: {}

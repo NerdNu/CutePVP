@@ -226,10 +226,8 @@ public class CutePVP extends JavaPlugin {
 					StringBuilder message = new StringBuilder();
 					message.append(team.getName()).append(' ').append("flags: ");
 					for (Flag flag : team.getFlags()) {
-						message.append(flag.getId()).append(" \"").append(flag.getName());
-						message.append("\" @ (").append(flag.getLocation().getBlockX()).append(',');
-						message.append(',').append(flag.getLocation().getBlockY());
-						message.append(',').append(flag.getLocation().getBlockZ()).append(") ");
+						message.append(" ").append(flag.getId()).append(" \"").append(flag.getName());
+						message.append("\" @ ").append(Messages.formatIntegerXYZ(flag.getLocation()));
 					}
 					Messages.success(sender, Messages.PREFIX, message.toString());
 				}
@@ -238,18 +236,33 @@ public class CutePVP extends JavaPlugin {
 				StringBuilder message = new StringBuilder();
 				message.append("Team buffs: ");
 				for (TeamBuff teamBuff : getBuffManager()) {
-					message.append(teamBuff.getId()).append(" \"").append(teamBuff.getName());
-					message.append("\" @ (").append(teamBuff.getLocation().getBlockX()).append(',');
-					message.append(',').append(teamBuff.getLocation().getBlockY());
-					message.append(',').append(teamBuff.getLocation().getBlockZ()).append(") ");
+					message.append(" ").append(teamBuff.getId()).append(" \"").append(teamBuff.getName());
+					message.append("\" @ ").append(Messages.formatIntegerXYZ(teamBuff.getLocation()));
 				}
 				Messages.success(sender, Messages.PREFIX, message.toString());
 				return true;
 			}
 		} else if (args.length == 3) {
-			// /cutepvp buff set north-east
+			// /cutepvp buff set <buffId>
 			if (args[0].equals("buff") && args[1].equals("set")) {
-
+				String buffId = args[2];
+				TeamBuff teamBuff = getBuffManager().getTeamBuff(buffId);
+				if (teamBuff == null) {
+					Messages.failure(sender, Messages.PREFIX, "There is no team buff with that ID.");
+				} else {
+					if (sender instanceof Player) {
+						Player player = (Player) sender;
+						List<Block> inSight = player.getLastTwoTargetBlocks(null, 50);
+						Block target = inSight.get(1);
+						teamBuff.setLocation(target.getLocation());
+						Messages.success(sender, Messages.PREFIX,
+							"Team buff " + teamBuff.getId() + " (\"" + teamBuff.getName() + "\") set to " +
+								target.getType().name().toLowerCase() + " at " + 
+								Messages.formatIntegerXYZ(teamBuff.getLocation()));
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "You need to be in game to set team buff locations.");
+					}
+				}
 				return true;
 			}
 		} else if (args.length == 4) {

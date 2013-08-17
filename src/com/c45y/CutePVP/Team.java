@@ -1,6 +1,7 @@
 package com.c45y.CutePVP;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -235,6 +236,7 @@ public class Team {
 	// --------------------------------------------------------------------------
 	/**
 	 * Return the flag with the specified ID, or null if none matches.
+	 * 
 	 * @param flagId the programmatic ID of the flag.
 	 * @return the flag with the specified ID, or null if none matches.
 	 */
@@ -395,13 +397,19 @@ public class Team {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Return the names of all online team members in sorted order as a string,
-	 * with each player name preceded by a space.
+	 * Return the names of all online team members in case-insensitive sorted
+	 * order as a string, with each player name preceded by a space.
 	 * 
-	 * @return the names of all online team members in sorted order as a string.
+	 * @return the names of all online team members in case-insensitive sorted
+	 *         order as a string.
 	 */
 	public String getOnlineList() {
-		TreeSet<Player> online = new TreeSet<Player>();
+		TreeSet<Player> online = new TreeSet<Player>(new Comparator<Player>() {
+			@Override
+			public int compare(Player a, Player b) {
+				return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
+			}
+		});
 		for (OfflinePlayer offlinePlayer : getMembers()) {
 			Player player = offlinePlayer.getPlayer();
 			if (player != null) {
