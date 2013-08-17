@@ -14,8 +14,8 @@ buffs:
         regeneration:
           amplifier: 1
           duration: 1200
-      team: ''
-      start_ticks: 26521843
+      team: red
+      start_ticks: 26700570
     SW:
       name: South-West
       location:
@@ -27,8 +27,8 @@ buffs:
         speed:
           amplifier: 1
           duration: 1200
-      team: ''
-      start_ticks: 26521349
+      team: red
+      start_ticks: 26698760
   friend:
     damage_resistance:
       amplifier: 0
@@ -79,13 +79,13 @@ teams:
           world: world
     score:
       kills: 0
-      steals: 9
+      steals: 10
       returns: 0
       captures: 9
     members:
       totemo:
         kills: 0
-        steals: 9
+        steals: 10
         returns: 0
         captures: 9
   blue:
@@ -111,9 +111,9 @@ teams:
           z: -123
           world: world
         current:
-          x: -7
+          x: 9
           y: 64
-          z: -123
+          z: -127
           world: world
       two:
         description: east

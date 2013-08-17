@@ -136,17 +136,9 @@ public class CutePVPListener implements Listener {
 	public void onPlayerMove(PlayerMoveEvent event) {
 		Player player = event.getPlayer();
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
-		if (teamPlayer == null) {
-			return;
+		if (teamPlayer != null) {
+			_plugin.updateTeamPlayerEffects(teamPlayer);
 		}
-
-		Location loc = player.getLocation();
-		if (teamPlayer.isCarryingFlag()) {
-			loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
-		}
-
-		Block block = loc.getBlock().getRelative(BlockFace.DOWN);
-		_plugin.getBuffManager().applyFloorBuff(block, teamPlayer);
 	}
 
 	// ------------------------------------------------------------------------

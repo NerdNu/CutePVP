@@ -4,9 +4,12 @@ import java.util.List;
 import java.util.logging.Level;
 
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -101,6 +104,13 @@ public class CutePVP extends JavaPlugin {
 					team.updateCompasses();
 				}
 				// saveConfig();
+
+				for (Player player : Bukkit.getOnlinePlayers()) {
+					TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
+					if (teamPlayer != null) {
+						updateTeamPlayerEffects(teamPlayer);
+					}
+				}
 			}
 		}, 0, 5 * ONE_SECOND_TICKS);
 	}
@@ -113,6 +123,23 @@ public class CutePVP extends JavaPlugin {
 	public void onDisable() {
 		saveConfiguration();
 		_worldGuard = null;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Apply effects to the player state based on the block the player is
+	 * standing on and whether they are carrying a flag.
+	 * 
+	 * @param teamPlayer the non-null TeamPlayer who is affected.
+	 */
+	public void updateTeamPlayerEffects(TeamPlayer teamPlayer) {
+		Location loc = teamPlayer.getPlayer().getLocation();
+		if (teamPlayer.isCarryingFlag()) {
+			loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
+		}
+
+		Block block = loc.getBlock().getRelative(BlockFace.DOWN);
+		getBuffManager().applyFloorBuff(block, teamPlayer);
 	}
 
 	// ------------------------------------------------------------------------
@@ -162,8 +189,7 @@ public class CutePVP extends JavaPlugin {
 				if (flag.isHome()) {
 					Messages.success(player, null, "Flag Location: Home");
 				} else {
-					Location loc = flag.getLocation();
-					sender.sendMessage("Flag Location: " + loc.getBlockX() + ", " + loc.getBlockY() + ", " + loc.getBlockZ());
+					sender.sendMessage("Flag Location: " + Messages.formatIntegerXYZ(flag.getLocation()));
 				}
 			}
 			return true;
@@ -262,7 +288,7 @@ public class CutePVP extends JavaPlugin {
 						teamBuff.setLocation(target.getLocation());
 						Messages.success(sender, Messages.PREFIX,
 							"Team buff " + teamBuff.getId() + " (\"" + teamBuff.getName() + "\") set to " +
-								target.getType().name().toLowerCase() + " at " + 
+								target.getType().name().toLowerCase() + " at " +
 								Messages.formatIntegerXYZ(teamBuff.getLocation()));
 					} else {
 						Messages.failure(sender, Messages.PREFIX, "You need to be in game to set team buff locations.");

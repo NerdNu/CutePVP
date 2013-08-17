@@ -108,6 +108,7 @@ public class Flag {
 	 */
 	public boolean checkReturn(long timeoutTicks) {
 		if (isDropped() && _dropLocation.getWorld().getFullTime() >= _dropTime + timeoutTicks) {
+			Messages.broadcast(_team.getName() + "'s " + getName() + " flag returned automatically.");
 			doReturn();
 			return true;
 		} else {

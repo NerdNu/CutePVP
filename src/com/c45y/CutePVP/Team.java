@@ -458,7 +458,7 @@ public class Team {
 			Location flagLoc = flag.getLocation();
 			double distSq = flagLoc.distanceSquared(playerLoc);
 			if (!flag.isHome() && distSq < minDistSq) {
-				distSq = minDistSq;
+				minDistSq = distSq;
 				nearest = flag;
 			}
 		}
@@ -469,7 +469,7 @@ public class Team {
 				Location flagLoc = flag.getLocation();
 				double distSq = flagLoc.distanceSquared(playerLoc);
 				if (distSq < minDistSq) {
-					distSq = minDistSq;
+					minDistSq = distSq;
 					nearest = flag;
 				}
 			}
