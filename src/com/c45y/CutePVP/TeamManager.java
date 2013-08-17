@@ -157,7 +157,7 @@ public class TeamManager implements Iterable<Team> {
 	public void onFirstJoin(Player player) {
 		Team team = decideTeam(player);
 		if (team != null) {
-			TeamPlayer teamPlayer = createTeamPlayer(player, team);
+			createTeamPlayer(player, team);
 			player.sendMessage(team.getTeamChatColor() + "Welcome to " + team.getName() + "!");
 			_plugin.getLogger().info(player.getName() + " was assigned to " + team.getName() + ".");
 		}

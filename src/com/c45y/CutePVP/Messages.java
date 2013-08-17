@@ -2,6 +2,7 @@ package com.c45y.CutePVP;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 
 // --------------------------------------------------------------------------
@@ -28,6 +29,20 @@ public class Messages {
 	 * The prefix at the start of broadcast messages.
 	 */
 	public static final String PREFIX = "[CutePvP] ";
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Format the specified Location as a string of the form "(x, y, z)"
+	 * containing integer coordinates of a block.
+	 * 
+	 * The world is omitted.
+	 * 
+	 * @param location the Location.
+	 * @return the integer x, y and z coordinates of the location.
+	 */
+	public static String formatIntegerXYZ(Location location) {
+		return "(" + location.getBlockX() + ", " + location.getBlockY() + ", " + location.getBlockZ() + ")";
+	}
 
 	// ------------------------------------------------------------------------
 	/**

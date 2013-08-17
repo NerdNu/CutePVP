@@ -210,6 +210,21 @@ public class Flag {
 		return isCarried() ? getCarrier().getPlayer().getLocation() : _dropLocation;
 	}
 
+	// --------------------------------------------------------------------------
+	/**
+	 * Set the home location of this flag.
+	 * 
+	 * The current carrier is cleared and the current location is set to the
+	 * home location too.
+	 * 
+	 * @param location the new home location of the flag.
+	 */
+	public void setHomeLocation(Location location) {
+		_homeLocation = _dropLocation = location.clone();
+		_carrier = null;
+		_dropTime = 0;
+	}
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Return the starting location of the flag in its owning team's base.

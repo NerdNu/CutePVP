@@ -1,10 +1,12 @@
 package com.c45y.CutePVP;
 
+import java.util.List;
 import java.util.logging.Level;
 
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -93,7 +95,7 @@ public class CutePVP extends JavaPlugin {
 				for (Team team : getTeamManager()) {
 					team.updateCompasses();
 				}
-				//saveConfig();
+				// saveConfig();
 			}
 		}, 5 * 20, 5 * 20);
 	}
@@ -169,7 +171,10 @@ public class CutePVP extends JavaPlugin {
 				Messages.failure(player, null, "You're not carrying a flag.");
 			}
 			return true;
+		} else if (command.getName().equals("cutepvp")) {
+			return handleCutePvPCommand(sender, args);
 		}
+
 		return false;
 	} // onCommand
 
@@ -213,7 +218,7 @@ public class CutePVP extends JavaPlugin {
 					Messages.success(sender, Messages.PREFIX, team.getName() + " spawn set.");
 					team.setSpawn(((Player) sender).getLocation());
 				} else {
-					Messages.failure(sender, Messages.PREFIX, teamId + " You need to be in game to set team spawns.");
+					Messages.failure(sender, Messages.PREFIX, " You need to be in game to set team spawns.");
 				}
 				return true;
 			} else if (args[0].equals("flag") && args[1].equals("list")) {
@@ -242,15 +247,45 @@ public class CutePVP extends JavaPlugin {
 				return true;
 			}
 		} else if (args.length == 3) {
-			if (args[0].equals("flag") && args[1].equals("set")) {
-
-				return true;
-			} else if (args[0].equals("buff") && args[1].equals("set")) {
+			// /cutepvp buff set north-east
+			if (args[0].equals("buff") && args[1].equals("set")) {
 
 				return true;
 			}
-		}
+		} else if (args.length == 4) {
+			// /cutepvp flag set <teamId> <flagId>
+			if (args[0].equals("flag") && args[1].equals("set")) {
+				String teamId = args[2];
+				Team team = getTeamManager().getTeam(teamId);
+				if (team == null) {
+					Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
+				} else {
+					String flagId = args[3];
+					Flag flag = team.getFlag(flagId);
+					if (flag == null) {
+						Messages.failure(sender, Messages.PREFIX, team.getName() + " doesn't have a flag with the ID " + flagId + ".");
+					} else {
+						if (sender instanceof Player) {
+							Player player = (Player) sender;
+							List<Block> inSight = player.getLastTwoTargetBlocks(null, 50);
+							Block target = inSight.get(1);
+							if (team.isTeamBlock(target)) {
+								flag.setHomeLocation(target.getLocation());
+								Messages.success(sender, Messages.PREFIX,
+									team.getName() + " flag " + flag.getId() + " (\"" + flag.getName() + "\") home set to " +
+									Messages.formatIntegerXYZ(flag.getLocation()));
 
+							} else {
+								Messages.failure(sender, Messages.PREFIX, "The flag needs to be of the team's block type.");
+							}
+						} else {
+							Messages.failure(sender, Messages.PREFIX, "You need to be in game to set flags.");
+						}
+					}
+				}
+				return true;
+			} // handling /cutepvp flag set <teamId> <flagId>
+		}
 		return false;
 	} // handleCutePvPCommand
 

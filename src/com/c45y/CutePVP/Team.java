@@ -234,6 +234,21 @@ public class Team {
 
 	// --------------------------------------------------------------------------
 	/**
+	 * Return the flag with the specified ID, or null if none matches.
+	 * @param flagId the programmatic ID of the flag.
+	 * @return the flag with the specified ID, or null if none matches.
+	 */
+	public Flag getFlag(String flagId) {
+		for (Flag flag : _flags) {
+			if (flag.getId().equals(flagId)) {
+				return flag;
+			}
+		}
+		return null;
+	}
+
+	// --------------------------------------------------------------------------
+	/**
 	 * Return the flag at the specified, non-null block (if dropped or home), or
 	 * null if the block is not a flag.
 	 * 
