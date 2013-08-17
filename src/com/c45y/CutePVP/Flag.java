@@ -9,6 +9,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.material.MaterialData;
 
 import com.c45y.CutePVP.util.ConfigHelper;
+import com.c45y.CutePVP.util.Util;
 
 // ----------------------------------------------------------------------------
 /**
@@ -67,8 +68,8 @@ public class Flag {
 	 * @param team that player's team.
 	 */
 	public void stealBy(TeamPlayer teamPlayer) {
-		if (isHome() && teamPlayer.getTeam() != _team) {
-			_homeLocation.getBlock().setType(Material.AIR);
+		if (!isCarried() && teamPlayer.getTeam() != _team) {
+			getLocation().getBlock().setType(Material.AIR);
 			_carrier = teamPlayer;
 			_carrier.setCarriedFlag(this);
 		}
@@ -84,6 +85,10 @@ public class Flag {
 	public void drop() {
 		if (isCarried()) {
 			_dropLocation = _carrier.getPlayer().getLocation().clone();
+			_team.getPlugin().getLogger().info(
+				_carrier.getPlayer().getName() + " dropped " + _team.getName() + "'s " + 
+				getName() + " flag at "	+ Messages.formatIntegerXYZ(_dropLocation) + ".");
+			
 			MaterialData teamBlock = getTeam().getMaterialData();
 			_dropLocation.getBlock().setTypeIdAndData(teamBlock.getItemTypeId(), teamBlock.getData(), false);
 			_carrier.setCarriedFlag(null);
@@ -116,9 +121,17 @@ public class Flag {
 	 * carried, dropped or already home.
 	 */
 	public void doReturn() {
+		boolean restoreFlagBlock = false;
 		if (isDropped()) {
 			_dropLocation.getBlock().setType(Material.AIR);
+			restoreFlagBlock = true;
+		} else if (isCarried()) {
+			_carrier.setCarriedFlag(null);
+			_carrier = null;
+			restoreFlagBlock = true;
+		}
 
+		if (restoreFlagBlock) {
 			MaterialData teamBlock = getTeam().getMaterialData();
 			_homeLocation.getBlock().setTypeIdAndData(teamBlock.getItemTypeId(), teamBlock.getData(), false);
 			_dropLocation = _homeLocation.clone();
@@ -162,7 +175,7 @@ public class Flag {
 	 * @return true if the flag is at its home location.
 	 */
 	public boolean isHome() {
-		return !isCarried() && _dropLocation.getBlock() == _homeLocation.getBlock();
+		return !isCarried() && Util.isSameBlock(_dropLocation, _homeLocation);
 	}
 
 	// ------------------------------------------------------------------------
@@ -172,7 +185,7 @@ public class Flag {
 	 * @return true if the flag is not at home and not being carried.
 	 */
 	public boolean isDropped() {
-		return !isCarried() && _dropLocation.getBlock() != _homeLocation.getBlock();
+		return !isCarried() && !Util.isSameBlock(_dropLocation, _homeLocation);
 	}
 
 	// ------------------------------------------------------------------------

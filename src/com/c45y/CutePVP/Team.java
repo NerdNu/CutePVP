@@ -19,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.MaterialData;
 
 import com.c45y.CutePVP.util.ConfigHelper;
+import com.c45y.CutePVP.util.Util;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
@@ -259,8 +260,9 @@ public class Team {
 	 *         or null if the block is not a flag.
 	 */
 	public Flag getFlagFromBlock(Block block) {
+		Location loc = block.getLocation();
 		for (Flag flag : _flags) {
-			if (block == flag.getBlock()) {
+			if (Util.isSameBlock(loc, flag.getLocation())) {
 				return flag;
 			}
 		}
@@ -449,7 +451,7 @@ public class Team {
 	protected Flag getNearestFlag(Player player) {
 		Location playerLoc = player.getLocation();
 
-		// Set flagLoc if a flag is not at home.
+		// Find nearest stolen/dropped flag location first.
 		double minDistSq = Double.MAX_VALUE;
 		Flag nearest = null;
 		for (Flag flag : _flags) {

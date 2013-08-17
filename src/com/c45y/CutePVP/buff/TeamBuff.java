@@ -64,7 +64,7 @@ public class TeamBuff extends Buff {
 		try {
 			ConfigHelper helper = new ConfigHelper(logger);
 			section.set("team", _team != null ? _team.getId() : "");
-			section.set("start_ticks", _startTicks);			
+			section.set("start_ticks", _startTicks);
 			ConfigurationSection locationSection = section.createSection("location");
 			helper.saveBlockLocation(locationSection, _location);
 		} catch (Exception ex) {
@@ -143,8 +143,12 @@ public class TeamBuff extends Buff {
 	public void claimBy(TeamPlayer teamPlayer) {
 		_team = teamPlayer.getTeam();
 		_startTicks = _location.getWorld().getFullTime();
-		Messages.broadcast(teamPlayer.getPlayer().getDisplayName() +
+		for (Player player : _team.getOnlineMembers()) {
+			apply(player);
+		}
+		Messages.broadcast(teamPlayer.getPlayer().getDisplayName() + Messages.BROADCAST_COLOR +
 							" has claimed the " + _name + " buff for " + _team.getName() + ".");
+		_lastBroadcastTicks = _location.getWorld().getFullTime();
 	}
 
 	// ------------------------------------------------------------------------
@@ -157,13 +161,18 @@ public class TeamBuff extends Buff {
 	 */
 	public void update(long durationTicks) {
 		if (isClaimed()) {
-			if (_startTicks + durationTicks < _location.getWorld().getFullTime()) {
-				Messages.broadcast(_team.getName() + " has the " + _name + " buff.");
+			long worldTime = _location.getWorld().getFullTime(); 
+			if (worldTime < _startTicks + durationTicks) {
 				for (Player player : _team.getOnlineMembers()) {
 					apply(player);
 				}
+				if (worldTime > _lastBroadcastTicks + BUFF_BROADCAST_TICKS) {
+					Messages.broadcast(_team.getName() + " has the " + _name + " buff.");
+					_lastBroadcastTicks = worldTime;
+				}
 			} else {
-				Messages.broadcast(_team.getName() + "'s claim on the " + _name + " buff has expired.");
+				Messages.broadcast(_team.getName() + Messages.BROADCAST_COLOR +
+									"'s claim on the " + _name + " buff has expired.");
 				_team = null;
 			}
 		}
@@ -191,8 +200,20 @@ public class TeamBuff extends Buff {
 	private Location _location;
 
 	/**
-	 * The full time when the buff block was claimed.
+	 * The world time (ticks) when the buff block was claimed.
 	 */
 	private long _startTicks;
 
+	/**
+	 * World time (ticks) of the last broadcast announcing ownership of this 
+	 * team buff.
+	 */
+	private long _lastBroadcastTicks = 0;
+	
+	/**
+	 * Minimum duration in ticks between broadcast announcements about who owns
+	 * team buffs.
+	 */
+	private long BUFF_BROADCAST_TICKS = 20 * 60 * 3;
+	
 } // class TeamBuff

@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
+import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffect;
@@ -13,6 +14,7 @@ import com.c45y.CutePVP.CutePVP;
 import com.c45y.CutePVP.Team;
 import com.c45y.CutePVP.TeamPlayer;
 import com.c45y.CutePVP.util.ConfigHelper;
+import com.c45y.CutePVP.util.Util;
 
 // ----------------------------------------------------------------------------
 /**
@@ -125,8 +127,9 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 * @return the TeamBuff corresponding to block, or null if not a buff block.
 	 */
 	public TeamBuff getTeamBuffFromBlock(Block block) {
+		Location loc = block.getLocation();
 		for (TeamBuff teamBuff : _teamBuffs) {
-			if (block == teamBuff.getBlock()) {
+			if (Util.isSameBlock(loc, teamBuff.getLocation())) {
 				return teamBuff;
 			}
 		}

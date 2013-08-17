@@ -22,9 +22,14 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
  */
 public class CutePVP extends JavaPlugin {
 	/**
+	 * The number of ticks in one second.
+	 */
+	public static final int ONE_SECOND_TICKS = 20;
+
+	/**
 	 * The number of ticks in one minute.
 	 */
-	public static final int ONE_MINUTE_TICKS = 60 * 20;
+	public static final int ONE_MINUTE_TICKS = 60 * ONE_SECOND_TICKS;
 
 	// ------------------------------------------------------------------------
 	/**
@@ -88,7 +93,7 @@ public class CutePVP extends JavaPlugin {
 					}
 				}
 			}
-		}, 0, 2 * ONE_MINUTE_TICKS);
+		}, 0, 30 * ONE_SECOND_TICKS);
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
@@ -97,7 +102,7 @@ public class CutePVP extends JavaPlugin {
 				}
 				// saveConfig();
 			}
-		}, 5 * 20, 5 * 20);
+		}, 0, 5 * ONE_SECOND_TICKS);
 	}
 
 	// ------------------------------------------------------------------------
@@ -143,11 +148,11 @@ public class CutePVP extends JavaPlugin {
 
 		} else if (command.getName().equalsIgnoreCase("score")) {
 			for (Team team : getTeamManager()) {
-				sender.sendMessage(team.encodeTeamColor(team.getName()) + ":-" + team.getScore());
+				sender.sendMessage(team.encodeTeamColor(team.getName()) + " :-" + team.getScore());
 			}
 			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 			if (teamPlayer != null) {
-				sender.sendMessage(player.getDisplayName() + ":-" + teamPlayer.getScore());
+				sender.sendMessage(player.getDisplayName() + " :-" + teamPlayer.getScore());
 			}
 			return true;
 		} else if (command.getName().equalsIgnoreCase("flag")) {

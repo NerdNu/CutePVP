@@ -1,5 +1,6 @@
 package com.c45y.CutePVP;
 
+import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 
 // ----------------------------------------------------------------------------
@@ -127,10 +128,10 @@ public class Score {
 	 */
 	public String toString() {
 		StringBuilder message = new StringBuilder();
-		message.append(" Kills: ").append(kills.get());
-		message.append(" Steals: ").append(steals.get());
-		message.append(" Captures: ").append(captures.get());
-		message.append(" Returns: ").append(returns.get());
+		message.append(ChatColor.LIGHT_PURPLE).append(" Kills: ").append(ChatColor.WHITE).append(kills.get());
+		message.append(ChatColor.LIGHT_PURPLE).append(" Steals: ").append(ChatColor.WHITE).append(steals.get());
+		message.append(ChatColor.LIGHT_PURPLE).append(" Captures: ").append(ChatColor.WHITE).append(captures.get());
+		message.append(ChatColor.LIGHT_PURPLE).append(" Returns: ").append(ChatColor.WHITE).append(returns.get());
 		return message.toString();
 	}
 	

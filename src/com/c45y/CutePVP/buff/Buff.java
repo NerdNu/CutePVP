@@ -1,5 +1,6 @@
 package com.c45y.CutePVP.buff;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.logging.Logger;
 
@@ -47,17 +48,36 @@ public class Buff {
 	/**
 	 * Apply all potion effects of this buff to the player.
 	 * 
-	 * TODO: investigate what happens when a player already has an active potion
-	 * of the same kind and higher level. Also, if I don't force, does speed
-	 * expire etc.?
+	 * If the player already has a potion buff of a higher level, retain that.
+	 * I believe this is different from the "force" flag in 
+	 * Player.addPotionEffect(), in that the latter forces the new potion 
+	 * without regard to whether it is weaker or stronger in effect.
 	 * 
 	 * @param player the affected player.
 	 */
 	public void apply(Player player) {
+		Collection<PotionEffect> activePotions = player.getActivePotionEffects();
 		for (PotionEffect potion : _potions) {
-			player.addPotionEffect(potion);
+			if (! player.hasPotionEffect(potion.getType())) {
+				player.addPotionEffect(potion);
+			} else {
+				// Find current active effect of the same type.
+				PotionEffect current = null;
+				for (PotionEffect active : activePotions) {
+					if (active.getType() == potion.getType()) {
+						current = active;
+						break;
+					}
+				}
+				
+				// Add the new potion if it is at least as strong.
+				// If the same stength, this may just refresh the duration.
+				if (potion.getAmplifier() >= current.getAmplifier()) {
+					player.addPotionEffect(potion, true);
+				}
+			}
 		}
-	}
+	} // apply
 
 	// ------------------------------------------------------------------------
 	/**

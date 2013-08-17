@@ -1,6 +1,7 @@
 package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -101,7 +102,7 @@ public class CutePVPListener implements Listener {
 		// The old OfflinePlayer instance can't be used to reference the player.
 		// This new one can, so store that.
 		teamPlayer.setOfflinePlayer(event.getPlayer());
-		
+
 		player.setDisplayName(teamPlayer.getTeam().encodeTeamColor(player.getName()));
 		teamPlayer.setHelmet();
 		event.setJoinMessage(player.getDisplayName() + " joined the game.");
@@ -139,9 +140,13 @@ public class CutePVPListener implements Listener {
 			return;
 		}
 
-		Block block = player.getLocation().getBlock().getRelative(BlockFace.DOWN);
-		_plugin.getBuffManager().applyFloorBuff(block, teamPlayer);
+		Location loc = player.getLocation();
+		if (teamPlayer.isCarryingFlag()) {
+			loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
+		}
 
+		Block block = loc.getBlock().getRelative(BlockFace.DOWN);
+		_plugin.getBuffManager().applyFloorBuff(block, teamPlayer);
 	}
 
 	// ------------------------------------------------------------------------
@@ -242,7 +247,7 @@ public class CutePVPListener implements Listener {
 						flag.doReturn();
 						teamPlayer.getScore().returns.increment();
 						teamPlayer.getTeam().getScore().returns.increment();
-						Messages.broadcast(player.getDisplayName() + " returned " +
+						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR + " returned " +
 											teamPlayer.getTeam().getName() + "'s flag.");
 					} else if (flag.isHome() && teamPlayer.isCarryingFlag()) {
 						// Capturing an opposition team's flag.
@@ -251,18 +256,19 @@ public class CutePVPListener implements Listener {
 
 						Flag carriedFlag = teamPlayer.getCarriedFlag();
 						carriedFlag.doReturn();
-						Messages.broadcast(player.getDisplayName() + " captured " +
+						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR + " captured " +
 											carriedFlag.getTeam().getName() + "'s " + carriedFlag.getName() + " flag.");
 					}
 				} else {
 					// An opposition team flag.
 					if (teamPlayer.isCarryingFlag()) {
-						player.sendMessage(ChatColor.RED + "You can only carry one flag at a time.");
+						player.sendMessage(ChatColor.DARK_RED + "You can only carry one flag at a time.");
 					} else {
 						flag.stealBy(teamPlayer);
 						teamPlayer.getScore().steals.increment();
 						teamPlayer.getTeam().getScore().steals.increment();
-						Messages.broadcast(player.getDisplayName() + " has stolen " + clickedBlockTeam.getName() + "'s flag.");
+						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
+											" has stolen " + clickedBlockTeam.getName() + "'s flag.");
 					}
 				}
 			}

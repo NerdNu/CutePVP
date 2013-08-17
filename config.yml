@@ -12,10 +12,10 @@ buffs:
         world: world
       potions:
         regeneration:
-          amplifier: 0
-          duration: 600
+          amplifier: 1
+          duration: 1200
       team: ''
-      start_ticks: 0
+      start_ticks: 26521843
     SW:
       name: South-West
       location:
@@ -26,9 +26,9 @@ buffs:
       potions:
         speed:
           amplifier: 1
-          duration: 600
+          duration: 1200
       team: ''
-      start_ticks: 0
+      start_ticks: 26521349
   friend:
     damage_resistance:
       amplifier: 0
@@ -54,7 +54,7 @@ teams:
       world: world
     flags:
       one:
-        description: first
+        description: west
         home:
           x: -7
           y: 64
@@ -66,7 +66,7 @@ teams:
           z: -18
           world: world
       two:
-        description: second
+        description: east
         home:
           x: 33
           y: 64
@@ -79,15 +79,15 @@ teams:
           world: world
     score:
       kills: 0
-      steals: 0
+      steals: 9
       returns: 0
-      captures: 0
+      captures: 9
     members:
       totemo:
         kills: 0
-        steals: 0
+        steals: 9
         returns: 0
-        captures: 0
+        captures: 9
   blue:
     name: Blue Team
     chat_color: aqua
@@ -104,7 +104,7 @@ teams:
       world: world
     flags:
       one:
-        description: first
+        description: west
         home:
           x: -7
           y: 64
@@ -116,7 +116,7 @@ teams:
           z: -123
           world: world
       two:
-        description: second
+        description: east
         home:
           x: 33
           y: 64
