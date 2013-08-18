@@ -1,6 +1,6 @@
 misc:
-  flag_return_ticks: 6000
-  team_buff_ticks: 36000
+  flag_return_ticks: 0
+  team_buff_ticks: 0
 buffs:
   team:
     NE:
@@ -14,8 +14,8 @@ buffs:
         regeneration:
           amplifier: 1
           duration: 1200
-      team: red
-      start_ticks: 26700570
+      team: ''
+      start_ticks: 26754830
     SW:
       name: South-West
       location:
@@ -27,16 +27,16 @@ buffs:
         speed:
           amplifier: 1
           duration: 1200
-      team: red
+      team: ''
       start_ticks: 26698760
   friend:
     damage_resistance:
       amplifier: 0
-      duration: 60
+      duration: 120
   enemy:
     wither:
       amplifier: 0
-      duration: 60
+      duration: 120
 teams:
   red:
     name: Red Team
@@ -45,6 +45,7 @@ teams:
     data: 14
     regions:
     - red_base
+    - red_base2
     spawn:
       x: 13
       y: 64
@@ -79,15 +80,15 @@ teams:
           world: world
     score:
       kills: 0
-      steals: 10
+      steals: 0
       returns: 0
-      captures: 9
+      captures: 0
     members:
       totemo:
         kills: 0
-        steals: 10
+        steals: 0
         returns: 0
-        captures: 9
+        captures: 0
   blue:
     name: Blue Team
     chat_color: aqua
@@ -95,6 +96,7 @@ teams:
     data: 11
     regions:
     - blue_base
+    - blue_base2
     spawn:
       x: 13
       y: 64
@@ -111,9 +113,9 @@ teams:
           z: -123
           world: world
         current:
-          x: 9
+          x: -7
           y: 64
-          z: -127
+          z: -123
           world: world
       two:
         description: east
@@ -133,3 +135,4 @@ teams:
       returns: 0
       captures: 0
     members: {}
+

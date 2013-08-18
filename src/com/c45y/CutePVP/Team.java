@@ -278,7 +278,7 @@ public class Team {
 	 */
 	public boolean isFlagHomeLocation(Location location) {
 		for (Flag flag : _flags) {
-			if (flag.getHomeLocation().getBlock() == location.getBlock()) {
+			if (Util.isSameBlock(flag.getHomeLocation(), location)) {
 				return true;
 			}
 		}

@@ -165,17 +165,17 @@ public class TeamManager implements Iterable<Team> {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Return true if the Player is in an enemy team's base.
+	 * Return true if the Location is in an enemy team's base.
 	 * 
-	 * @param player the Player.
-	 * @return true if the Player is in an enemy team's base.
+	 * @param player the Player performing an action.
+	 * @param location the Location.
+	 * @return true if the Location is in an enemy team's base.
 	 */
-	public boolean inEnemyTeamBase(Player player) {
+	public boolean inEnemyTeamBase(Player player, Location location) {
 		TeamPlayer teamPlayer = getTeamPlayer(player);
 		if (teamPlayer != null) {
-			Location playerLocation = player.getLocation();
 			for (Team otherTeam : _teams.values()) {
-				if (teamPlayer.getTeam() != otherTeam && otherTeam.inTeamBase(playerLocation)) {
+				if (teamPlayer.getTeam() != otherTeam && otherTeam.inTeamBase(location)) {
 					return true;
 				}
 			}

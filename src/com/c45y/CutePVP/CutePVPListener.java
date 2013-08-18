@@ -1,10 +1,8 @@
 package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
-import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -369,7 +367,7 @@ public class CutePVPListener implements Listener {
 
 		if (teamPlayer.getTeam().inTeamBase(location)) {
 			return !teamPlayer.getTeam().isFlagHomeLocation(location);
-		} else if (_plugin.getTeamManager().inEnemyTeamBase(player)) {
+		} else if (_plugin.getTeamManager().inEnemyTeamBase(player, location)) {
 			player.sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
 			return false;
 		} else {
