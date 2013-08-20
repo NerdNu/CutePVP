@@ -139,21 +139,19 @@ public class Flag {
 	 * carried, dropped or already home.
 	 */
 	public void doReturn() {
-		boolean restoreFlagBlock = false;
-		if (isDropped()) {
-			_dropLocation.getBlock().setType(Material.AIR);
-			restoreFlagBlock = true;
-		} else if (isCarried()) {
+		if (isCarried()) {
 			_carrier.setCarriedFlag(null);
 			_carrier = null;
-			restoreFlagBlock = true;
-		}
+		} else {
+			// Flag may be at home, but if this method was called, then perhaps
+			// an admin in creative mode inadvertently broke the flag, 
+			// triggering trag destruction detection.
+			_dropLocation.getBlock().setType(Material.AIR);
+		} 
 
-		if (restoreFlagBlock) {
-			MaterialData teamBlock = getTeam().getMaterialData();
-			_homeLocation.getBlock().setTypeIdAndData(teamBlock.getItemTypeId(), teamBlock.getData(), false);
-			_dropLocation = _homeLocation.clone();
-		}
+		MaterialData teamBlock = getTeam().getMaterialData();
+		_homeLocation.getBlock().setTypeIdAndData(teamBlock.getItemTypeId(), teamBlock.getData(), false);
+		_dropLocation = _homeLocation.clone();
 	}
 
 	// ------------------------------------------------------------------------

@@ -62,6 +62,10 @@ public class CutePVPListener implements Listener {
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(event.getPlayer());
 		if (teamPlayer != null) {
+			// The old OfflinePlayer instance can't be used to reference the player.
+			// This new one can, so store that.
+			teamPlayer.setOfflinePlayer(event.getPlayer());
+
 			_plugin.getLogger().info(event.getPlayer().getName() + " respawned on " + teamPlayer.getTeam().getName() + ".");
 			teamPlayer.setHelmet();
 			event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
