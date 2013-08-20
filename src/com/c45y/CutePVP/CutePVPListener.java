@@ -269,14 +269,17 @@ public class CutePVPListener implements Listener {
 					if (teamPlayer.isCarryingFlag()) {
 						player.sendMessage(ChatColor.DARK_RED + "You can only carry one flag at a time.");
 					} else {
-						flag.stealBy(teamPlayer);
-						teamPlayer.getScore().steals.increment();
-						teamPlayer.getTeam().getScore().steals.increment();
-						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
-											" has stolen " + clickedBlockTeam.getName() + "'s flag.");
-						if (_plugin.getConfiguration().FLAG_STEAL_SOUND != null) {
-							loc.getWorld().playSound(loc, _plugin.getConfiguration().FLAG_STEAL_SOUND, Constants.SOUND_RANGE, 1);
+						// Only count towards the score if the flag was at home.
+						if (flag.isHome()) {
+							teamPlayer.getScore().steals.increment();
+							teamPlayer.getTeam().getScore().steals.increment();
+							Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
+												" has stolen " + clickedBlockTeam.getName() + "'s flag.");
+							if (_plugin.getConfiguration().FLAG_STEAL_SOUND != null) {
+								loc.getWorld().playSound(loc, _plugin.getConfiguration().FLAG_STEAL_SOUND, Constants.SOUND_RANGE, 1);
+							}
 						}
+						flag.stealBy(teamPlayer);
 					}
 				}
 			}

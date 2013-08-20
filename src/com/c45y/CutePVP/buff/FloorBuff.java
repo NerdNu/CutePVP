@@ -22,14 +22,16 @@ public class FloorBuff extends Buff {
 	 */
 	public boolean load(ConfigurationSection section, Logger logger) {
 		try {
-			Material material = Material.matchMaterial(section.getString("material", ""));
-			byte data = (byte) (section.getInt("data") & 0xF);
-			_materialData = new MaterialData(material, data);
-			return true;
+			if (super.load(section, logger)) {
+				Material material = Material.matchMaterial(section.getString("material", ""));
+				byte data = (byte) (section.getInt("data") & 0xF);
+				_materialData = new MaterialData(material, data);
+				return true;
+			}
 		} catch (Exception ex) {
 			logger.severe("Unable to load material for floor buff " + section.getName());
-			return false;
 		}
+		return false;
 	}
 
 	// ------------------------------------------------------------------------

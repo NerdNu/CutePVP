@@ -173,7 +173,8 @@ public class BuffManager implements Iterable<TeamBuff> {
 		} else {
 			// Perhaps it is one of the non-team-specific buff blocks.
 			// NOTE: this key must be the same as MaterialData.hashCode().
-			FloorBuff buff = _floorBuffs.get((block.getTypeId() << 8) ^ block.getData());
+			int hash = (block.getTypeId() << 8) ^ block.getData();
+			FloorBuff buff = _floorBuffs.get(hash);
 			if (buff != null) {
 				buff.apply(teamPlayer.getPlayer());
 				return;

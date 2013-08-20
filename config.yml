@@ -85,7 +85,7 @@ teams:
           y: 64
           z: -18
           world: world
-        drop_time: 27894756
+        drop_time: 0
     score:
       kills: 0
       steals: 0
@@ -120,7 +120,7 @@ teams:
           y: 64
           z: -123
           world: world
-        drop_time: 27925557
+        drop_time: 0
       two:
         description: east
         home:
@@ -133,7 +133,7 @@ teams:
           y: 64
           z: -123
           world: world
-        drop_time: 27744546
+        drop_time: 0
     score:
       kills: 0
       steals: 0
