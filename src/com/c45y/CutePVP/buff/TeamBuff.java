@@ -3,6 +3,7 @@ package com.c45y.CutePVP.buff;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -12,6 +13,7 @@ import com.c45y.CutePVP.Team;
 import com.c45y.CutePVP.TeamManager;
 import com.c45y.CutePVP.TeamPlayer;
 import com.c45y.CutePVP.util.ConfigHelper;
+import com.c45y.CutePVP.util.RateLimiter;
 
 // ----------------------------------------------------------------------------
 /**
@@ -141,14 +143,23 @@ public class TeamBuff extends Buff {
 	 * @param teamPlayer the player who claimed the buff.
 	 */
 	public void claimBy(TeamPlayer teamPlayer) {
+		// Only announce if minimum broadcast separation has elapsed, or the
+		// buff has changed hands, to prevent chat spam.
+		if (_team != teamPlayer.getTeam() || _broadcastRateLimiter.canAct(_location.getWorld(), BUFF_BROADCAST_TICKS)) {
+			Messages.broadcast(teamPlayer.getPlayer().getDisplayName() + Messages.BROADCAST_COLOR +
+								" has claimed the " + _name + " buff for " + teamPlayer.getTeam().getName() + ".");
+
+			// If the buff has changed hands, play a sound.
+			if (_team != teamPlayer.getTeam()) {
+				_location.getWorld().playSound(_location, Sound.WITHER_SPAWN, 1000.0f, 1);
+			}
+		}
+
 		_team = teamPlayer.getTeam();
 		_startTicks = _location.getWorld().getFullTime();
 		for (Player player : _team.getOnlineMembers()) {
 			apply(player);
 		}
-		Messages.broadcast(teamPlayer.getPlayer().getDisplayName() + Messages.BROADCAST_COLOR +
-							" has claimed the " + _name + " buff for " + _team.getName() + ".");
-		_lastBroadcastTicks = _location.getWorld().getFullTime();
 	}
 
 	// ------------------------------------------------------------------------
@@ -161,14 +172,13 @@ public class TeamBuff extends Buff {
 	 */
 	public void update(long durationTicks) {
 		if (isClaimed()) {
-			long worldTime = _location.getWorld().getFullTime(); 
+			long worldTime = _location.getWorld().getFullTime();
 			if (worldTime < _startTicks + durationTicks) {
 				for (Player player : _team.getOnlineMembers()) {
 					apply(player);
 				}
-				if (worldTime > _lastBroadcastTicks + BUFF_BROADCAST_TICKS) {
+				if (_broadcastRateLimiter.canAct(_location.getWorld(), BUFF_BROADCAST_TICKS)) {
 					Messages.broadcast(_team.getName() + " has the " + _name + " buff.");
-					_lastBroadcastTicks = worldTime;
 				}
 			} else {
 				Messages.broadcast(_team.getName() + Messages.BROADCAST_COLOR +
@@ -205,15 +215,14 @@ public class TeamBuff extends Buff {
 	private long _startTicks;
 
 	/**
-	 * World time (ticks) of the last broadcast announcing ownership of this 
-	 * team buff.
+	 * Limit the rate at which buff claims are broadcast so players can't spam
+	 * chat by right clicking on the buff.
 	 */
-	private long _lastBroadcastTicks = 0;
-	
+	private RateLimiter _broadcastRateLimiter = new RateLimiter();
+
 	/**
 	 * Minimum duration in ticks between broadcast announcements about who owns
 	 * team buffs.
 	 */
-	private long BUFF_BROADCAST_TICKS = 20 * 60 * 3;
-	
+	private int BUFF_BROADCAST_TICKS = 20 * 60 * 3;
 } // class TeamBuff

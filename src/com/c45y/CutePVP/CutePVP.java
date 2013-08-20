@@ -92,7 +92,7 @@ public class CutePVP extends JavaPlugin {
 				getBuffManager().applyTeamBuffs(_teamBuffTicks);
 				for (Team team : getTeamManager()) {
 					for (Flag flag : team.getFlags()) {
-						flag.checkReturn(_flagReturnTicks);
+						flag.checkReturn(_flagDroppedTicks);
 					}
 				}
 			}
@@ -113,6 +113,19 @@ public class CutePVP extends JavaPlugin {
 				}
 			}
 		}, 0, 5 * ONE_SECOND_TICKS);
+
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+			public void run() {
+				for (Team team : getTeamManager()) {
+					for (Flag flag : team.getFlags()) {
+						Location loc = flag.getLocation();
+						loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
+					}
+				}
+			}
+		}, 0, _flagFlameTicks);
+
+		getLogger().info("World time: " + Bukkit.getWorlds().get(0).getFullTime());
 	}
 
 	// ------------------------------------------------------------------------
@@ -121,6 +134,7 @@ public class CutePVP extends JavaPlugin {
 	 */
 	@Override
 	public void onDisable() {
+		getLogger().info("World time: " + Bukkit.getWorlds().get(0).getFullTime());
 		saveConfiguration();
 		_worldGuard = null;
 	}
@@ -134,10 +148,6 @@ public class CutePVP extends JavaPlugin {
 	 */
 	public void updateTeamPlayerEffects(TeamPlayer teamPlayer) {
 		Location loc = teamPlayer.getPlayer().getLocation();
-		if (teamPlayer.isCarryingFlag()) {
-			loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
-		}
-
 		Block block = loc.getBlock().getRelative(BlockFace.DOWN);
 		getBuffManager().applyFloorBuff(block, teamPlayer);
 	}
@@ -341,7 +351,8 @@ public class CutePVP extends JavaPlugin {
 		getTeamManager().load();
 		getBuffManager().load();
 
-		_flagReturnTicks = getConfig().getInt("misc.flag_return_ticks", 5 * ONE_MINUTE_TICKS);
+		_flagFlameTicks = getConfig().getInt("misc.flag_flame_ticks", 7);
+		_flagDroppedTicks = getConfig().getInt("misc.flag_dropped_ticks", 5 * ONE_MINUTE_TICKS);
 		_teamBuffTicks = getConfig().getInt("misc.team_buff_ticks", 30 * ONE_MINUTE_TICKS);
 	}
 
@@ -353,7 +364,8 @@ public class CutePVP extends JavaPlugin {
 		getTeamManager().save();
 		getBuffManager().save();
 
-		getConfig().set("misc.flag_return_ticks", _flagReturnTicks);
+		getConfig().set("misc.flag_flame_ticks", _flagFlameTicks);
+		getConfig().set("misc.flag_dropped_ticks", _flagDroppedTicks);
 		getConfig().set("misc.team_buff_ticks", _teamBuffTicks);
 		saveConfig();
 	}
@@ -382,7 +394,12 @@ public class CutePVP extends JavaPlugin {
 	/**
 	 * Number of ticks before a dropped flag is automatically returned.
 	 */
-	int _flagReturnTicks;
+	int _flagDroppedTicks;
+
+	/**
+	 * The number of ticks between flame effects displayed at each flag.
+	 */
+	int _flagFlameTicks;
 
 	/**
 	 * The total number of ticks from the time a team buff is claimed to when it

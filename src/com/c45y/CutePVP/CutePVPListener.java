@@ -2,6 +2,7 @@ package com.c45y.CutePVP;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -210,9 +211,14 @@ public class CutePVPListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Player player = event.getPlayer();
+		Location loc = player.getLocation();
 		TeamManager tm = _plugin.getTeamManager();
 		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
-		if (teamPlayer == null || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
+
+		// Treat left and right clicks the same to catch attempts to break flag.
+		if (teamPlayer == null ||
+			(event.getAction() != Action.RIGHT_CLICK_BLOCK &&
+			event.getAction() != Action.LEFT_CLICK_BLOCK)) {
 			return;
 		}
 
@@ -221,6 +227,10 @@ public class CutePVPListener implements Listener {
 		TeamBuff teamBuff = _plugin.getBuffManager().getTeamBuffFromBlock(clickedBlock);
 		if (teamBuff != null) {
 			teamBuff.claimBy(teamPlayer);
+
+			// Cancel the interaction, so that we can use beacons as purely
+			// decorative buff markers.
+			event.setCancelled(true);
 			return;
 		}
 
@@ -239,6 +249,7 @@ public class CutePVPListener implements Listener {
 						teamPlayer.getTeam().getScore().returns.increment();
 						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR + " returned " +
 											teamPlayer.getTeam().getName() + "'s flag.");
+						loc.getWorld().playSound(loc, Sound.ORB_PICKUP, 1000.0f, 1);
 					} else if (flag.isHome() && teamPlayer.isCarryingFlag()) {
 						// Capturing an opposition team's flag.
 						teamPlayer.getScore().captures.increment();
@@ -248,6 +259,8 @@ public class CutePVPListener implements Listener {
 						carriedFlag.doReturn();
 						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR + " captured " +
 											carriedFlag.getTeam().getName() + "'s " + carriedFlag.getName() + " flag.");
+
+						loc.getWorld().playSound(loc, Sound.LEVEL_UP, 1000.0f, 1);
 					}
 				} else {
 					// An opposition team flag.
@@ -259,6 +272,7 @@ public class CutePVPListener implements Listener {
 						teamPlayer.getTeam().getScore().steals.increment();
 						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
 											" has stolen " + clickedBlockTeam.getName() + "'s flag.");
+						loc.getWorld().playSound(loc, Sound.AMBIENCE_THUNDER, 1000.0f, 1);
 					}
 				}
 			}

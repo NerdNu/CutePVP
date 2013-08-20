@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.material.MaterialData;
 
@@ -36,6 +37,7 @@ public class Flag {
 			flag._homeLocation = config.loadLocation(section, "home");
 			flag._dropLocation = (section.contains("current")) ? config.loadLocation(section, "current") : flag._homeLocation.clone();
 			flag._name = section.getString("description", team.getName() + "'s flag");
+			flag._dropTime = section.getLong("drop_time");
 			return flag;
 		} catch (Exception ex) {
 			logger.severe("Error loading " + team.getId() + "'s flag " + section.getName());
@@ -47,16 +49,16 @@ public class Flag {
 	/**
 	 * Save the current and home locations of this flag.
 	 * 
-	 * @param teamSection the configuration section of the team that owns this
-	 *        flag.
+	 * @param section the configuration section of the flag.
 	 * @param logger logs messages.
 	 */
-	public void save(ConfigurationSection teamSection, Logger logger) {
+	public void save(ConfigurationSection section, Logger logger) {
 		ConfigHelper helper = new ConfigHelper(logger);
-		ConfigurationSection currentSection = teamSection.getConfigurationSection("flags." + _id + ".current");
-		ConfigurationSection homeSection = teamSection.getConfigurationSection("flags." + _id + ".home");
+		ConfigurationSection currentSection = section.getConfigurationSection("current");
+		ConfigurationSection homeSection = section.getConfigurationSection("home");
 		helper.saveBlockLocation(currentSection, _dropLocation);
 		helper.saveBlockLocation(homeSection, _homeLocation);
+		section.set("drop_time", _dropTime);
 	}
 
 	// ------------------------------------------------------------------------
@@ -84,16 +86,20 @@ public class Flag {
 	 */
 	public void drop() {
 		if (isCarried()) {
-			_dropLocation = _carrier.getPlayer().getLocation().clone();
+			// Try dropping the flag at head height to avoid being trapped under
+			// it.
+			_dropLocation = _carrier.getPlayer().getLocation().getBlock().getRelative(BlockFace.UP).getLocation();
+			_dropTime = _dropLocation.getWorld().getFullTime();
+
 			_team.getPlugin().getLogger().info(
-				_carrier.getPlayer().getName() + " dropped " + _team.getName() + "'s " + 
-				getName() + " flag at "	+ Messages.formatIntegerXYZ(_dropLocation) + ".");
-			
+				_carrier.getPlayer().getName() + " dropped " + _team.getName() + "'s " +
+				getName() + " flag at " + Messages.formatIntegerXYZ(_dropLocation) +
+				" at time " + _dropTime + ".");
+
 			MaterialData teamBlock = getTeam().getMaterialData();
 			_dropLocation.getBlock().setTypeIdAndData(teamBlock.getItemTypeId(), teamBlock.getData(), false);
 			_carrier.setCarriedFlag(null);
 			_carrier = null;
-			_dropTime = _dropLocation.getWorld().getFullTime();
 		}
 	}
 
@@ -107,8 +113,11 @@ public class Flag {
 	 * @return true if the flag was returned.
 	 */
 	public boolean checkReturn(long timeoutTicks) {
-		if (isDropped() && _dropLocation.getWorld().getFullTime() >= _dropTime + timeoutTicks) {
+		long worldTime = _dropLocation.getWorld().getFullTime();
+		if (isDropped() && worldTime >= (_dropTime + timeoutTicks)) {
 			Messages.broadcast(_team.getName() + "'s " + getName() + " flag returned automatically.");
+			_team.getPlugin().getLogger().info(_team.getName() + "'s " + getName() +
+												" flag returned automatically at time " + worldTime);
 			doReturn();
 			return true;
 		} else {
@@ -312,5 +321,4 @@ public class Flag {
 	 * The value of World.getFullTime() when the flag was dropped.
 	 */
 	private long _dropTime;
-
 } // class Flag

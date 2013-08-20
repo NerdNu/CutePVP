@@ -1,6 +1,7 @@
 misc:
-  flag_return_ticks: 0
-  team_buff_ticks: 0
+  flag_flame_ticks: 7
+  flag_dropped_ticks: 6000
+  team_buff_ticks: 36000
 buffs:
   team:
     NE:
@@ -15,7 +16,7 @@ buffs:
           amplifier: 1
           duration: 1200
       team: ''
-      start_ticks: 26754830
+      start_ticks: 0
     SW:
       name: South-West
       location:
@@ -28,7 +29,7 @@ buffs:
           amplifier: 1
           duration: 1200
       team: ''
-      start_ticks: 26698760
+      start_ticks: 0
   friend:
     damage_resistance:
       amplifier: 0
@@ -66,6 +67,7 @@ teams:
           y: 64
           z: -18
           world: world
+        drop_time: 0
       two:
         description: east
         home:
@@ -78,17 +80,13 @@ teams:
           y: 64
           z: -18
           world: world
+        drop_time: 27894756
     score:
       kills: 0
       steals: 0
       returns: 0
       captures: 0
-    members:
-      totemo:
-        kills: 0
-        steals: 0
-        returns: 0
-        captures: 0
+    members: {}
   blue:
     name: Blue Team
     chat_color: aqua
@@ -117,6 +115,7 @@ teams:
           y: 64
           z: -123
           world: world
+        drop_time: 27925557
       two:
         description: east
         home:
@@ -129,10 +128,10 @@ teams:
           y: 64
           z: -123
           world: world
+        drop_time: 27744546
     score:
       kills: 0
       steals: 0
       returns: 0
       captures: 0
     members: {}
-

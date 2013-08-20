@@ -121,7 +121,8 @@ public class Team {
 
 		// Save the flags.
 		for (Flag flag : _flags) {
-			flag.save(teamSection, _plugin.getLogger());
+			ConfigurationSection flagSection = teamSection.getConfigurationSection("flags." + flag.getId());
+			flag.save(flagSection, _plugin.getLogger());
 		}
 
 		// Save the team members.
@@ -345,7 +346,11 @@ public class Team {
 	 */
 	public void message(String message) {
 		for (Player player : getOnlineMembers()) {
-			player.sendMessage(message);
+			// Don't send team messages to staff here, since they will get a 
+			// copy of them anyway.
+			if (! player.hasPermission(Permissions.MOD)) {
+				player.sendMessage(message);
+			}
 		}
 	}
 
