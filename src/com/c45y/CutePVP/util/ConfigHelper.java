@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -187,6 +188,43 @@ public class ConfigHelper {
 		}
 		return potions;
 	} // loadPotions
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Load a sound whose name is specified as a string at the specified path in
+	 * the specified section.
+	 * 
+	 * @param section the section containing path.
+	 * @param path the path to the string value naming the sound, relative to
+	 *        section.
+	 * @param def the default value to use on error or if the sound is
+	 *        unspecified.
+	 * @param warnIfMissing if true, a warning is logged if the value is missing
+	 *        from the configuration.
+	 */
+	public Sound loadSound(ConfigurationSection section, String path, Sound def, boolean warnIfMissing) {
+		if (section == null) {
+			if (warnIfMissing) {
+				_logger.warning("Missing configuration section for sound at " + path + ".");
+			}
+			return def;
+		}
+
+		String name = section.getString(path);
+		if (name == null) {
+			if (warnIfMissing) {
+				_logger.warning("Missing value for sound at " + getFullPath(section, path) + ".");
+			}
+			return def;
+		}
+
+		Sound sound = Sound.valueOf(name.toUpperCase());
+		if (sound == null) {
+			_logger.severe("Invalid name \"" + name + "\" for sound at " + getFullPath(section, path) + ".");
+			return def;
+		}
+		return sound;
+	} // loadSound
 
 	// ------------------------------------------------------------------------
 	/**

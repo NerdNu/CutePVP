@@ -2,6 +2,11 @@ misc:
   flag_flame_ticks: 7
   flag_dropped_ticks: 6000
   team_buff_ticks: 36000
+sounds:
+  steal: ambience_thunder
+  return: orb_pickup
+  capture: level_up
+  buff: wither_spawn
 buffs:
   team:
     NE:

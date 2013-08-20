@@ -83,13 +83,21 @@ public class Flag {
 	 * 
 	 * The block above the ground is set to the flag material. This method is
 	 * called when the flag carrier is killed or logs out, including restarts.
+	 * 
 	 */
 	public void drop() {
 		if (isCarried()) {
-			// Try dropping the flag at head height to avoid being trapped under
-			// it.
-			_dropLocation = _carrier.getPlayer().getLocation().getBlock().getRelative(BlockFace.UP).getLocation();
+			// If the block at feet level is a slab or whatnot (anything but
+			// air), then drop the flag one block higher.
+			Block feetBlock = _carrier.getPlayer().getLocation().getBlock();
+			_dropLocation = (feetBlock.getType() == Material.AIR) ? feetBlock.getLocation()
+																	: feetBlock.getRelative(BlockFace.UP).getLocation();
 			_dropTime = _dropLocation.getWorld().getFullTime();
+
+			// Put the player dropping the flag on top of the dropped block,
+			// to prevent them being trapped underneath the flag when they
+			// log out and drop it.
+			_carrier.getPlayer().teleport(_dropLocation.getBlock().getRelative(BlockFace.UP).getLocation());
 
 			_team.getPlugin().getLogger().info(
 				_carrier.getPlayer().getName() + " dropped " + _team.getName() + "'s " +

@@ -24,16 +24,6 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
  * Plugin class.
  */
 public class CutePVP extends JavaPlugin {
-	/**
-	 * The number of ticks in one second.
-	 */
-	public static final int ONE_SECOND_TICKS = 20;
-
-	/**
-	 * The number of ticks in one minute.
-	 */
-	public static final int ONE_MINUTE_TICKS = 60 * ONE_SECOND_TICKS;
-
 	// ------------------------------------------------------------------------
 	/**
 	 * Return a reference to the WorldGuard plugin and enable it if necessary.
@@ -77,26 +67,37 @@ public class CutePVP extends JavaPlugin {
 	}
 
 	// ------------------------------------------------------------------------
+
+	/**
+	 * Return the {@link Configuration} .
+	 * 
+	 * @return the {@link Configuration} .
+	 */
+	public Configuration getConfiguration() {
+		return _configuration;
+	}
+
+	// ------------------------------------------------------------------------
 	/**
 	 * Called when the plugin is enabled.
 	 */
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
-		loadConfiguration();
+		getConfiguration().load();
 
 		getServer().getPluginManager().registerEvents(_listener, this);
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
-				getBuffManager().applyTeamBuffs(_teamBuffTicks);
+				getBuffManager().applyTeamBuffs(getConfiguration().TEAM_BUFF_TICKS);
 				for (Team team : getTeamManager()) {
 					for (Flag flag : team.getFlags()) {
-						flag.checkReturn(_flagDroppedTicks);
+						flag.checkReturn(getConfiguration().FLAG_DROPPED_TICKS);
 					}
 				}
 			}
-		}, 0, 30 * ONE_SECOND_TICKS);
+		}, 0, 30 * Constants.ONE_SECOND_TICKS);
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
@@ -112,18 +113,30 @@ public class CutePVP extends JavaPlugin {
 					}
 				}
 			}
-		}, 0, 5 * ONE_SECOND_TICKS);
+		}, 0, 5 * Constants.ONE_SECOND_TICKS);
 
+		// Play flames at the flag location. Also check for attempts to piston
+		// the flag out of position so that it can't be clicked.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
 				for (Team team : getTeamManager()) {
 					for (Flag flag : team.getFlags()) {
 						Location loc = flag.getLocation();
 						loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
+						
+						// Flags that are dropped or home are "not carried".
+						if (!flag.isCarried() && !flag.getTeam().isTeamBlock(loc.getBlock())) {
+							flag.doReturn();
+							Messages.broadcast(Messages.BROADCAST_COLOR + flag.getTeam().getName() + "'s stolen " +
+												flag.getName() + " flag was destroyed and returned home.");
+							if (getConfiguration().FLAG_RETURN_SOUND != null) {
+								loc.getWorld().playSound(loc, getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
+							}
+						}
 					}
 				}
 			}
-		}, 0, _flagFlameTicks);
+		}, 0, getConfiguration().FLAG_FLAME_TICKS);
 
 		getLogger().info("World time: " + Bukkit.getWorlds().get(0).getFullTime());
 	}
@@ -135,7 +148,7 @@ public class CutePVP extends JavaPlugin {
 	@Override
 	public void onDisable() {
 		getLogger().info("World time: " + Bukkit.getWorlds().get(0).getFullTime());
-		saveConfiguration();
+		getConfiguration().save();
 		_worldGuard = null;
 	}
 
@@ -241,11 +254,11 @@ public class CutePVP extends JavaPlugin {
 	protected boolean handleCutePvPCommand(CommandSender sender, String[] args) {
 		if (args.length == 1) {
 			if (args[0].equals("reload")) {
-				loadConfiguration();
+				getConfiguration().load();
 				Messages.success(sender, Messages.PREFIX, "Configuration reloaded.");
 				return true;
 			} else if (args[0].equals("save")) {
-				saveConfiguration();
+				getConfiguration().save();
 				Messages.success(sender, Messages.PREFIX, "Configuration saved.");
 				return true;
 			}
@@ -345,36 +358,14 @@ public class CutePVP extends JavaPlugin {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Load all configuration.
-	 */
-	protected void loadConfiguration() {
-		getTeamManager().load();
-		getBuffManager().load();
-
-		_flagFlameTicks = getConfig().getInt("misc.flag_flame_ticks", 7);
-		_flagDroppedTicks = getConfig().getInt("misc.flag_dropped_ticks", 5 * ONE_MINUTE_TICKS);
-		_teamBuffTicks = getConfig().getInt("misc.team_buff_ticks", 30 * ONE_MINUTE_TICKS);
-	}
-
-	// ------------------------------------------------------------------------
-	/**
-	 * Save all configuration.
-	 */
-	protected void saveConfiguration() {
-		getTeamManager().save();
-		getBuffManager().save();
-
-		getConfig().set("misc.flag_flame_ticks", _flagFlameTicks);
-		getConfig().set("misc.flag_dropped_ticks", _flagDroppedTicks);
-		getConfig().set("misc.team_buff_ticks", _teamBuffTicks);
-		saveConfig();
-	}
-
-	// ------------------------------------------------------------------------
-	/**
 	 * Reference to the WorldGuard plugin.
 	 */
-	private WorldGuardPlugin _worldGuard = null;
+	private WorldGuardPlugin _worldGuard;
+
+	/**
+	 * Plugin configuration.
+	 */
+	private Configuration _configuration = new Configuration(this);
 
 	/**
 	 * Event listener.
@@ -390,20 +381,4 @@ public class CutePVP extends JavaPlugin {
 	 * The {@link BuffManager}.
 	 */
 	private BuffManager _buffManager = new BuffManager(this);
-
-	/**
-	 * Number of ticks before a dropped flag is automatically returned.
-	 */
-	int _flagDroppedTicks;
-
-	/**
-	 * The number of ticks between flame effects displayed at each flag.
-	 */
-	int _flagFlameTicks;
-
-	/**
-	 * The total number of ticks from the time a team buff is claimed to when it
-	 * expires.
-	 */
-	int _teamBuffTicks;
 } // class CutePVP

@@ -3,11 +3,12 @@ package com.c45y.CutePVP.buff;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
-import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
+import com.c45y.CutePVP.Configuration;
+import com.c45y.CutePVP.Constants;
 import com.c45y.CutePVP.Messages;
 import com.c45y.CutePVP.Team;
 import com.c45y.CutePVP.TeamManager;
@@ -151,7 +152,10 @@ public class TeamBuff extends Buff {
 
 			// If the buff has changed hands, play a sound.
 			if (_team != teamPlayer.getTeam()) {
-				_location.getWorld().playSound(_location, Sound.WITHER_SPAWN, 1000.0f, 1);
+				Configuration configuration = teamPlayer.getTeam().getPlugin().getConfiguration();
+				if (configuration.TEAM_BUFF_SOUND != null) {
+					_location.getWorld().playSound(_location, configuration.TEAM_BUFF_SOUND, Constants.SOUND_RANGE, 1);
+				}
 			}
 		}
 
