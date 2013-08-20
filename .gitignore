@@ -2,6 +2,7 @@
 .project
 .settings/
 *.class
+*~
 bin/
 target/
 config.yml.example

@@ -2,6 +2,9 @@ misc:
   flag_flame_ticks: 7
   flag_dropped_ticks: 6000
   team_buff_ticks: 36000
+protections:
+  can_attack_in_enemy_base: false
+  can_edit_enemy_base: false
 sounds:
   steal: ambience_thunder
   return: orb_pickup

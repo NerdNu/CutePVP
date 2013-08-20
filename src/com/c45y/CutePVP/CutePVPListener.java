@@ -185,7 +185,8 @@ public class CutePVPListener implements Listener {
 		} else if (attacker.getTeam() == victim.getTeam()) {
 			// Both players on the same team. No damage dealt.
 			event.setCancelled(true);
-		} else if (victim.getTeam().inTeamBase(victim.getPlayer().getLocation())) {
+		} else if (!_plugin.getConfiguration().CAN_ATTACK_IN_ENEMY_BASE &&
+					victim.getTeam().inTeamBase(victim.getPlayer().getLocation())) {
 			attacker.getPlayer().sendMessage(ChatColor.DARK_RED + "You cannot attack within another team's base.");
 			event.setCancelled(true);
 		}
@@ -347,7 +348,8 @@ public class CutePVPListener implements Listener {
 	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event) {
-		if (!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
+		if (!_plugin.getConfiguration().CAN_EDIT_ENEMY_BASE &&
+			!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
 			event.setCancelled(true);
 		}
 	}
@@ -359,7 +361,8 @@ public class CutePVPListener implements Listener {
 	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event) {
-		if (!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
+		if (!_plugin.getConfiguration().CAN_EDIT_ENEMY_BASE &&
+			!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
 			event.setCancelled(true);
 		}
 	}

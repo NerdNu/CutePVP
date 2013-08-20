@@ -27,6 +27,18 @@ public class Configuration {
 	 */
 	public int TEAM_BUFF_TICKS;
 
+	/**
+	 * If true, players can be attacked by the enemy in their own base.
+	 * 
+	 * That is, Team A can be hurt by Team B in Team A's base.
+	 */
+	public boolean CAN_ATTACK_IN_ENEMY_BASE;
+	
+	/**
+	 * If true, players can edit within an enemy team's base region.
+	 */
+	public boolean CAN_EDIT_ENEMY_BASE;
+	
 	// ------------------------------------------------------------------------
 	/**
 	 * Sound played when a player steals a flag.
@@ -69,6 +81,8 @@ public class Configuration {
 		FLAG_FLAME_TICKS = _plugin.getConfig().getInt("misc.flag_flame_ticks", 7);
 		FLAG_DROPPED_TICKS = _plugin.getConfig().getInt("misc.flag_dropped_ticks", 5 * Constants.ONE_MINUTE_TICKS);
 		TEAM_BUFF_TICKS = _plugin.getConfig().getInt("misc.team_buff_ticks", 30 * Constants.ONE_MINUTE_TICKS);
+		CAN_ATTACK_IN_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_attack_in_enemy_base", false);
+		CAN_EDIT_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_edit_enemy_base", false);
 		
 		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
 		ConfigurationSection sounds = _plugin.getConfig().getConfigurationSection("sounds");
