@@ -1,7 +1,7 @@
 misc:
   flag_flame_ticks: 7
-  flag_dropped_ticks: 6000
-  team_buff_ticks: 36000
+  flag_dropped_seconds: 300
+  team_buff_seconds: 1800
 protections:
   can_attack_in_enemy_base: false
   can_edit_enemy_base: false
@@ -24,7 +24,7 @@ buffs:
           amplifier: 1
           duration: 1200
       team: ''
-      start_ticks: 0
+      start_millis: 0
     SW:
       name: South-West
       location:
@@ -33,11 +33,11 @@ buffs:
         z: -70
         world: world
       potions:
-        speed:
+        increase_damage:
           amplifier: 1
           duration: 1200
       team: ''
-      start_ticks: 0
+      start_millis: 0
   friend:
     damage_resistance:
       amplifier: 0

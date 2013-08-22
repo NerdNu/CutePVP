@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
@@ -81,6 +82,8 @@ public class CutePVP extends JavaPlugin {
 	/**
 	 * Called when the plugin is enabled.
 	 */
+	OfflinePlayer totemo;
+
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
@@ -90,10 +93,10 @@ public class CutePVP extends JavaPlugin {
 
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
-				getBuffManager().applyTeamBuffs(getConfiguration().TEAM_BUFF_TICKS);
+				getBuffManager().applyTeamBuffs(getConfiguration().TEAM_BUFF_SECONDS);
 				for (Team team : getTeamManager()) {
 					for (Flag flag : team.getFlags()) {
-						flag.checkReturn(getConfiguration().FLAG_DROPPED_TICKS);
+						flag.checkReturn(getConfiguration().FLAG_DROPPED_SECONDS);
 					}
 				}
 			}
@@ -123,7 +126,7 @@ public class CutePVP extends JavaPlugin {
 					for (Flag flag : team.getFlags()) {
 						Location loc = flag.getLocation();
 						loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
-						
+
 						// Flags that are dropped or home are "not carried".
 						if (!flag.isCarried() && !flag.getTeam().isTeamBlock(loc.getBlock())) {
 							flag.doReturn();

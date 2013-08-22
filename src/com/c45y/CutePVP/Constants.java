@@ -18,5 +18,5 @@ public class Constants {
 	/**
 	 * The volume for playing sounds.
 	 */
-	public static final float SOUND_RANGE = 1000.0f;
+	public static final float SOUND_RANGE = 2000.0f;
 } // class Constants

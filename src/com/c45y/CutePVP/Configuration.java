@@ -8,13 +8,28 @@ import com.c45y.CutePVP.util.ConfigHelper;
 // ----------------------------------------------------------------------------
 /**
  * Plugin configuration.
+ * 
+ * Seconds are used for timeouts rather than ticks. Only the periods of
+ * repeating tasks added to the Bukkit scheduler are specified in ticks. The
+ * reason for this is twofold:
+ * <ul>
+ * <li>Firstly, in all these cases, we're interested in elapsed real-world time,
+ * rather than ticks, which dependent on the actual tick rate of the server,
+ * which is rarely 20 under heavy load.</li>
+ * <li>Secondly, using the ProperTime plugin to adjust the day cycle appears to
+ * cause problems with World.getFullTime() advancing by large fractions of a day
+ * after restarts, leading to buffs timing out unexpectedly when using ticks.</li>
+ * </ul>
+ * 
+ * On the downside, this scheme will now take into account the time required to
+ * restart the server.
  */
 public class Configuration {
 	// ------------------------------------------------------------------------
 	/**
-	 * Number of ticks before a dropped flag is automatically returned.
+	 * Number of seconds before a dropped flag is automatically returned.
 	 */
-	public int FLAG_DROPPED_TICKS;
+	public int FLAG_DROPPED_SECONDS;
 
 	/**
 	 * The number of ticks between flame effects displayed at each flag.
@@ -22,10 +37,10 @@ public class Configuration {
 	public int FLAG_FLAME_TICKS;
 
 	/**
-	 * The total number of ticks from the time a team buff is claimed to when it
-	 * expires.
+	 * The total number of seconds from the time a team buff is claimed to when
+	 * it expires.
 	 */
-	public int TEAM_BUFF_TICKS;
+	public int TEAM_BUFF_SECONDS;
 
 	/**
 	 * If true, players can be attacked by the enemy in their own base.
@@ -33,12 +48,12 @@ public class Configuration {
 	 * That is, Team A can be hurt by Team B in Team A's base.
 	 */
 	public boolean CAN_ATTACK_IN_ENEMY_BASE;
-	
+
 	/**
 	 * If true, players can edit within an enemy team's base region.
 	 */
 	public boolean CAN_EDIT_ENEMY_BASE;
-	
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Sound played when a player steals a flag.
@@ -79,11 +94,11 @@ public class Configuration {
 		_plugin.getBuffManager().load();
 
 		FLAG_FLAME_TICKS = _plugin.getConfig().getInt("misc.flag_flame_ticks", 7);
-		FLAG_DROPPED_TICKS = _plugin.getConfig().getInt("misc.flag_dropped_ticks", 5 * Constants.ONE_MINUTE_TICKS);
-		TEAM_BUFF_TICKS = _plugin.getConfig().getInt("misc.team_buff_ticks", 30 * Constants.ONE_MINUTE_TICKS);
+		FLAG_DROPPED_SECONDS = _plugin.getConfig().getInt("misc.flag_dropped_seconds", 300);
+		TEAM_BUFF_SECONDS = _plugin.getConfig().getInt("misc.team_buff_seconds", 1800);
 		CAN_ATTACK_IN_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_attack_in_enemy_base", false);
 		CAN_EDIT_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_edit_enemy_base", false);
-		
+
 		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
 		ConfigurationSection sounds = _plugin.getConfig().getConfigurationSection("sounds");
 		FLAG_STEAL_SOUND = helper.loadSound(sounds, "steal", Sound.AMBIENCE_THUNDER, true);
@@ -101,8 +116,8 @@ public class Configuration {
 		_plugin.getBuffManager().save();
 
 		_plugin.getConfig().set("misc.flag_flame_ticks", FLAG_FLAME_TICKS);
-		_plugin.getConfig().set("misc.flag_dropped_ticks", FLAG_DROPPED_TICKS);
-		_plugin.getConfig().set("misc.team_buff_ticks", TEAM_BUFF_TICKS);
+		_plugin.getConfig().set("misc.flag_dropped_seconds", FLAG_DROPPED_SECONDS);
+		_plugin.getConfig().set("misc.team_buff_seconds", TEAM_BUFF_SECONDS);
 		_plugin.saveConfig();
 	}
 

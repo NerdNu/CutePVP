@@ -16,39 +16,61 @@ public class Score {
 	/**
 	 * Number of enemies killed by this scorer.
 	 */
-	public Count kills = new Count("kills");
+	public Count kills = new Count("Kills");
 
 	/**
 	 * Number of times this scorer has taken an enemy flag.
 	 */
-	public Count steals = new Count("steals");
+	public Count steals = new Count("Steals");
 
 	/**
 	 * Number of times this scorer has returned an own team flag stolen by an
 	 * enemy.
 	 */
-	public Count returns = new Count("returns");
+	public Count returns = new Count("Returns");
 
 	/**
 	 * Number of times this scorer has carried an enemy flag to the scoring
 	 * zone.
 	 */
-	public Count captures = new Count("captures");
+	public Count captures = new Count("Captures");
+
+	/**
+	 * Number of team buffs claimed by this scorer.
+	 */
+	public Count buffs = new Count("Buffs");
 
 	// ------------------------------------------------------------------------
 	/**
 	 * Represents one counted (integer) property as a public field of Score.
 	 */
 	public static class Count {
+		// --------------------------------------------------------------------
 		/**
 		 * Constructor.
 		 * 
-		 * @param name the persistent name of the property in the config file.
+		 * @param id the persistent ID of the property in the config file.
+		 * @param name the name of the property presented to players in score
+		 *        messages.
 		 */
 		public Count(String name) {
-			_name = name;
+			this(name, name.toLowerCase());
 		}
 
+		// --------------------------------------------------------------------
+		/**
+		 * Constructor.
+		 * 
+		 * @param name the name of the property presented to players in score
+		 *        messages.
+		 * @param id the persistent ID of the property in the config file.
+		 */
+		public Count(String name, String id) {
+			_name = name;
+			_id = id;
+		}
+
+		// --------------------------------------------------------------------
 		/**
 		 * Increment the count by one.
 		 */
@@ -56,6 +78,7 @@ public class Score {
 			++_count;
 		}
 
+		// --------------------------------------------------------------------
 		/**
 		 * Return the current count.
 		 * 
@@ -65,6 +88,17 @@ public class Score {
 			return _count;
 		}
 
+		// --------------------------------------------------------------------
+		/**
+		 * Return the descriptive name of this count presented to the players.
+		 * 
+		 * @return the descriptive name of this count presented to the players.
+		 */
+		public String getName() {
+			return _name;
+		}
+		
+		// --------------------------------------------------------------------
 		/**
 		 * Load the count value from the configuration.
 		 * 
@@ -72,9 +106,10 @@ public class Score {
 		 *        is stored.
 		 */
 		public void load(ConfigurationSection section) {
-			_count = section.getInt(_name);
+			_count = section.getInt(_id);
 		}
 
+		// --------------------------------------------------------------------
 		/**
 		 * Save the count value to the configuration.
 		 * 
@@ -82,11 +117,17 @@ public class Score {
 		 *        is stored.
 		 */
 		public void save(ConfigurationSection section) {
-			section.set(_name, _count);
+			section.set(_id, _count);
 		}
 
+		// --------------------------------------------------------------------
 		/**
-		 * The name of this count in the configuration file.
+		 * The programmatic ID of this count in the configuration file.
+		 */
+		private String _id;
+
+		/**
+		 * The descriptive name of this count presented to the players.
 		 */
 		private String _name;
 
@@ -128,16 +169,17 @@ public class Score {
 	 */
 	public String toString() {
 		StringBuilder message = new StringBuilder();
-		message.append(ChatColor.LIGHT_PURPLE).append(" Kills: ").append(ChatColor.WHITE).append(kills.get());
-		message.append(ChatColor.LIGHT_PURPLE).append(" Steals: ").append(ChatColor.WHITE).append(steals.get());
-		message.append(ChatColor.LIGHT_PURPLE).append(" Captures: ").append(ChatColor.WHITE).append(captures.get());
-		message.append(ChatColor.LIGHT_PURPLE).append(" Returns: ").append(ChatColor.WHITE).append(returns.get());
+		for (Count count : _counts) {
+			message.append(ChatColor.LIGHT_PURPLE).append(" ").append(count.getName()).append(": ");
+			message.append(ChatColor.WHITE).append(count.get());
+		}
 		return message.toString();
 	}
-	
+
 	// ------------------------------------------------------------------------
 	/**
-	 * A list of all Count fields, used to automate load() and save().
+	 * A list of all Count fields, used to automate load(), save() and
+	 * toString().
 	 */
-	private Count[] _counts = new Count[] { kills, steals, returns, captures };
+	private Count[] _counts = new Count[] { kills, steals, captures, returns, buffs };
 } // class Score

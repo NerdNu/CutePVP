@@ -140,13 +140,13 @@ public class BuffManager implements Iterable<TeamBuff> {
 	/**
 	 * Apply team buffs to teams that have them.
 	 * 
-	 * @param teamBuffTicks the total number of ticks from the time a team buff
+	 * @param teamBuffSeconds the total number of seconds from the time a team buff
 	 *        is claimed to when it expires.
 	 */
-	public void applyTeamBuffs(long teamBuffTicks) {
+	public void applyTeamBuffs(long teamBuffSeconds) {
 		_plugin.getLogger().info("Running buff.");
 		for (TeamBuff teamBuff : _teamBuffs) {
-			teamBuff.update(teamBuffTicks);
+			teamBuff.update(teamBuffSeconds);
 		}
 	}
 

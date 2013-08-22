@@ -116,16 +116,14 @@ public class Flag {
 	 * Return true if the flag was automatically returned after lying on the
 	 * ground.
 	 * 
-	 * @param timeoutTicks the time in ticks that the flag can lie on the ground
-	 *        before being automatically returned.
+	 * @param timeoutSeconds the time in seconds that the flag can lie on the 
+	 *        ground before being automatically returned.
 	 * @return true if the flag was returned.
 	 */
-	public boolean checkReturn(long timeoutTicks) {
-		long worldTime = _dropLocation.getWorld().getFullTime();
-		if (isDropped() && worldTime >= (_dropTime + timeoutTicks)) {
+	public boolean checkReturn(long timeoutSeconds) {
+		long now = System.currentTimeMillis();
+		if (isDropped() && now >= (_dropTime + 1000 * timeoutSeconds)) {
 			Messages.broadcast(_team.getName() + "'s " + getName() + " flag returned automatically.");
-			_team.getPlugin().getLogger().info(_team.getName() + "'s " + getName() +
-												" flag returned automatically at time " + worldTime);
 			doReturn();
 			return true;
 		} else {
@@ -324,7 +322,7 @@ public class Flag {
 	private Location _homeLocation;
 
 	/**
-	 * The value of World.getFullTime() when the flag was dropped.
+	 * The value of System.currentTimeMillis() when the flag was dropped.
 	 */
 	private long _dropTime;
 } // class Flag

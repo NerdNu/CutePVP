@@ -47,7 +47,7 @@ public class TeamBuff extends Buff {
 					logger.severe("Unable to load the " + _name + " buff location.");
 					return false;
 				}
-				_startTicks = section.getLong("start_ticks");
+				_startMillis = section.getLong("start_millis");
 				return true;
 			}
 		} catch (Exception ex) {
@@ -67,7 +67,7 @@ public class TeamBuff extends Buff {
 		try {
 			ConfigHelper helper = new ConfigHelper(logger);
 			section.set("team", _team != null ? _team.getId() : "");
-			section.set("start_ticks", _startTicks);
+			section.set("start_millis", _startMillis);
 			ConfigurationSection locationSection = section.createSection("location");
 			helper.saveBlockLocation(locationSection, _location);
 		} catch (Exception ex) {
@@ -144,44 +144,53 @@ public class TeamBuff extends Buff {
 	 * @param teamPlayer the player who claimed the buff.
 	 */
 	public void claimBy(TeamPlayer teamPlayer) {
-		// Only announce if minimum broadcast separation has elapsed, or the
-		// buff has changed hands, to prevent chat spam.
-		if (_team != teamPlayer.getTeam() || _broadcastRateLimiter.canAct(_location.getWorld(), BUFF_BROADCAST_TICKS)) {
-			Messages.broadcast(teamPlayer.getPlayer().getDisplayName() + Messages.BROADCAST_COLOR +
-								" has claimed the " + _name + " buff for " + teamPlayer.getTeam().getName() + ".");
+		if (_team != teamPlayer.getTeam()) {
+			_team = teamPlayer.getTeam();
 
-			// If the buff has changed hands, play a sound.
-			if (_team != teamPlayer.getTeam()) {
+			// Only score if ownership has changed.
+			teamPlayer.getTeam().getScore().buffs.increment();
+			teamPlayer.getScore().buffs.increment();
+
+			// Prevent chat and audio spam.			
+			if (_claimRateLimiter.canAct(BUFF_CLAIM_MILLIS)) {
+				Messages.broadcast(teamPlayer.getPlayer().getDisplayName() + Messages.BROADCAST_COLOR +
+									" has claimed the " + _name + " buff for " + teamPlayer.getTeam().getName() + ".");
 				Configuration configuration = teamPlayer.getTeam().getPlugin().getConfiguration();
 				if (configuration.TEAM_BUFF_SOUND != null) {
 					_location.getWorld().playSound(_location, configuration.TEAM_BUFF_SOUND, Constants.SOUND_RANGE, 1);
 				}
+			} else {
+				Messages.success(teamPlayer.getPlayer(), null, 
+					"You've reclaimed the buff. An announcement will be broadcast shortly.");
 			}
+		} else {
+			Messages.success(teamPlayer.getPlayer(), null, 
+				"Your team already owns that buff.");
 		}
-
-		_team = teamPlayer.getTeam();
-		_startTicks = _location.getWorld().getFullTime();
+		
+		// Restart the claim timer.
+		_startMillis = System.currentTimeMillis();
 		for (Player player : _team.getOnlineMembers()) {
 			apply(player);
 		}
-	}
+	} // claimBy
 
 	// ------------------------------------------------------------------------
 	/**
 	 * Update this buff by reapplying it to all members of the owning team, or
-	 * expiring it if durationTicks ticks have elapsed since it was claimed.
+	 * expiring it if the timeout has elapsed since it was claimed.
 	 * 
-	 * @param durationTicks the duration in ticks that the buff is sustained
+	 * @param durationSeconds the duration in seconds that the buff is sustained
 	 *        after it is claimed by a player.
 	 */
-	public void update(long durationTicks) {
+	public void update(long durationSeconds) {
 		if (isClaimed()) {
-			long worldTime = _location.getWorld().getFullTime();
-			if (worldTime < _startTicks + durationTicks) {
+			long now = System.currentTimeMillis();
+			if (now < _startMillis + 1000 * durationSeconds) {
 				for (Player player : _team.getOnlineMembers()) {
 					apply(player);
 				}
-				if (_broadcastRateLimiter.canAct(_location.getWorld(), BUFF_BROADCAST_TICKS)) {
+				if (_broadcastRateLimiter.canAct(BUFF_BROADCAST_MILLIS)) {
 					Messages.broadcast(_team.getName() + " has the " + _name + " buff.");
 				}
 			} else {
@@ -214,19 +223,32 @@ public class TeamBuff extends Buff {
 	private Location _location;
 
 	/**
-	 * The world time (ticks) when the buff block was claimed.
+	 * The value of System.currentTimeMillis() when the buff block was claimed.
 	 */
-	private long _startTicks;
+	private long _startMillis;
 
 	/**
-	 * Limit the rate at which buff claims are broadcast so players can't spam
-	 * chat by right clicking on the buff.
+	 * Limit the rate at which ongoing buff claims are broadcast so that players
+	 * can't spam chat and audio by right clicking on the buff.
 	 */
 	private RateLimiter _broadcastRateLimiter = new RateLimiter();
 
 	/**
-	 * Minimum duration in ticks between broadcast announcements about who owns
-	 * team buffs.
+	 * Limit the rate at which changes to buff ownership trigger broadcasts and
+	 * sounds so that players on opposing teams cannot spam chat or audio by
+	 * conspiring to claim the buff alternately.
 	 */
-	private int BUFF_BROADCAST_TICKS = 20 * 60 * 3;
+	private RateLimiter _claimRateLimiter = new RateLimiter();
+
+	/**
+	 * Minimum duration in milliseconds between broadcast announcements about
+	 * who owns team buffs.
+	 */
+	private int BUFF_BROADCAST_MILLIS = 1000 * 60 * 3;
+
+	/**
+	 * Minimum duration in milliseconds between sounds playing when a different
+	 * team claims team buffs.
+	 */
+	private int BUFF_CLAIM_MILLIS = 1000 * 60;
 } // class TeamBuff
