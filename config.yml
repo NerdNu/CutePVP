@@ -54,6 +54,7 @@ teams:
     chat_color: red
     material: wool
     data: 14
+    chest_region: red
     regions:
     - red_base
     - red_base2
@@ -105,6 +106,7 @@ teams:
     chat_color: aqua
     material: wool
     data: 11
+    chest_region: blue
     regions:
     - blue_base
     - blue_base2

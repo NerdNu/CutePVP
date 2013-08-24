@@ -11,6 +11,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -61,6 +62,7 @@ public class Team {
 		}
 
 		_spawn = config.loadLocation(teamSection, "spawn");
+		_chestRegion = teamSection.getString("chest_region", "");
 		_regions = new HashSet<String>();
 		if (teamSection.isList("regions")) {
 			for (String region : teamSection.getStringList("regions")) {
@@ -442,6 +444,15 @@ public class Team {
 	 */
 	void addMember(OfflinePlayer offlinePlayer) {
 		_members.add(offlinePlayer);
+		
+		// Add the player to the team's "chest region" used as a group to 
+		// protect chests.
+		World overworld = Bukkit.getWorlds().get(0);
+		RegionManager mgr = _plugin.getWorldGuard().getGlobalRegionManager().get(overworld);
+		ProtectedRegion region = mgr.getRegionExact(_chestRegion);
+		if (region != null) {
+			region.getMembers().addPlayer(offlinePlayer.getName());
+		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -518,6 +529,12 @@ public class Team {
 	 */
 	private Score _score;
 
+	/**
+	 * The name of the protection region used as a predefined protection 
+	 * group for the team's chests.
+	 */
+	private String _chestRegion;
+	
 	/**
 	 * Set of WorldGuard region names that are part of the base, all converted
 	 * to lower case.
