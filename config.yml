@@ -1,6 +1,8 @@
-misc:
+time:
   flag_flame_ticks: 7
   flag_dropped_seconds: 300
+  flag_capture_minutes: 30
+  flag_warning_minutes: 10
   team_buff_seconds: 1800
 protections:
   can_attack_in_enemy_base: false
@@ -75,6 +77,7 @@ teams:
           y: 64
           z: -18
           world: world
+        steal_time: 0
         drop_time: 0
       two:
         description: east
@@ -88,12 +91,14 @@ teams:
           y: 64
           z: -18
           world: world
+        steal_time: 0
         drop_time: 0
     score:
       kills: 0
       steals: 0
       returns: 0
       captures: 0
+      buffs: 0
     members: {}
   blue:
     name: Blue Team
@@ -123,6 +128,7 @@ teams:
           y: 64
           z: -123
           world: world
+        steal_time: 0
         drop_time: 0
       two:
         description: east
@@ -136,10 +142,13 @@ teams:
           y: 64
           z: -123
           world: world
+        steal_time: 0
         drop_time: 0
     score:
       kills: 0
       steals: 0
       returns: 0
       captures: 0
+      buffs: 0
     members: {}
+

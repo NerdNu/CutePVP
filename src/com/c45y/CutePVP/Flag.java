@@ -37,6 +37,10 @@ public class Flag {
 			flag._homeLocation = config.loadLocation(section, "home");
 			flag._dropLocation = (section.contains("current")) ? config.loadLocation(section, "current") : flag._homeLocation.clone();
 			flag._name = section.getString("description", team.getName() + "'s flag");
+			flag._stealTime = section.getLong("steal_time");
+			Configuration configuration = team.getPlugin().getConfiguration();
+			long warningTime = flag._stealTime + 60 * 1000 * (configuration.FLAG_CAPTURE_MINUTES - configuration.FLAG_WARNING_MINUTES);
+			flag._returnWarningPending = (System.currentTimeMillis() < warningTime);
 			flag._dropTime = section.getLong("drop_time");
 			return flag;
 		} catch (Exception ex) {
@@ -58,6 +62,7 @@ public class Flag {
 		ConfigurationSection homeSection = section.getConfigurationSection("home");
 		helper.saveBlockLocation(currentSection, _dropLocation);
 		helper.saveBlockLocation(homeSection, _homeLocation);
+		section.set("steal_time", _stealTime);
 		section.set("drop_time", _dropTime);
 	}
 
@@ -71,6 +76,16 @@ public class Flag {
 	 */
 	public void stealBy(TeamPlayer teamPlayer) {
 		if (!isCarried() && teamPlayer.getTeam() != _team) {
+			// Start the return timer when stolen from home only, not when 
+			// a dropped stolen flag is picked up again.
+			if (isHome()) {
+				Configuration conf = getTeam().getPlugin().getConfiguration();
+				Messages.success(teamPlayer.getPlayer(), null,
+					"You must capture the flag within " +
+					conf.FLAG_CAPTURE_MINUTES + " minutes or it will be returned automatically.");
+				_stealTime = System.currentTimeMillis();
+				_returnWarningPending = true;
+			}
 			getLocation().getBlock().setType(Material.AIR);
 			_carrier = teamPlayer;
 			_carrier.setCarriedFlag(this);
@@ -92,7 +107,7 @@ public class Flag {
 			Block feetBlock = _carrier.getPlayer().getLocation().getBlock();
 			_dropLocation = (feetBlock.getType() == Material.AIR) ? feetBlock.getLocation()
 																	: feetBlock.getRelative(BlockFace.UP).getLocation();
-			_dropTime = _dropLocation.getWorld().getFullTime();
+			_dropTime = System.currentTimeMillis();
 
 			// Put the player dropping the flag on top of the dropped block,
 			// to prevent them being trapped underneath the flag when they
@@ -116,11 +131,11 @@ public class Flag {
 	 * Return true if the flag was automatically returned after lying on the
 	 * ground.
 	 * 
-	 * @param timeoutSeconds the time in seconds that the flag can lie on the 
+	 * @param timeoutSeconds the time in seconds that the flag can lie on the
 	 *        ground before being automatically returned.
 	 * @return true if the flag was returned.
 	 */
-	public boolean checkReturn(long timeoutSeconds) {
+	public boolean checkReturnDropped(long timeoutSeconds) {
 		long now = System.currentTimeMillis();
 		if (isDropped() && now >= (_dropTime + 1000 * timeoutSeconds)) {
 			Messages.broadcast(_team.getName() + "'s " + getName() + " flag returned automatically.");
@@ -129,6 +144,32 @@ public class Flag {
 		} else {
 			return false;
 		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Check automatic return of stolen flags (whether dropped or carried) and
+	 * broadcast a warning about them being returned automatically.
+	 * 
+	 * @return true if the flag was returned.
+	 */
+	public boolean checkReturnStolen() {
+		Configuration conf = getTeam().getPlugin().getConfiguration();
+		long elapsedMillis = System.currentTimeMillis() - _stealTime;
+		if (_returnWarningPending &&
+			elapsedMillis > 60 * 1000 * (conf.FLAG_CAPTURE_MINUTES - conf.FLAG_WARNING_MINUTES)) {
+			_returnWarningPending = false;
+			Messages.broadcast(_team.getName() + "'s " + getName() + " flag must be captured in the next " +
+								conf.FLAG_WARNING_MINUTES +
+								" minutes or it will be returned automatically.");
+
+		} else if (elapsedMillis > 60 * 1000 * conf.FLAG_CAPTURE_MINUTES) {
+			doReturn();
+			Messages.broadcast("Time ran out to capture " + _team.getName() +
+								"'s " + getName() + " flag and it returned automatically.");
+			return true;
+		}
+		return false;
 	}
 
 	// ------------------------------------------------------------------------
@@ -142,10 +183,10 @@ public class Flag {
 			_carrier = null;
 		} else {
 			// Flag may be at home, but if this method was called, then perhaps
-			// an admin in creative mode inadvertently broke the flag, 
+			// an admin in creative mode inadvertently broke the flag,
 			// triggering trag destruction detection.
 			_dropLocation.getBlock().setType(Material.AIR);
-		} 
+		}
 
 		MaterialData teamBlock = getTeam().getMaterialData();
 		_homeLocation.getBlock().setTypeIdAndData(teamBlock.getItemTypeId(), teamBlock.getData(), false);
@@ -320,6 +361,17 @@ public class Flag {
 	 * Starting location of the flag in its owning team's base.
 	 */
 	private Location _homeLocation;
+
+	/**
+	 * The value of System.currentTimeMillis() when the flag was stolen.
+	 */
+	private long _stealTime;
+
+	/**
+	 * If true, the warning about the flag being automatically returned is still
+	 * pending to be broadcast.
+	 */
+	private boolean _returnWarningPending;
 
 	/**
 	 * The value of System.currentTimeMillis() when the flag was dropped.

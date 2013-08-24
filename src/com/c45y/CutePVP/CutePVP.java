@@ -96,7 +96,7 @@ public class CutePVP extends JavaPlugin {
 				getBuffManager().applyTeamBuffs(getConfiguration().TEAM_BUFF_SECONDS);
 				for (Team team : getTeamManager()) {
 					for (Flag flag : team.getFlags()) {
-						flag.checkReturn(getConfiguration().FLAG_DROPPED_SECONDS);
+						flag.checkReturnDropped(getConfiguration().FLAG_DROPPED_SECONDS);
 					}
 				}
 			}
@@ -118,16 +118,16 @@ public class CutePVP extends JavaPlugin {
 			}
 		}, 0, 5 * Constants.ONE_SECOND_TICKS);
 
-		// Play flames at the flag location. Also check for attempts to piston
-		// the flag out of position so that it can't be clicked.
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			public void run() {
 				for (Team team : getTeamManager()) {
 					for (Flag flag : team.getFlags()) {
+						// Play flames at the flag location.
 						Location loc = flag.getLocation();
 						loc.getWorld().playEffect(loc, Effect.MOBSPAWNER_FLAMES, 1);
 
-						// Flags that are dropped or home are "not carried".
+						// Check for attempts to piston the flag out of position
+						// so that it can't be clicked.
 						if (!flag.isCarried() && !flag.getTeam().isTeamBlock(loc.getBlock())) {
 							flag.doReturn();
 							Messages.broadcast(Messages.BROADCAST_COLOR + flag.getTeam().getName() + "'s stolen " +
@@ -136,12 +136,18 @@ public class CutePVP extends JavaPlugin {
 								loc.getWorld().playSound(loc, getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
 							}
 						}
+						
+						// Check for and do automatic return of flags that are
+						// stolen but not captured after too long.
+						if (!flag.isHome() && flag.checkReturnStolen()) {
+							if (getConfiguration().FLAG_RETURN_SOUND != null) {
+								loc.getWorld().playSound(loc, getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
+							}
+						}
 					}
 				}
 			}
 		}, 0, getConfiguration().FLAG_FLAME_TICKS);
-
-		getLogger().info("World time: " + Bukkit.getWorlds().get(0).getFullTime());
 	}
 
 	// ------------------------------------------------------------------------
@@ -150,7 +156,6 @@ public class CutePVP extends JavaPlugin {
 	 */
 	@Override
 	public void onDisable() {
-		getLogger().info("World time: " + Bukkit.getWorlds().get(0).getFullTime());
 		getConfiguration().save();
 		_worldGuard = null;
 	}

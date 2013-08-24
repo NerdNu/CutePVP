@@ -37,6 +37,21 @@ public class Configuration {
 	public int FLAG_FLAME_TICKS;
 
 	/**
+	 * The duration in seconds that a flag can be away from from its home before
+	 * it is automatically returned, whether carried or dropped. A team must
+	 * therefore capture the flag within that time or be forced to steal it
+	 * again.
+	 */
+	public int FLAG_CAPTURE_MINUTES;
+
+	/**
+	 * The time in minutes before a flag is automatically returned (see
+	 * {@link FLAG_CAPTURE_MINUTES}) when a warning of the automatic return is
+	 * announced.
+	 */
+	public int FLAG_WARNING_MINUTES;
+
+	/**
 	 * The total number of seconds from the time a team buff is claimed to when
 	 * it expires.
 	 */
@@ -93,9 +108,12 @@ public class Configuration {
 		_plugin.getTeamManager().load();
 		_plugin.getBuffManager().load();
 
-		FLAG_FLAME_TICKS = _plugin.getConfig().getInt("misc.flag_flame_ticks", 7);
-		FLAG_DROPPED_SECONDS = _plugin.getConfig().getInt("misc.flag_dropped_seconds", 300);
-		TEAM_BUFF_SECONDS = _plugin.getConfig().getInt("misc.team_buff_seconds", 1800);
+		FLAG_FLAME_TICKS = _plugin.getConfig().getInt("time.flag_flame_ticks", 7);
+		FLAG_DROPPED_SECONDS = _plugin.getConfig().getInt("time.flag_dropped_seconds", 300);
+		FLAG_CAPTURE_MINUTES = _plugin.getConfig().getInt("time.flag_capture_minutes", 30);
+		FLAG_WARNING_MINUTES = _plugin.getConfig().getInt("time.flag_warning_minutes", 10);
+		TEAM_BUFF_SECONDS = _plugin.getConfig().getInt("time.team_buff_seconds", 1800);
+
 		CAN_ATTACK_IN_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_attack_in_enemy_base", false);
 		CAN_EDIT_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_edit_enemy_base", false);
 
@@ -115,9 +133,11 @@ public class Configuration {
 		_plugin.getTeamManager().save();
 		_plugin.getBuffManager().save();
 
-		_plugin.getConfig().set("misc.flag_flame_ticks", FLAG_FLAME_TICKS);
-		_plugin.getConfig().set("misc.flag_dropped_seconds", FLAG_DROPPED_SECONDS);
-		_plugin.getConfig().set("misc.team_buff_seconds", TEAM_BUFF_SECONDS);
+		_plugin.getConfig().set("time.flag_flame_ticks", FLAG_FLAME_TICKS);
+		_plugin.getConfig().set("time.flag_dropped_seconds", FLAG_DROPPED_SECONDS);
+		_plugin.getConfig().set("time.flag_capture_minutes", FLAG_CAPTURE_MINUTES);
+		_plugin.getConfig().set("time.flag_warning_minutes", FLAG_WARNING_MINUTES);
+		_plugin.getConfig().set("time.team_buff_seconds", TEAM_BUFF_SECONDS);
 		_plugin.saveConfig();
 	}
 

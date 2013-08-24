@@ -26,16 +26,6 @@
         	</dependency>
 	</dependencies>
 	<distributionManagement>
-		<repository>
-			<id>thezomg-rel</id>
-			<name>maven.thezomg.com Releases</name>
-			<url>http://maven.thezomg.com/content/repositories/releases/</url>
-		</repository>
-		<snapshotRepository>
-			<id>thezomg-snap</id>
-			<name>maven.thezomg.com Snapshots</name>
-			<url>http://maven.thezomg.com/content/repositories/snapshots/</url>
-		</snapshotRepository>
 	</distributionManagement>
 
 	<repositories>
@@ -47,18 +37,7 @@
 			<id>sk89q-repo</id>
 			<url>http://maven.sk89q.com/repo/</url>
 		</repository>
-		<repository>
-			<id>thezomg-repo</id>
-			<url>http://maven.thezomg.com/content/groups/public/</url>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-		</repository>
 	</repositories>
-
 
 	<pluginRepositories>
 		<pluginRepository>
@@ -68,12 +47,7 @@
 	</pluginRepositories>
 
 	<description>KOTH and CTF Plugin</description>
-	<url>https://github.com/Deaygo/CutePVP</url>
-	<scm>
-		<connection>scm:git:https://Deaygo@github.com/Deaygo/CutePVP.git</connection>
-		<developerConnection>scm:git:https://Deaygo@github.com/Deaygo/CutePVP.git</developerConnection>
-		<url>https://github.com/Deaygo/CutePVP</url>
-	</scm>
+	<url>https://github.com/NerdNu/CutePVP</url>
 	<build>
 		<sourceDirectory>${basedir}/src</sourceDirectory>
 		<resources>
@@ -116,3 +90,4 @@
 		</pluginManagement>
 	</build>
 </project>
+
