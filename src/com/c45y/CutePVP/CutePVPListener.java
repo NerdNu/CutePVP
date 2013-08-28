@@ -62,7 +62,8 @@ public class CutePVPListener implements Listener {
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(event.getPlayer());
 		if (teamPlayer != null) {
-			// The old OfflinePlayer instance can't be used to reference the player.
+			// The old OfflinePlayer instance can't be used to reference the
+			// player.
 			// This new one can, so store that.
 			teamPlayer.setOfflinePlayer(event.getPlayer());
 
@@ -296,7 +297,8 @@ public class CutePVPListener implements Listener {
 	 * When a player dies:
 	 * 
 	 * <ul>
-	 * <li>Drop the flag if he's carrying it.</li>
+	 * <li>Drop the flag if he's carrying it, but return it home if he falls out
+	 * of the world.</li>
 	 * <li>Increment his and his team's kill scores if they are not on the same
 	 * team. Players can't hurt their team mates, so the check is redundant, but
 	 * cheap and future-proof.</li>
@@ -308,7 +310,20 @@ public class CutePVPListener implements Listener {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {
 			if (teamPlayer.isCarryingFlag()) {
-				teamPlayer.getCarriedFlag().drop();
+				// Flags that fall out of the world are returned.
+				Flag flag = teamPlayer.getCarriedFlag();
+				Location loc = flag.getHomeLocation();
+				if (player.getLocation().getY() < 0) {
+					flag.doReturn();
+					Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
+										" fell out of the world with " + flag.getTeam().getName() + "'s " +
+										flag.getName() + " flag. It was returned.");
+					if (_plugin.getConfiguration().FLAG_RETURN_SOUND != null) {
+						loc.getWorld().playSound(loc, _plugin.getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
+					}
+				} else {
+					flag.drop();
+				}
 			}
 
 			Player killer = player.getKiller();
@@ -318,7 +333,7 @@ public class CutePVPListener implements Listener {
 				teamKiller.getScore().kills.increment();
 			}
 		}
-	}
+	} // onPlayerDeath
 
 	// ------------------------------------------------------------------------
 	/**
