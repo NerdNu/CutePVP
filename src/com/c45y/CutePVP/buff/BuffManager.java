@@ -1,11 +1,13 @@
 package com.c45y.CutePVP.buff;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.potion.PotionEffect;
@@ -67,7 +69,24 @@ public class BuffManager implements Iterable<TeamBuff> {
 				if (section != null) {
 					FloorBuff floorBuff = new FloorBuff();
 					if (floorBuff.load(section, _plugin.getLogger())) {
-						_floorBuffs.put(floorBuff.getMaterialData().hashCode(), floorBuff);
+						// If team-specific floor buffs are enabled, index the
+						// floor buff according to specificity settings.
+						// Some Materials can never be team-specific, however.
+						Material material = floorBuff.getMaterialData().getItemType();
+						if (_plugin.getConfiguration().TEAM_SPECIFIC_FLOOR_BUFFS &&
+							!_immutableFloorBuffMaterials.contains(material)) {
+							_mutableFloorBuffMaterials.add(material);
+
+							// Add an entry for every possible team data value.
+							for (Team team : _plugin.getTeamManager()) {
+								if (floorBuff.affectsPlacingTeam() || floorBuff.affectsEnemyTeam()) {
+									_floorBuffs.put(getMaterialDataHash(material.getId(), team.getData()), floorBuff);
+								}
+							}
+						} else {
+							// Add an entry just for the data value in config.
+							_floorBuffs.put(floorBuff.getMaterialData().hashCode(), floorBuff);
+						}
 					}
 				}
 			}
@@ -140,8 +159,8 @@ public class BuffManager implements Iterable<TeamBuff> {
 	/**
 	 * Apply team buffs to teams that have them.
 	 * 
-	 * @param teamBuffSeconds the total number of seconds from the time a team buff
-	 *        is claimed to when it expires.
+	 * @param teamBuffSeconds the total number of seconds from the time a team
+	 *        buff is claimed to when it expires.
 	 */
 	public void applyTeamBuffs(long teamBuffSeconds) {
 		_plugin.getLogger().info("Running buff.");
@@ -171,12 +190,15 @@ public class BuffManager implements Iterable<TeamBuff> {
 			}
 			return;
 		} else {
-			// Perhaps it is one of the non-team-specific buff blocks.
-			// NOTE: this key must be the same as MaterialData.hashCode().
-			int hash = (block.getTypeId() << 8) ^ block.getData();
+			// Perhaps it is one of the general floor buff blocks.
+			int hash = getMaterialDataHash(block.getTypeId(), block.getData());
 			FloorBuff buff = _floorBuffs.get(hash);
 			if (buff != null) {
-				buff.apply(teamPlayer.getPlayer());
+				int ownTeamData = teamPlayer.getTeam().getData();
+				if ((buff.affectsPlacingTeam() && block.getData() == ownTeamData) ||
+					(buff.affectsEnemyTeam() && (block.getData() != ownTeamData || teamPlayer.isTestingFloorBuffs()))) {
+					buff.apply(teamPlayer.getPlayer());
+				}
 				return;
 			}
 		}
@@ -191,6 +213,42 @@ public class BuffManager implements Iterable<TeamBuff> {
 			}
 		}
 	} // applyFloorBuff
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Record ownership of a floor buff block by setting its data value to that
+	 * of the Team placing it.
+	 * 
+	 * Floor buffs with a data value modified in this way are team-specific;
+	 * they apply positive effects to the placing team and/or negative effects
+	 * to enemy teams, as enabled in the configuration by the "friend" and
+	 * "enemy" flags. Effectively, the block itself stores ownership information
+	 * in the data value.
+	 * 
+	 * This method is only called if Configuration.TEAM_SPECIFIC_FLOOR_BUFFS is
+	 * true.
+	 * 
+	 * @param block the block that was placed.
+	 * @param team the Team that will own the placed block.
+	 */
+	public void setFloorBuffTeam(Block block, Team team) {
+		if (_mutableFloorBuffMaterials.contains(block.getType())) {
+			block.setData(team.getData());
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Compute the same hash value as MaterialData.hashCode() for a given block
+	 * type ID and data/damage byte.
+	 * 
+	 * @param materialId the block type ID.
+	 * @param data the data/damage byte.
+	 * @return the hash code, exactly as it would be computed by MaterialData.
+	 */
+	public static int getMaterialDataHash(int materialId, byte data) {
+		return (materialId << 8) ^ data;
+	}
 
 	// ------------------------------------------------------------------------
 	/**
@@ -225,4 +283,24 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 */
 	private ArrayList<TeamBuff> _teamBuffs = new ArrayList<TeamBuff>();
 
+	/**
+	 * The set of all Materials used in floor buffs whose data value can be set
+	 * to that of the Team placing it.
+	 * 
+	 * This set is computed as an asymmetric set difference: the set of floor
+	 * buff materials loaded from the configuration minus those materials listed
+	 * in _immutableFloorBuffMaterials.
+	 */
+	private HashSet<Material> _mutableFloorBuffMaterials = new HashSet<Material>();
+
+	/**
+	 * The set of all Materials that can never have a data/damage value modified
+	 * when placed as a floor buff.
+	 * 
+	 * Essentially this is a set of materials where the data value is actually
+	 * used for something. It's not a complete set in that it doesn't include
+	 * stairs, for example.
+	 */
+	private HashSet<Material> _immutableFloorBuffMaterials = new HashSet<Material>(
+		Arrays.asList(Material.WOOL, Material.STAINED_CLAY, Material.QUARTZ_BLOCK));
 } // class BuffManager

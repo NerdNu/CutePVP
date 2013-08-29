@@ -69,6 +69,19 @@ public class Configuration {
 	 */
 	public boolean CAN_EDIT_ENEMY_BASE;
 
+	/**
+	 * If true, floor buff blocks effects are limited to specific teams rather
+	 * than affecting all teams equally.
+	 * 
+	 * For each floor buff block in the configuration, the "friend" flag enables
+	 * the effect for the team who placed the block.  The "enemy" flag enables
+	 * it for any other team.  The functionality is implemented by setting the
+	 * damage value of the block when it is placed.  Only floor buff blocks that
+	 * have a damage value that is different from any of the damage values used
+	 * by teams are modified in this way.
+	 */
+	public boolean TEAM_SPECIFIC_FLOOR_BUFFS;
+	
 	// ------------------------------------------------------------------------
 	/**
 	 * Sound played when a player steals a flag.
@@ -105,9 +118,6 @@ public class Configuration {
 	 * Load all configuration.
 	 */
 	public void load() {
-		_plugin.getTeamManager().load();
-		_plugin.getBuffManager().load();
-
 		FLAG_FLAME_TICKS = _plugin.getConfig().getInt("time.flag_flame_ticks", 7);
 		FLAG_DROPPED_SECONDS = _plugin.getConfig().getInt("time.flag_dropped_seconds", 300);
 		FLAG_CAPTURE_MINUTES = _plugin.getConfig().getInt("time.flag_capture_minutes", 30);
@@ -123,7 +133,11 @@ public class Configuration {
 		FLAG_RETURN_SOUND = helper.loadSound(sounds, "return", Sound.ORB_PICKUP, true);
 		FLAG_CAPTURE_SOUND = helper.loadSound(sounds, "capture", Sound.LEVEL_UP, true);
 		TEAM_BUFF_SOUND = helper.loadSound(sounds, "buff", Sound.WITHER_SPAWN, true);
-	}
+		
+		TEAM_SPECIFIC_FLOOR_BUFFS = _plugin.getConfig().getBoolean("buffs.team_specific_floor_buffs", true);
+		_plugin.getTeamManager().load();
+		_plugin.getBuffManager().load();
+	} // load
 
 	// ------------------------------------------------------------------------
 	/**

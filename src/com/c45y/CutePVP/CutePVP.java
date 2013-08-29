@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
@@ -82,8 +82,6 @@ public class CutePVP extends JavaPlugin {
 	/**
 	 * Called when the plugin is enabled.
 	 */
-	OfflinePlayer totemo;
-
 	@Override
 	public void onEnable() {
 		saveDefaultConfig();
@@ -107,12 +105,15 @@ public class CutePVP extends JavaPlugin {
 				for (Team team : getTeamManager()) {
 					team.updateCompasses();
 				}
-				// saveConfig();
 
+				// Only apply block buffs in the overworld, not the minigames
+				// area in The End.
 				for (Player player : Bukkit.getOnlinePlayers()) {
 					TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 					if (teamPlayer != null) {
-						updateTeamPlayerEffects(teamPlayer);
+						if (isInMatchArea(player)) {
+							updateTeamPlayerEffects(teamPlayer);
+						}
 					}
 				}
 			}
@@ -136,7 +137,7 @@ public class CutePVP extends JavaPlugin {
 								loc.getWorld().playSound(loc, getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
 							}
 						}
-						
+
 						// Check for and do automatic return of flags that are
 						// stolen but not captured after too long.
 						if (!flag.isHome() && flag.checkReturnStolen()) {
@@ -162,8 +163,21 @@ public class CutePVP extends JavaPlugin {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Return true if the player is in the area where CutePvP match rules apply.
+	 * 
+	 * Currently this is the whole of the Overworld.
+	 * 
+	 * @return true if the player is in the area where CutePvP match rules apply.
+	 */
+	public boolean isInMatchArea(Player player) {
+		World overWorld = Bukkit.getWorlds().get(0);
+		return (player.getLocation().getWorld() == overWorld);
+	}
+	
+	// ------------------------------------------------------------------------
+	/**
 	 * Apply effects to the player state based on the block the player is
-	 * standing on and whether they are carrying a flag.
+	 * standing on.
 	 * 
 	 * @param teamPlayer the non-null TeamPlayer who is affected.
 	 */
@@ -227,10 +241,19 @@ public class CutePVP extends JavaPlugin {
 		} else if (command.getName().equalsIgnoreCase("drop")) {
 			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 			if (teamPlayer != null && teamPlayer.getCarriedFlag() != null) {
-				Messages.failure(player, null, "Flag dropped.");
+				Messages.success(player, null, "Flag dropped.");
 				teamPlayer.getCarriedFlag().drop();
 			} else {
 				Messages.failure(player, null, "You're not carrying a flag.");
+			}
+			return true;
+		} else if (command.getName().equalsIgnoreCase("testblock")) {
+			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
+			if (teamPlayer != null) {
+				teamPlayer.setTestingFloorBuffs(! teamPlayer.isTestingFloorBuffs());
+				Messages.success(player, null, "Power block testing is now " + (teamPlayer.isTestingFloorBuffs() ? "enabled." : "disabled."));
+			} else {
+				Messages.failure(player, null, "You're not on a team.");
 			}
 			return true;
 		} else if (command.getName().equals("cutepvp")) {

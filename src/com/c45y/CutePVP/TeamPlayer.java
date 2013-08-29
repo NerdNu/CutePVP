@@ -118,6 +118,31 @@ public class TeamPlayer {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Specify whether the player is testing the effects of floor buffs.
+	 * 
+	 * When testing is enabled, floor buffs ("power blocks") apply their effects
+	 * to the player even if intended only for enemies.
+	 * 
+	 * @param testingFloorBuffs if true, testing is enabled.
+	 */
+	public void setTestingFloorBuffs(boolean testingFloorBuffs) {
+		_testingFloorBuffs = testingFloorBuffs;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return true if floor buffs ("power blocks") apply their effects to the
+	 * player even if intended only for enemies.
+	 * 
+	 * @return true if floor buffs ("power blocks") apply their effects to the
+	 *         player even if intended only for enemies.
+	 */
+	public boolean isTestingFloorBuffs() {
+		return _testingFloorBuffs;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
 	 * The online Player.
 	 */
 	private OfflinePlayer _offlinePlayer;
@@ -136,4 +161,10 @@ public class TeamPlayer {
 	 * Player's personal score.
 	 */
 	private Score _score = new Score();
+
+	/**
+	 * If true, floor buffs ("power blocks") apply their effects to the player
+	 * even if intended only for enemies.
+	 */
+	private boolean _testingFloorBuffs;
 } // class TeamPlayer

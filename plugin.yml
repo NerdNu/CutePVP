@@ -53,4 +53,9 @@ commands:
     permissions: CutePVP.user
     usage: |
            /flag
+  testblock:
+    description: Toggles testing of power blocks. When testing is enabled, hostile blocks placed by the player's own team are still effective.
+    permissions: CutePVP.user
+    usage: |
+           /testblock
 

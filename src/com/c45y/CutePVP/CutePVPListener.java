@@ -14,6 +14,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -69,7 +70,11 @@ public class CutePVPListener implements Listener {
 
 			_plugin.getLogger().info(event.getPlayer().getName() + " respawned on " + teamPlayer.getTeam().getName() + ".");
 			teamPlayer.setHelmet();
-			event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
+
+			// Don't put players in their team spawn when not in the match.
+			if (_plugin.isInMatchArea(teamPlayer.getPlayer())) {
+				event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
+			}
 		}
 	}
 
@@ -138,9 +143,11 @@ public class CutePVPListener implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerMove(PlayerMoveEvent event) {
 		Player player = event.getPlayer();
-		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
-		if (teamPlayer != null) {
-			_plugin.updateTeamPlayerEffects(teamPlayer);
+		if (_plugin.isInMatchArea(player)) {
+			TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
+			if (teamPlayer != null) {
+				_plugin.updateTeamPlayerEffects(teamPlayer);
+			}
 		}
 	}
 
@@ -157,17 +164,24 @@ public class CutePVPListener implements Listener {
 			return;
 		}
 
+		// If the victim is not in the match area, don't change PvP mechanics.
+		Player victim = (Player) event.getEntity();
+		if (!_plugin.isInMatchArea(victim)) {
+			return;
+		}
+
 		if (event.getDamager() instanceof Player) {
-			TeamPlayer attacker = _plugin.getTeamManager().getTeamPlayer((Player) event.getDamager());
-			TeamPlayer victim = _plugin.getTeamManager().getTeamPlayer((Player) event.getEntity());
-			handlePvPDamage(event, attacker, victim);
+			Player attacker = (Player) event.getDamager();
+			TeamPlayer teamAttacker = _plugin.getTeamManager().getTeamPlayer(attacker);
+			TeamPlayer teamVictim = _plugin.getTeamManager().getTeamPlayer(victim);
+			handlePvPDamage(event, teamAttacker, teamVictim);
 
 		} else if (event.getDamager() instanceof Projectile) {
 			Projectile projectile = (Projectile) event.getDamager();
 			if (projectile.getShooter() instanceof Player) {
-				TeamPlayer attacker = _plugin.getTeamManager().getTeamPlayer((Player) projectile.getShooter());
-				TeamPlayer victim = _plugin.getTeamManager().getTeamPlayer((Player) event.getEntity());
-				handlePvPDamage(event, attacker, victim);
+				TeamPlayer teamAttacker = _plugin.getTeamManager().getTeamPlayer((Player) projectile.getShooter());
+				TeamPlayer teamVictim = _plugin.getTeamManager().getTeamPlayer(victim);
+				handlePvPDamage(event, teamAttacker, teamVictim);
 			}
 		}
 	}
@@ -216,6 +230,10 @@ public class CutePVPListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerInteract(PlayerInteractEvent event) {
 		Player player = event.getPlayer();
+		if (!_plugin.isInMatchArea(player)) {
+			return;
+		}
+
 		Location loc = player.getLocation();
 		TeamManager tm = _plugin.getTeamManager();
 		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
@@ -294,6 +312,27 @@ public class CutePVPListener implements Listener {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * If a player attempts to carry a flag out of the world, it is
+	 * automatically returned.
+	 * 
+	 * This event is called after the player has already changed worlds, so
+	 * don't check that the player is in the match area.
+	 */
+	@EventHandler(ignoreCancelled = true)
+	public void onPlayerChangedWorldEvent(PlayerChangedWorldEvent event) {
+		Player player = event.getPlayer();
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
+		if (teamPlayer != null && teamPlayer.isCarryingFlag()) {
+			Flag flag = teamPlayer.getCarriedFlag();
+			flag.doReturn();
+			Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
+								" tried to carry " + flag.getTeam().getName() + "'s " +
+								flag.getName() + " flag out of the world. It was returned.");
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
 	 * When a player dies:
 	 * 
 	 * <ul>
@@ -307,6 +346,10 @@ public class CutePVPListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		Player player = event.getEntity();
+		if (! _plugin.isInMatchArea(player)) {
+			return;
+		}
+
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {
 			if (teamPlayer.isCarryingFlag()) {
@@ -367,9 +410,22 @@ public class CutePVPListener implements Listener {
 	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event) {
+		Player player = event.getPlayer();
+		if (! _plugin.isInMatchArea(player)) {
+			return;
+		}
+
 		if (!_plugin.getConfiguration().CAN_EDIT_ENEMY_BASE &&
-			!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
+			!allowBlockEdit(player, event.getBlock().getLocation())) {
 			event.setCancelled(true);
+			return;
+		}
+
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
+		if (teamPlayer != null) {
+			if (_plugin.getConfiguration().TEAM_SPECIFIC_FLOOR_BUFFS) {
+				_plugin.getBuffManager().setFloorBuffTeam(event.getBlock(), teamPlayer.getTeam());
+			}
 		}
 	}
 
@@ -380,9 +436,15 @@ public class CutePVPListener implements Listener {
 	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event) {
+		Player player = event.getPlayer();
+		if (! _plugin.isInMatchArea(player)) {
+			return;
+		}
+
 		if (!_plugin.getConfiguration().CAN_EDIT_ENEMY_BASE &&
-			!allowBlockEdit(event.getPlayer(), event.getBlock().getLocation())) {
+			!allowBlockEdit(player, event.getBlock().getLocation())) {
 			event.setCancelled(true);
+			return;
 		}
 	}
 

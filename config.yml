@@ -13,6 +13,7 @@ sounds:
   capture: level_up
   buff: wither_spawn
 buffs:
+  team_specific_floor_buffs: true
   team:
     NE:
       name: North-East

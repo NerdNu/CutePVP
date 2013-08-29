@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 import com.c45y.CutePVP.util.ConfigHelper;
 
@@ -48,9 +49,9 @@ public class Buff {
 	/**
 	 * Apply all potion effects of this buff to the player.
 	 * 
-	 * If the player already has a potion buff of a higher level, retain that.
-	 * I believe this is different from the "force" flag in 
-	 * Player.addPotionEffect(), in that the latter forces the new potion 
+	 * If the player already has a potion buff of a higher level, retain that. I
+	 * believe this is different from the "force" flag in
+	 * Player.addPotionEffect(), in that the latter forces the new potion
 	 * without regard to whether it is weaker or stronger in effect.
 	 * 
 	 * @param player the affected player.
@@ -58,22 +59,32 @@ public class Buff {
 	public void apply(Player player) {
 		Collection<PotionEffect> activePotions = player.getActivePotionEffects();
 		for (PotionEffect potion : _potions) {
-			if (! player.hasPotionEffect(potion.getType())) {
+			if (!player.hasPotionEffect(potion.getType())) {
 				player.addPotionEffect(potion);
 			} else {
 				// Find current active effect of the same type.
 				PotionEffect current = null;
 				for (PotionEffect active : activePotions) {
-					if (active.getType() == potion.getType()) {
+					// Looks like an enum. Does not compare like one.
+					if (active.getType().getId() == potion.getType().getId()) {
 						current = active;
 						break;
 					}
 				}
-				
+
 				// Add the new potion if it is at least as strong.
-				// If the same stength, this may just refresh the duration.
-				if (potion.getAmplifier() >= current.getAmplifier()) {
-					player.addPotionEffect(potion, true);
+				// If the same strength, this may just refresh the duration.
+				// However, don't reapply regeneration potions unless the new
+				// potion is actually stronger because otherwise the resulting
+				// regeneration rate is way too high.
+				if (potion.getType().getId() == PotionEffectType.REGENERATION.getId()) {
+					if (potion.getAmplifier() > current.getAmplifier()) {
+						player.addPotionEffect(potion, true);
+					}
+				} else {
+					if (potion.getAmplifier() >= current.getAmplifier()) {
+						player.addPotionEffect(potion, true);
+					}
 				}
 			}
 		}

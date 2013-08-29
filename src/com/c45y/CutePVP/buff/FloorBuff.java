@@ -26,6 +26,8 @@ public class FloorBuff extends Buff {
 				Material material = Material.matchMaterial(section.getString("material", ""));
 				byte data = (byte) (section.getInt("data") & 0xF);
 				_materialData = new MaterialData(material, data);
+				_affectsPlacingTeam = section.getBoolean("friend", true);
+				_affectsEnemyTeam = section.getBoolean("enemy", true);
 				return true;
 			}
 		} catch (Exception ex) {
@@ -48,7 +50,38 @@ public class FloorBuff extends Buff {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Return true if this FloorBuff affects the team that placed it.
+	 * 
+	 * @return true if this FloorBuff affects the team that placed it.
+	 */
+	public boolean affectsPlacingTeam() {
+		return _affectsPlacingTeam;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return true if this FloorBuff affects enemies of the team that placed it.
+	 * 
+	 * @return true if this FloorBuff affects enemies of the team that placed
+	 *         it.
+	 */
+	public boolean affectsEnemyTeam() {
+		return _affectsEnemyTeam;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
 	 * Material and data value that imparts the buff.
 	 */
 	private MaterialData _materialData;
+
+	/**
+	 * If true, this FloorBuff affects the team that placed it.
+	 */
+	private boolean _affectsPlacingTeam;
+
+	/**
+	 * If true, this FloorBuff affects enemies of the team that placed it.
+	 */
+	private boolean _affectsEnemyTeam;
 } // class FloorBuff

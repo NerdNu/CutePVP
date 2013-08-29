@@ -180,6 +180,21 @@ public class Team {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Return the data value that is set on floor buff blocks when placed to 
+	 * mark them as owned by this team.
+	 * 
+	 * Currently this is derived from the data/color value of the wool helmets
+	 * worn on players' heads, but the code could be adapted to get the value
+	 * from another configuration setting if necessary.
+	 * 
+	 * @return the data/damage value of placed floor buff blocks.
+	 */
+	public byte getData() {
+		return getMaterialData().getData();
+	}	
+	
+	// ------------------------------------------------------------------------
+	/**
 	 * Return the MaterialData of the team's block.
 	 * 
 	 * The team block is the type of block that players wear on their heads as a
@@ -359,11 +374,14 @@ public class Team {
 	// ------------------------------------------------------------------------
 	/**
 	 * Point team member compasses to point to the nearest stolen flag.
+	 * 
+	 * Only do this in the overworld.
 	 */
 	public void updateCompasses() {
+		World overWorld = Bukkit.getWorlds().get(0);
 		for (OfflinePlayer offlinePlayer : _members) {
 			Player player = offlinePlayer.getPlayer();
-			if (player != null) {
+			if (player != null && player.getLocation().getWorld() == overWorld) {
 				player.setCompassTarget(getNearestFlag(player).getLocation());
 			}
 		}

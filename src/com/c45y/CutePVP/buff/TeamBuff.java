@@ -151,7 +151,7 @@ public class TeamBuff extends Buff {
 			teamPlayer.getTeam().getScore().buffs.increment();
 			teamPlayer.getScore().buffs.increment();
 
-			// Prevent chat and audio spam.			
+			// Prevent chat and audio spam.
 			if (_claimRateLimiter.canAct(BUFF_CLAIM_MILLIS)) {
 				Messages.broadcast(teamPlayer.getPlayer().getDisplayName() + Messages.BROADCAST_COLOR +
 									" has claimed the " + _name + " buff for " + teamPlayer.getTeam().getName() + ".");
@@ -160,14 +160,14 @@ public class TeamBuff extends Buff {
 					_location.getWorld().playSound(_location, configuration.TEAM_BUFF_SOUND, Constants.SOUND_RANGE, 1);
 				}
 			} else {
-				Messages.success(teamPlayer.getPlayer(), null, 
+				Messages.success(teamPlayer.getPlayer(), null,
 					"You've reclaimed the buff. An announcement will be broadcast shortly.");
 			}
 		} else {
-			Messages.success(teamPlayer.getPlayer(), null, 
+			Messages.success(teamPlayer.getPlayer(), null,
 				"Your team already owns that buff.");
 		}
-		
+
 		// Restart the claim timer.
 		_startMillis = System.currentTimeMillis();
 		for (Player player : _team.getOnlineMembers()) {
@@ -188,7 +188,10 @@ public class TeamBuff extends Buff {
 			long now = System.currentTimeMillis();
 			if (now < _startMillis + 1000 * durationSeconds) {
 				for (Player player : _team.getOnlineMembers()) {
-					apply(player);
+					// Only apply buffs in the overworld; not The End.
+					if (_team.getPlugin().isInMatchArea(player)) {
+						apply(player);
+					}
 				}
 				if (_broadcastRateLimiter.canAct(BUFF_BROADCAST_MILLIS)) {
 					Messages.broadcast(_team.getName() + " has the " + _name + " buff.");
