@@ -378,10 +378,9 @@ public class Team {
 	 * Only do this in the overworld.
 	 */
 	public void updateCompasses() {
-		World overWorld = Bukkit.getWorlds().get(0);
 		for (OfflinePlayer offlinePlayer : _members) {
 			Player player = offlinePlayer.getPlayer();
-			if (player != null && player.getLocation().getWorld() == overWorld) {
+			if (player != null && _plugin.isInMatchArea(player)) {
 				player.setCompassTarget(getNearestFlag(player).getLocation());
 			}
 		}
