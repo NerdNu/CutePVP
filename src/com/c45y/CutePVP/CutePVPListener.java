@@ -1,5 +1,6 @@
 package com.c45y.CutePVP;
 
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -24,6 +25,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
 import com.c45y.CutePVP.buff.TeamBuff;
@@ -378,6 +380,23 @@ public class CutePVPListener implements Listener {
 			if (teamKiller != null && teamPlayer.getTeam() != teamKiller.getTeam()) {
 				teamKiller.getTeam().getScore().kills.increment();
 				teamKiller.getScore().kills.increment();
+			}
+
+			// Remove the helmet from the drops to prevent farming wool.
+			ItemStack teamBlockStack = null;
+			for (Iterator<ItemStack> it = event.getDrops().iterator(); it.hasNext();) {
+				ItemStack stack = it.next();
+				if (stack.getData().equals(teamPlayer.getTeam().getMaterialData())) {
+					it.remove();
+					teamBlockStack = stack;
+					break;
+				}
+			}
+			if (teamBlockStack != null) {
+				teamBlockStack.setAmount(teamBlockStack.getAmount() - 1);
+				if (teamBlockStack.getAmount() > 0) {
+					event.getDrops().add(teamBlockStack);
+				}
 			}
 		}
 	} // onPlayerDeath
