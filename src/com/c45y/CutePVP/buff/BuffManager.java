@@ -163,7 +163,6 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 *        buff is claimed to when it expires.
 	 */
 	public void applyTeamBuffs(long teamBuffSeconds) {
-		_plugin.getLogger().info("Running buff.");
 		for (TeamBuff teamBuff : _teamBuffs) {
 			teamBuff.update(teamBuffSeconds);
 		}
