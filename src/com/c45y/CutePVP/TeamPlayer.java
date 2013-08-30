@@ -1,5 +1,6 @@
 package com.c45y.CutePVP;
 
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 
@@ -11,39 +12,34 @@ import org.bukkit.entity.Player;
  * Only Players assigned to a team have corresponding TeamPlayer instances.
  * {@link TeamManager} manages the mapping from {@link OfflinePlayer} to
  * {@link TeamPlayer}.
+ * 
+ * Notes on getting the corresponding Player from TeamPlayer:
+ * <ul>
+ * <li>setHelmet() occasionally fails with a NullPointerException (after deaths,
+ * relogs etc). I assumed OfflinePlayer.getPlayer() was the culprit, but perhaps
+ * it's actually Player.getInventory().</li>
+ * <li>CraftOfflinePlayer.getPlayer() does an expensive linear search through
+ * the entire online player list of the server every time it is called.</li>
+ * <li>CraftServer.getPlayerExact() first generates a temporary array of online
+ * players, then does the expensive linear search (case insenstive string
+ * comparisons on player names) through that.</li>
+ * </ul>
+ * 
+ * There is a very slight efficiency benefit from using OfflinePlayer but at the
+ * cost of using a method that sometimes fails for unexplained reasons. Probably
+ * best just to use Server.getPlayerExect() and hope that it will be improved.
  */
 public class TeamPlayer {
 	// ------------------------------------------------------------------------
 	/**
 	 * Constructor.
 	 * 
-	 * @param player the OfflinePlayer.
+	 * @param playerName the Player's name.
 	 * @param team the Team to which the player belongs.
 	 */
-	public TeamPlayer(OfflinePlayer player, Team team) {
-		_offlinePlayer = player;
+	public TeamPlayer(String playerName, Team team) {
+		_playerName = playerName;
 		_team = team;
-	}
-
-	// ------------------------------------------------------------------------
-	/**
-	 * Put on the team's helmet on the player.
-	 */
-	public void setHelmet() {
-		getPlayer().getInventory().setHelmet(getTeam().getTeamItemStack());
-	}
-
-	// ------------------------------------------------------------------------
-	/**
-	 * Set the OfflinePlayer reference.
-	 * 
-	 * When a player logs in, his OfflinePlayer instance changes to an actual
-	 * Player object. We need to update the stored OfflinePlayer instance.
-	 * 
-	 * @param offlinePlayer the new OfflinePlayer instance.
-	 */
-	public void setOfflinePlayer(OfflinePlayer offlinePlayer) {
-		_offlinePlayer = offlinePlayer;
 	}
 
 	// ------------------------------------------------------------------------
@@ -53,7 +49,7 @@ public class TeamPlayer {
 	 * @return the corresponding OfflinePlayer.
 	 */
 	public OfflinePlayer getOfflinePlayer() {
-		return _offlinePlayer;
+		return Bukkit.getOfflinePlayer(_playerName);
 	}
 
 	// ------------------------------------------------------------------------
@@ -63,7 +59,7 @@ public class TeamPlayer {
 	 * @return the corresponding online Player, or null if not online.
 	 */
 	public Player getPlayer() {
-		return _offlinePlayer.getPlayer();
+		return Bukkit.getPlayerExact(_playerName);
 	}
 
 	// ------------------------------------------------------------------------
@@ -143,9 +139,9 @@ public class TeamPlayer {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * The online Player.
+	 * The Player's name.
 	 */
-	private OfflinePlayer _offlinePlayer;
+	private String _playerName;
 
 	/**
 	 * The owning Team.

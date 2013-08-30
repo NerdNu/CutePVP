@@ -1,7 +1,6 @@
 package com.c45y.CutePVP;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
@@ -93,8 +92,8 @@ public class Team {
 		ConfigurationSection membersSection = teamSection.getConfigurationSection("members");
 		if (membersSection != null) {
 			for (String playerName : membersSection.getKeys(false)) {
-				OfflinePlayer player = Bukkit.getServer().getOfflinePlayer(playerName);
-				TeamPlayer teamPlayer = _plugin.getTeamManager().createTeamPlayer(player, this);
+				OfflinePlayer player = Bukkit.getOfflinePlayer(playerName);
+				TeamPlayer teamPlayer = _plugin.getTeamManager().createTeamPlayer(player.getName(), this);
 				// createTeamPlayer() also calls addMember().
 				teamPlayer.getScore().load(membersSection.getConfigurationSection(playerName));
 			}
@@ -129,9 +128,9 @@ public class Team {
 
 		// Save the team members.
 		ConfigurationSection membersSection = teamSection.createSection("members");
-		for (OfflinePlayer player : _members) {
-			TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
-			ConfigurationSection playerSection = membersSection.createSection(player.getName());
+		for (String playerName : _members) {
+			TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(playerName);
+			ConfigurationSection playerSection = membersSection.createSection(playerName);
 			teamPlayer.getScore().save(playerSection);
 		}
 	} // save
@@ -180,7 +179,7 @@ public class Team {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Return the data value that is set on floor buff blocks when placed to 
+	 * Return the data value that is set on floor buff blocks when placed to
 	 * mark them as owned by this team.
 	 * 
 	 * Currently this is derived from the data/color value of the wool helmets
@@ -191,8 +190,8 @@ public class Team {
 	 */
 	public byte getData() {
 		return getMaterialData().getData();
-	}	
-	
+	}
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Return the MaterialData of the team's block.
@@ -363,9 +362,9 @@ public class Team {
 	 */
 	public void message(String message) {
 		for (Player player : getOnlineMembers()) {
-			// Don't send team messages to staff here, since they will get a 
+			// Don't send team messages to staff here, since they will get a
 			// copy of them anyway.
-			if (! player.hasPermission(Permissions.MOD)) {
+			if (!player.hasPermission(Permissions.MOD)) {
 				player.sendMessage(message);
 			}
 		}
@@ -378,9 +377,8 @@ public class Team {
 	 * Only do this in the overworld.
 	 */
 	public void updateCompasses() {
-		for (OfflinePlayer offlinePlayer : _members) {
-			Player player = offlinePlayer.getPlayer();
-			if (player != null && _plugin.isInMatchArea(player)) {
+		for (Player player : getOnlineMembers()) {
+			if (_plugin.isInMatchArea(player)) {
 				player.setCompassTarget(getNearestFlag(player).getLocation());
 			}
 		}
@@ -396,11 +394,11 @@ public class Team {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Return the set of all team members, whether online or not.
+	 * Return the set of all team member names, whether online or not.
 	 * 
-	 * @return the set of all team members, whether online or not.
+	 * @return the set of all team member names, whether online or not.
 	 */
-	public HashSet<OfflinePlayer> getMembers() {
+	public HashSet<String> getMembers() {
 		return _members;
 	}
 
@@ -412,8 +410,8 @@ public class Team {
 	 */
 	public HashSet<Player> getOnlineMembers() {
 		HashSet<Player> online = new HashSet<Player>();
-		for (OfflinePlayer offlinePlayer : getMembers()) {
-			Player player = offlinePlayer.getPlayer();
+		for (String playerName : getMembers()) {
+			Player player = Bukkit.getPlayerExact(playerName);
 			if (player != null) {
 				online.add(player);
 			}
@@ -430,23 +428,15 @@ public class Team {
 	 *         order as a string.
 	 */
 	public String getOnlineList() {
-		TreeSet<Player> online = new TreeSet<Player>(new Comparator<Player>() {
-			@Override
-			public int compare(Player a, Player b) {
-				return a.getName().toLowerCase().compareTo(b.getName().toLowerCase());
-			}
-		});
-		for (OfflinePlayer offlinePlayer : getMembers()) {
-			Player player = offlinePlayer.getPlayer();
-			if (player != null) {
-				online.add(player);
-			}
+		TreeSet<String> onlineNames = new TreeSet<String>();
+		for (Player player : getOnlineMembers()) {
+			onlineNames.add(player.getName());
 		}
 
 		StringBuilder list = new StringBuilder();
-		for (Player player : online) {
+		for (String playerName : onlineNames) {
 			list.append(' ');
-			list.append(player.getName());
+			list.append(playerName);
 		}
 		return list.toString();
 	}
@@ -459,16 +449,16 @@ public class Team {
 	 * 
 	 * @param offlinePlayer the player.
 	 */
-	void addMember(OfflinePlayer offlinePlayer) {
-		_members.add(offlinePlayer);
-		
-		// Add the player to the team's "chest region" used as a group to 
+	void addMember(String playerName) {
+		_members.add(playerName);
+
+		// Add the player to the team's "chest region" used as a group to
 		// protect chests.
 		World overworld = Bukkit.getWorlds().get(0);
 		RegionManager mgr = _plugin.getWorldGuard().getGlobalRegionManager().get(overworld);
 		ProtectedRegion region = mgr.getRegionExact(_chestRegion);
 		if (region != null) {
-			region.getMembers().addPlayer(offlinePlayer.getName());
+			region.getMembers().addPlayer(playerName);
 		}
 	}
 
@@ -547,11 +537,11 @@ public class Team {
 	private Score _score;
 
 	/**
-	 * The name of the protection region used as a predefined protection 
-	 * group for the team's chests.
+	 * The name of the protection region used as a predefined protection group
+	 * for the team's chests.
 	 */
 	private String _chestRegion;
-	
+
 	/**
 	 * Set of WorldGuard region names that are part of the base, all converted
 	 * to lower case.
@@ -567,8 +557,8 @@ public class Team {
 	private ArrayList<Flag> _flags = new ArrayList<Flag>();
 
 	/**
-	 * The set of players that are members of this team.
+	 * The set of names of players that are members of this team.
 	 */
-	private HashSet<OfflinePlayer> _members = new HashSet<OfflinePlayer>();
+	private HashSet<String> _members = new HashSet<String>();
 
 } // class Team

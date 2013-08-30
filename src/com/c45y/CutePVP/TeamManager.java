@@ -1,7 +1,6 @@
 package com.c45y.CutePVP;
 
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -9,7 +8,6 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
@@ -112,27 +110,40 @@ public class TeamManager implements Iterable<Team> {
 	 * @return the {@link TeamPlayer} representing the specified OfflinePlayer,
 	 *         or create a new instance if it does not exist.
 	 */
-	public TeamPlayer createTeamPlayer(OfflinePlayer offlinePlayer, Team team) {
-		TeamPlayer teamPlayer = getTeamPlayer(offlinePlayer);
+	public TeamPlayer createTeamPlayer(String playerName, Team team) {
+		TeamPlayer teamPlayer = getTeamPlayer(playerName);
 		if (teamPlayer == null) {
-			teamPlayer = new TeamPlayer(offlinePlayer, team);
-			_players.put(offlinePlayer, teamPlayer);
-			team.addMember(offlinePlayer);
+			teamPlayer = new TeamPlayer(playerName, team);
+			_players.put(playerName, teamPlayer);
+			team.addMember(playerName);
 		}
 		return teamPlayer;
 	}
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Return the {@link TeamPlayer} representing the specified OfflinePlayer,
-	 * or null if the player has no assigned {@link Team}.
+	 * Return the {@link TeamPlayer} corresponding to the specified Player, or
+	 * null if the Player has no assigned {@link Team}.
 	 * 
-	 * @param offlinePlayer the player, whether online or offline.
-	 * @return the {@link TeamPlayer} representing the specified OfflinePlayer,
-	 *         or null if the player has no assigned {@link Team}.
+	 * @param player the name of the Player.
+	 * @return the {@link TeamPlayer} corresponding to the specified Player, or
+	 *         null if the Player has no assigned {@link Team}.
 	 */
-	public TeamPlayer getTeamPlayer(OfflinePlayer offlinePlayer) {
-		return _players.get(offlinePlayer);
+	public TeamPlayer getTeamPlayer(Player player) {
+		return player != null ? _players.get(player.getName()) : null;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the {@link TeamPlayer} with the specified name, or null if the
+	 * player has no assigned {@link Team}.
+	 * 
+	 * @param plaerName the name of the Player.
+	 * @return the {@link TeamPlayer} with the specified name, or null if the
+	 *         player has no assigned {@link Team}.
+	 */
+	public TeamPlayer getTeamPlayer(String playerName) {
+		return _players.get(playerName);
 	}
 
 	// ------------------------------------------------------------------------
@@ -157,7 +168,7 @@ public class TeamManager implements Iterable<Team> {
 	public void onFirstJoin(Player player) {
 		Team team = decideTeam(player);
 		if (team != null) {
-			createTeamPlayer(player, team);
+			createTeamPlayer(player.getName(), team);
 			player.sendMessage(team.getTeamChatColor() + "Welcome to " + team.getName() + "!");
 			_plugin.getLogger().info(player.getName() + " was assigned to " + team.getName() + ".");
 		}
@@ -225,7 +236,7 @@ public class TeamManager implements Iterable<Team> {
 	 */
 	public void onStaffJoin(Player player) {
 		Messages.success(player, Messages.PREFIX, "Welcome, staff member.");
-		_staff.add(player);
+		_staff.add(player.getName());
 	}
 
 	// ------------------------------------------------------------------------
@@ -237,7 +248,7 @@ public class TeamManager implements Iterable<Team> {
 	 * @param player the player who left.
 	 */
 	public void onPlayerQuit(Player player) {
-		_staff.remove(player);
+		_staff.remove(player.getName());
 	}
 
 	// ------------------------------------------------------------------------
@@ -246,7 +257,7 @@ public class TeamManager implements Iterable<Team> {
 	 * 
 	 * @return an immutable view of the set of online staff.
 	 */
-	public Set<Player> getOnlineStaff() {
+	public Set<String> getOnlineStaff() {
 		return Collections.unmodifiableSet(_staff);
 	}
 
@@ -301,17 +312,12 @@ public class TeamManager implements Iterable<Team> {
 	private LinkedHashMap<String, Team> _teams = new LinkedHashMap<String, Team>();
 
 	/**
-	 * Map from OfflinePlayer to corresponding {@link TeamPlayer}.
+	 * Map from Player name to corresponding {@link TeamPlayer}.
 	 */
-	private HashMap<OfflinePlayer, TeamPlayer> _players = new HashMap<OfflinePlayer, TeamPlayer>();
+	private HashMap<String, TeamPlayer> _players = new HashMap<String, TeamPlayer>();
 
 	/**
-	 * Online staff in sorted order.
+	 * Names of online staff in sorted order.
 	 */
-	private TreeSet<Player> _staff = new TreeSet<Player>(new Comparator<Player>() {
-		@Override
-		public int compare(Player a, Player b) {
-			return a.getName().compareTo(b.getName());
-		}
-	});
+	private TreeSet<String> _staff = new TreeSet<String>();
 } // class TeamManager

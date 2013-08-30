@@ -1,5 +1,8 @@
 package com.c45y.CutePVP;
 
+import java.util.logging.Logger;
+
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -21,6 +24,7 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.PlayerInventory;
 
 import com.c45y.CutePVP.buff.TeamBuff;
 
@@ -58,21 +62,25 @@ public class CutePVPListener implements Listener {
 	// ------------------------------------------------------------------------
 	/**
 	 * Respawn players in their team spawn.
+	 * 
+	 * Note:
+	 * "getPlayer getPlayerExact returns null when called during respawn event"
+	 * https://bukkit.atlassian.net/browse/BUKKIT-4561
+	 * 
+	 * Since TeamPlayer.getPlayer() is now based on getPlayerExact(), setting
+	 * the player's helmet on respawn requires use of the Player instance from
+	 * the event.
 	 */
-	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+	@EventHandler(ignoreCancelled = true)
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
-		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(event.getPlayer());
+		Player player = event.getPlayer();
+		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {
-			// The old OfflinePlayer instance can't be used to reference the
-			// player.
-			// This new one can, so store that.
-			teamPlayer.setOfflinePlayer(event.getPlayer());
-
 			_plugin.getLogger().info(event.getPlayer().getName() + " respawned on " + teamPlayer.getTeam().getName() + ".");
-			teamPlayer.setHelmet();
+			setHelmet(player, teamPlayer.getTeam());
 
 			// Don't put players in their team spawn when not in the match.
-			if (_plugin.isInMatchArea(teamPlayer.getPlayer())) {
+			if (_plugin.isInMatchArea(player)) {
 				event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
 			}
 		}
@@ -107,12 +115,8 @@ public class CutePVPListener implements Listener {
 			_plugin.getLogger().info(player.getName() + " rejoined " + team.getName() + ".");
 		}
 
-		// The old OfflinePlayer instance can't be used to reference the player.
-		// This new one can, so store that.
-		teamPlayer.setOfflinePlayer(event.getPlayer());
-
 		player.setDisplayName(teamPlayer.getTeam().encodeTeamColor(player.getName()));
-		teamPlayer.setHelmet();
+		setHelmet(player, teamPlayer.getTeam());
 		event.setJoinMessage(player.getDisplayName() + " joined the game.");
 	}
 
@@ -346,7 +350,7 @@ public class CutePVPListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		Player player = event.getEntity();
-		if (! _plugin.isInMatchArea(player)) {
+		if (!_plugin.isInMatchArea(player)) {
 			return;
 		}
 
@@ -398,8 +402,8 @@ public class CutePVPListener implements Listener {
 		}
 
 		// Copy the message to staff (all non-participants).
-		for (Player staff : _plugin.getTeamManager().getOnlineStaff()) {
-			staff.sendMessage(message);
+		for (String staffName : _plugin.getTeamManager().getOnlineStaff()) {
+			Bukkit.getPlayerExact(staffName).sendMessage(message);
 		}
 	}
 
@@ -411,7 +415,7 @@ public class CutePVPListener implements Listener {
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockPlace(BlockPlaceEvent event) {
 		Player player = event.getPlayer();
-		if (! _plugin.isInMatchArea(player)) {
+		if (!_plugin.isInMatchArea(player)) {
 			return;
 		}
 
@@ -437,7 +441,7 @@ public class CutePVPListener implements Listener {
 	@EventHandler(ignoreCancelled = true)
 	public void onBlockBreak(BlockBreakEvent event) {
 		Player player = event.getPlayer();
-		if (! _plugin.isInMatchArea(player)) {
+		if (!_plugin.isInMatchArea(player)) {
 			return;
 		}
 
@@ -477,6 +481,32 @@ public class CutePVPListener implements Listener {
 			return false;
 		} else {
 			return true;
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Put on the Team's helmet on the player.
+	 * 
+	 * Note:
+	 * "getPlayer getPlayerExact returns null when called during respawn event"
+	 * https://bukkit.atlassian.net/browse/BUKKIT-4561
+	 * 
+	 */
+	public void setHelmet(Player player, Team team) {
+		// Occasionally, this had NullPointerExceptions when players were being
+		// referenced by OfflinePlayer. Extra logging has been added to try to
+		// diagnose.
+		Logger logger = team.getPlugin().getLogger();
+		if (player == null) {
+			logger.severe("Player was unexpectedly null in setHelmet().");
+		} else {
+			PlayerInventory inventory = player.getInventory();
+			if (inventory == null) {
+				logger.severe("Player " + player.getName() + "'s inventory was unexpectedly null in setHelmet().");
+			} else {
+				inventory.setHelmet(team.getTeamItemStack());
+			}
 		}
 	}
 
