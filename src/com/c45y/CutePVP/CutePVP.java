@@ -167,13 +167,14 @@ public class CutePVP extends JavaPlugin {
 	 * 
 	 * Currently this is the whole of the Overworld.
 	 * 
-	 * @return true if the player is in the area where CutePvP match rules apply.
+	 * @return true if the player is in the area where CutePvP match rules
+	 *         apply.
 	 */
 	public boolean isInMatchArea(Player player) {
 		World overWorld = Bukkit.getWorlds().get(0);
 		return (player.getLocation().getWorld() == overWorld);
 	}
-	
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Apply effects to the player state based on the block the player is
@@ -250,7 +251,7 @@ public class CutePVP extends JavaPlugin {
 		} else if (command.getName().equalsIgnoreCase("testblock")) {
 			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 			if (teamPlayer != null) {
-				teamPlayer.setTestingFloorBuffs(! teamPlayer.isTestingFloorBuffs());
+				teamPlayer.setTestingFloorBuffs(!teamPlayer.isTestingFloorBuffs());
 				Messages.success(player, null, "Power block testing is now " + (teamPlayer.isTestingFloorBuffs() ? "enabled." : "disabled."));
 			} else {
 				Messages.failure(player, null, "You're not on a team.");
@@ -285,8 +286,11 @@ public class CutePVP extends JavaPlugin {
 	protected boolean handleCutePvPCommand(CommandSender sender, String[] args) {
 		if (args.length == 1) {
 			if (args[0].equals("reload")) {
-				getConfiguration().load();
-				Messages.success(sender, Messages.PREFIX, "Configuration reloaded.");
+				// Currrently risky. No gerfingerpoken.
+				// getConfiguration().load();
+				// Messages.success(sender, Messages.PREFIX,
+				// "Configuration reloaded.");
+				Messages.failure(sender, Messages.PREFIX, "That command is disabled.");
 				return true;
 			} else if (args[0].equals("save")) {
 				getConfiguration().save();
