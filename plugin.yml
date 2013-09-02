@@ -17,6 +17,7 @@ permissions:
     default: true
   CutePVP.exempt:
     description: Any player with this permission is not allocated to a team.
+    default: false
 commands:
   cutepvp:
     description: Administrative commands.
