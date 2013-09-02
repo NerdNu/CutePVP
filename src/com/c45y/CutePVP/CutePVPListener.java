@@ -77,13 +77,15 @@ public class CutePVPListener implements Listener {
 		if (teamPlayer != null) {
 			_plugin.getLogger().info(event.getPlayer().getName() + " respawned on " + teamPlayer.getTeam().getName() + ".");
 			teamPlayer.getTeam().setTeamAttributes(player);
-
-			// Don't put players in their team spawn when not in the match.
-			// This is probably redundant now.
-			if (_plugin.isInMatchArea(player)) {
-				event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
-			}
 		}
+
+		// Hopefully, explicitly setting a spawn location will prevent a
+		// message about a missing bed.
+		if (teamPlayer != null && _plugin.isInMatchArea(player)) {
+			event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
+		}
+		// If not in the match or on a team, the existing bed spawn in the end
+		// (which can be changed by minigames) should take effect.
 	}
 
 	// ------------------------------------------------------------------------
@@ -507,7 +509,7 @@ public class CutePVPListener implements Listener {
 		if (teamPlayer.getTeam().inTeamBase(location)) {
 			return !teamPlayer.getTeam().isFlagHomeLocation(location);
 		} else if (_plugin.getTeamManager().inEnemyTeamBase(player, location)) {
-			player.sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base");
+			player.sendMessage(ChatColor.DARK_RED + "You cannot build in an enemy base.");
 			return false;
 		} else {
 			return true;

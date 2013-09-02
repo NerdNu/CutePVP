@@ -248,7 +248,6 @@ public class Team {
 	 * 
 	 * <ul>
 	 * <li>The player's helmet is set to the team block.</li>
-	 * <li>The player's bed spawn is set to the team spawn.</li>
 	 * <li>The player's display name is set in the team color.</li>
 	 * </ul>
 	 * 
@@ -267,7 +266,6 @@ public class Team {
 		if (player == null) {
 			logger.severe("Player was unexpectedly null in setTeamAttributes().");
 		} else {
-			player.setBedSpawnLocation(getSpawn(), true);
 			player.setDisplayName(encodeTeamColor(player.getName()));
 
 			PlayerInventory inventory = player.getInventory();
