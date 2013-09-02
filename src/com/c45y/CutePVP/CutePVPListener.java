@@ -328,8 +328,7 @@ public class CutePVPListener implements Listener {
 	 * command will return him to the Overworld and set the spawn back to the
 	 * team spawn.
 	 * 
-	 * This event is called after the player has already changed worlds, so
-	 * don't check that the player is in the match area.
+	 * This event is called after the player has already changed worlds.
 	 */
 	@EventHandler(ignoreCancelled = true)
 	public void onPlayerChangedWorldEvent(PlayerChangedWorldEvent event) {
@@ -343,7 +342,10 @@ public class CutePVPListener implements Listener {
 								flag.getName() + " flag out of the world. It was returned.");
 		}
 
-		player.setBedSpawnLocation(_plugin.getConfiguration().NON_TEAM_RESPAWN_LOCATION, true);
+		// When arriving in The End, set the bed spawn there.
+		if (!_plugin.isInMatchArea(player)) {
+			player.setBedSpawnLocation(_plugin.getConfiguration().NON_TEAM_RESPAWN_LOCATION, true);
+		}
 	}
 
 	// ------------------------------------------------------------------------
