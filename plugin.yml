@@ -9,14 +9,9 @@ permissions:
     default: op
     children:
       CutePVP.mod: true
-#      Disabled so that staff can play-test.      
-#      CutePVP.exempt: true
   CutePVP.mod:
     description: Moderator, not allocated to teams. Can see all team chats.
     default: op
-#    Disabled so that staff can play-test.      
-#    children:
-#      CutePVP.exempt: true
   CutePVP.user:
     description: An ordinary player, allocated to a team.
     default: true
@@ -27,35 +22,34 @@ commands:
     description: Administrative commands.
     permission: CutePVP.admin
     usage: |
-           /cutepvp [subcommands]
-  g:
-    description: Global chat
+           /<command> [subcommands]
+  join:
+    description: Join a randomly chosen team.
     permission: CutePVP.user
-    usage: |
-           /g [message]
+    usage: /<command> 
+    
+  g:
+    description: Global chat.
+    permission: CutePVP.user
+    usage: /<command> [message]
   teams:
     description: Lists teams.
     permissions: CutePVP.user
-    usage: |
-           /teams
+    usage: /<command>
   score:
     description: Shows the current scores.
     permissions: CutePVP.user
-    usage: |
-           /score
+    usage: /<command>
   drop:
     description: Drops the flag, if held.
     permissions: CutePVP.user
-    usage: |
-           /drop
+    usage: /<command>
   flag:
     description: Displays the location of the nearest flag owned by your team.
     permissions: CutePVP.user
-    usage: |
-           /flag
+    usage: /<command>
   testblock:
     description: Toggles testing of power blocks. When testing is enabled, hostile blocks placed by the player's own team are still effective.
     permissions: CutePVP.user
-    usage: |
-           /testblock
+    usage: /<command>
 

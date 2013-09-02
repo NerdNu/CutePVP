@@ -1,5 +1,6 @@
 package com.c45y.CutePVP;
 
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 
@@ -82,6 +83,18 @@ public class Configuration {
 	 */
 	public boolean TEAM_SPECIFIC_FLOOR_BUFFS;
 
+	/**
+	 * The location where the player spawns the first time they join the server,
+	 * expected to be in The End, or at least not in the Overworld.
+	 */
+	public Location FIRST_JOIN_SPAWN_LOCATION;
+
+	/**
+	 * The respawn location on subsequent joins when not yet allocated to a
+	 * team; expected to be in The End, or at least not in the Overworld.
+	 */
+	public Location NON_TEAM_RESPAWN_LOCATION;
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Sound played when a player steals a flag.
@@ -118,6 +131,8 @@ public class Configuration {
 	 * Load all configuration.
 	 */
 	public void load() {
+		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
+
 		FLAG_FLAME_TICKS = _plugin.getConfig().getInt("time.flag_flame_ticks", 7);
 		FLAG_DROPPED_SECONDS = _plugin.getConfig().getInt("time.flag_dropped_seconds", 300);
 		FLAG_CAPTURE_MINUTES = _plugin.getConfig().getInt("time.flag_capture_minutes", 30);
@@ -127,7 +142,10 @@ public class Configuration {
 		CAN_ATTACK_IN_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_attack_in_enemy_base", false);
 		CAN_EDIT_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_edit_enemy_base", false);
 
-		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
+		ConfigurationSection spawn = _plugin.getConfig().getConfigurationSection("spawn");
+		FIRST_JOIN_SPAWN_LOCATION = helper.loadLocation(spawn, "first_join");
+		NON_TEAM_RESPAWN_LOCATION = helper.loadLocation(spawn, "non_team");
+
 		ConfigurationSection sounds = _plugin.getConfig().getConfigurationSection("sounds");
 		FLAG_STEAL_SOUND = helper.loadSound(sounds, "steal", Sound.AMBIENCE_THUNDER, true);
 		FLAG_RETURN_SOUND = helper.loadSound(sounds, "return", Sound.ORB_PICKUP, true);
@@ -144,6 +162,7 @@ public class Configuration {
 	 * Save all configuration.
 	 */
 	public void save() {
+		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
 		_plugin.getTeamManager().save();
 		_plugin.getBuffManager().save();
 
@@ -152,6 +171,11 @@ public class Configuration {
 		_plugin.getConfig().set("time.flag_capture_minutes", FLAG_CAPTURE_MINUTES);
 		_plugin.getConfig().set("time.flag_warning_minutes", FLAG_WARNING_MINUTES);
 		_plugin.getConfig().set("time.team_buff_seconds", TEAM_BUFF_SECONDS);
+
+		ConfigurationSection firstJoin = _plugin.getConfig().getConfigurationSection("spawn.first_join");
+		ConfigurationSection nonTeam = _plugin.getConfig().getConfigurationSection("spawn.non_team");
+		helper.saveLocation(firstJoin, FIRST_JOIN_SPAWN_LOCATION);
+		helper.saveLocation(nonTeam, NON_TEAM_RESPAWN_LOCATION);
 		_plugin.saveConfig();
 	}
 

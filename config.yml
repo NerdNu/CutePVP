@@ -4,6 +4,21 @@ time:
   flag_capture_minutes: 30
   flag_warning_minutes: 10
   team_buff_seconds: 1800
+spawn:
+  first_join:
+    x: 0
+    y: 200
+    z: 0
+    pitch: 0
+    yaw: 0
+    world: world_the_end
+  non_team:
+    x: 0
+    y: 80
+    z: 0
+    pitch: 0
+    yaw: 0
+    world: world_the_end
 protections:
   can_attack_in_enemy_base: false
   can_edit_enemy_base: false

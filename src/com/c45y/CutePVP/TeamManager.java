@@ -1,12 +1,13 @@
 package com.c45y.CutePVP;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
-import java.util.Set;
-import java.util.TreeSet;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
@@ -36,7 +37,6 @@ public class TeamManager implements Iterable<Team> {
 	public void load() {
 		_teams.clear();
 		_players.clear();
-		_staff.clear();
 
 		// Load the teams.
 		ConfigurationSection teams = _plugin.getConfig().getConfigurationSection("teams");
@@ -161,17 +161,23 @@ public class TeamManager implements Iterable<Team> {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Allocate non-staff to a team on first join.
+	 * Allocate non-exempted players to a team.
 	 * 
 	 * @param player the joining player.
+	 * @return the {@link TeamPlayer} instance representing the player, or null
+	 *         if not assigned to a {@link Team}.
 	 */
-	public void onFirstJoin(Player player) {
+	public TeamPlayer assignTeam(Player player) {
 		Team team = decideTeam(player);
 		if (team != null) {
-			createTeamPlayer(player.getName(), team);
+			TeamPlayer teamPlayer = createTeamPlayer(player.getName(), team);
+			team.setTeamAttributes(player);
+			player.teleport(team.getSpawn());
 			player.sendMessage(team.getTeamChatColor() + "Welcome to " + team.getName() + "!");
 			_plugin.getLogger().info(player.getName() + " was assigned to " + team.getName() + ".");
+			return teamPlayer;
 		}
+		return null;
 	}
 
 	// ------------------------------------------------------------------------
@@ -198,8 +204,6 @@ public class TeamManager implements Iterable<Team> {
 	/**
 	 * Return true if the player is in his own Team's base.
 	 * 
-	 * TODO: eliminate this trivial method.
-	 * 
 	 * @param player the Player.
 	 * @return true if the player is in his own Team's base.
 	 */
@@ -212,11 +216,9 @@ public class TeamManager implements Iterable<Team> {
 	/**
 	 * Send a list of all members of each team to the player.
 	 * 
-	 * TODO: rename as sendTeamLists().
-	 * 
 	 * @param player the player issuing the list command.
 	 */
-	public void sendList(Player player) {
+	public void sendTeamLists(Player player) {
 		for (Team team : _teams.values()) {
 			StringBuilder message = new StringBuilder();
 			message.append(team.encodeTeamColor(team.getName()));
@@ -225,6 +227,22 @@ public class TeamManager implements Iterable<Team> {
 			message.append(team.getOnlineList());
 			player.sendMessage(message.toString());
 		}
+
+		// Return staff list in sorted order.
+		ArrayList<Player> onlineStaff = getOnlineStaff();
+		Player[] sortedStaff = new Player[onlineStaff.size()];
+		Arrays.sort(onlineStaff.toArray(sortedStaff), new Comparator<Player>() {
+			@Override
+			public int compare(Player a, Player b) {
+				return a.getName().compareTo(b.getName());
+			}
+		});
+		StringBuilder staffMessage = new StringBuilder();
+		staffMessage.append("Staff: ");
+		for (Player staff : sortedStaff) {
+			staffMessage.append(' ').append(staff.getName());
+		}
+		player.sendMessage(staffMessage.toString());
 	}
 
 	// ------------------------------------------------------------------------
@@ -236,29 +254,25 @@ public class TeamManager implements Iterable<Team> {
 	 */
 	public void onStaffJoin(Player player) {
 		Messages.success(player, Messages.PREFIX, "Welcome, staff member.");
-		_staff.add(player.getName());
 	}
 
 	// ------------------------------------------------------------------------
 	/**
-	 * Handle players disconnecting.
+	 * Return the online staff.
 	 * 
-	 * If the player is staff, remove him from the set of online staff.
+	 * This is computed dynamically to account for moderators joining and
+	 * leaving staff using /modmode.
 	 * 
-	 * @param player the player who left.
+	 * @return the online staff.
 	 */
-	public void onPlayerQuit(Player player) {
-		_staff.remove(player.getName());
-	}
-
-	// ------------------------------------------------------------------------
-	/**
-	 * Return an immutable view of the set of online staff.
-	 * 
-	 * @return an immutable view of the set of online staff.
-	 */
-	public Set<String> getOnlineStaff() {
-		return Collections.unmodifiableSet(_staff);
+	public ArrayList<Player> getOnlineStaff() {
+		ArrayList<Player> staff = new ArrayList<Player>();
+		for (Player player : Bukkit.getOnlinePlayers()) {
+			if (player.hasPermission(Permissions.MOD)) {
+				staff.add(player);
+			}
+		}
+		return staff;
 	}
 
 	// ------------------------------------------------------------------------
@@ -316,8 +330,4 @@ public class TeamManager implements Iterable<Team> {
 	 */
 	private HashMap<String, TeamPlayer> _players = new HashMap<String, TeamPlayer>();
 
-	/**
-	 * Names of online staff in sorted order.
-	 */
-	private TreeSet<String> _staff = new TreeSet<String>();
 } // class TeamManager

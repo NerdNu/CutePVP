@@ -16,6 +16,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.material.MaterialData;
 
 import com.c45y.CutePVP.util.ConfigHelper;
@@ -239,6 +240,43 @@ public class Team {
 	 */
 	public String encodeTeamColor(String message) {
 		return getTeamChatColor() + message + ChatColor.WHITE;
+	}
+
+	// --------------------------------------------------------------------------
+	/**
+	 * Set the attributes of the player to those of this team; specifically:
+	 * 
+	 * <ul>
+	 * <li>The player's helmet is set to the team block.</li>
+	 * <li>The player's bed spawn is set to the team spawn.</li>
+	 * <li>The player's display name is set in the team color.</li>
+	 * </ul>
+	 * 
+	 * Note:
+	 * "getPlayer getPlayerExact returns null when called during respawn event"
+	 * https://bukkit.atlassian.net/browse/BUKKIT-4561
+	 * 
+	 * @param player the affected plaeyr.
+	 */
+	public void setTeamAttributes(Player player) {
+		// Helmet setting:
+		// Occasionally, this had NullPointerExceptions when players were being
+		// referenced by OfflinePlayer. Extra logging has been added to try to
+		// diagnose.
+		Logger logger = getPlugin().getLogger();
+		if (player == null) {
+			logger.severe("Player was unexpectedly null in setTeamAttributes().");
+		} else {
+			player.setBedSpawnLocation(getSpawn(), true);
+			player.setDisplayName(encodeTeamColor(player.getName()));
+
+			PlayerInventory inventory = player.getInventory();
+			if (inventory == null) {
+				logger.severe("Player " + player.getName() + "'s inventory was unexpectedly null in setTeamAttributes().");
+			} else {
+				inventory.setHelmet(getTeamItemStack());
+			}
+		}
 	}
 
 	// ------------------------------------------------------------------------

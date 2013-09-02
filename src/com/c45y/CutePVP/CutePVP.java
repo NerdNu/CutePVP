@@ -192,7 +192,8 @@ public class CutePVP extends JavaPlugin {
 	/**
 	 * Commands:
 	 * <ul>
-	 * <li>/g <message> - global chat</li>
+	 * <li>/join - join a team and teleport to that team's base.</li>
+	 * <li>/g &lt;message&gt; - global chat</li>
 	 * <li>/teams - list all teams</li>
 	 * <li>/score - show scores</li>
 	 * <li>/flag - give coordinates of nearest flag</li>
@@ -206,7 +207,10 @@ public class CutePVP extends JavaPlugin {
 			return true;
 		}
 		Player player = (Player) sender;
-		if (command.getName().equalsIgnoreCase("g")) {
+		if (command.getName().equalsIgnoreCase("join")) {
+			join(player);
+			return true;
+		} else if (command.getName().equalsIgnoreCase("g")) {
 			String message = ChatColor.RED + ">" + ChatColor.BLUE + ">" +
 								ChatColor.GREEN + ">" + ChatColor.YELLOW + ">" + ChatColor.WHITE
 								+ " <" + player.getDisplayName() + "> " + StringUtils.join(args, " ");
@@ -216,7 +220,7 @@ public class CutePVP extends JavaPlugin {
 			return true;
 
 		} else if (command.getName().equalsIgnoreCase("teams")) {
-			getTeamManager().sendList(player);
+			getTeamManager().sendTeamLists(player);
 			return true;
 
 		} else if (command.getName().equalsIgnoreCase("score")) {
@@ -299,13 +303,28 @@ public class CutePVP extends JavaPlugin {
 			}
 		} else if (args.length == 2) {
 			if (args[0].equals("setspawn")) {
-				String teamId = args[1];
-				Team team = getTeamManager().getTeam(teamId);
-				if (team == null) {
-					Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
-				} else if (sender instanceof Player) {
-					Messages.success(sender, Messages.PREFIX, team.getName() + " spawn set.");
-					team.setSpawn(((Player) sender).getLocation());
+				if (sender instanceof Player) {
+					Player player = (Player) sender;
+					String teamId = args[1];
+
+					// Set the main first join and non team spawns?
+					if (teamId.equals("firstjoin")) {
+						Messages.success(sender, Messages.PREFIX, "First join spawn location set.");
+						getConfiguration().FIRST_JOIN_SPAWN_LOCATION = player.getLocation();
+						getConfiguration().save();
+					} else if (teamId.equals("nonteam")) {
+						Messages.success(sender, Messages.PREFIX, "Non-team respawn location set.");
+						getConfiguration().NON_TEAM_RESPAWN_LOCATION = player.getLocation();
+						getConfiguration().save();
+					} else {
+						Team team = getTeamManager().getTeam(teamId);
+						if (team == null) {
+							Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
+						} else {
+							Messages.success(sender, Messages.PREFIX, team.getName() + " spawn set.");
+							team.setSpawn(player.getLocation());
+						}
+					}
 				} else {
 					Messages.failure(sender, Messages.PREFIX, " You need to be in game to set team spawns.");
 				}
@@ -390,6 +409,45 @@ public class CutePVP extends JavaPlugin {
 		}
 		return false;
 	} // handleCutePvPCommand
+
+	// ------------------------------------------------------------------------
+	/**
+	 * The implementation of the /join command.
+	 * 
+	 * <ul>
+	 * <li>If the player is not on a team, he is allocated to a team unless
+	 * exempted by the CutePVP.exempt permision.</li>
+	 * <li>If the player is not in the Overworld, the team block is affixed as a
+	 * helmet, his display name color is set and he is teleported to his team's
+	 * spawn.</li>
+	 * <li>The player's bed spawn is set to the team spawn. This also prevents
+	 * him from dying back to the minigames area in The End.</li>
+	 * </ul>
+	 */
+	public void join(Player player) {
+		if (player.hasPermission(Permissions.EXEMPT)) {
+			Messages.failure(player, Messages.PREFIX, "You are exempted from playing by the " +
+														Permissions.EXEMPT + " permission. Talk to a techadmin.");
+			return;
+		}
+
+		TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
+		if (teamPlayer == null) {
+			// Player has not joined a team before. Assign them now.
+			getTeamManager().assignTeam(player);
+		} else {
+			// If the player is already on a team, simply remind them of that.
+			Team team = teamPlayer.getTeam();
+			player.sendMessage("You're on " + team.encodeTeamColor(team.getName()) + ".");
+
+			// If they happen to be in the lobby/minigames area in The End,
+			// spawn them back into their team base.
+			if (!isInMatchArea(player)) {
+				team.setTeamAttributes(player);
+				player.teleport(team.getSpawn());
+			}
+		}
+	}
 
 	// ------------------------------------------------------------------------
 	/**

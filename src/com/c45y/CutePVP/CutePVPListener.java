@@ -1,9 +1,7 @@
 package com.c45y.CutePVP;
 
 import java.util.Iterator;
-import java.util.logging.Logger;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
@@ -26,7 +24,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
 
 import com.c45y.CutePVP.buff.TeamBuff;
 
@@ -79,9 +76,10 @@ public class CutePVPListener implements Listener {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {
 			_plugin.getLogger().info(event.getPlayer().getName() + " respawned on " + teamPlayer.getTeam().getName() + ".");
-			setHelmet(player, teamPlayer.getTeam());
+			teamPlayer.getTeam().setTeamAttributes(player);
 
 			// Don't put players in their team spawn when not in the match.
+			// This is probably redundant now.
 			if (_plugin.isInMatchArea(player)) {
 				event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
 			}
@@ -90,37 +88,43 @@ public class CutePVPListener implements Listener {
 
 	// ------------------------------------------------------------------------
 	/**
-	 * On join, allocate players to a team if not exempted.
+	 * On join, spawn new players at the first join spawn, in The End.
+	 * 
+	 * If they have already joined a team, tell everybody about it and set their
+	 * helmet (just in case) and display name.
 	 */
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		TeamManager tm = _plugin.getTeamManager();
 		Player player = event.getPlayer();
+		Configuration config = _plugin.getConfiguration();
+
+		TeamManager tm = _plugin.getTeamManager();
 		if (player.hasPermission(Permissions.MOD)) {
 			tm.onStaffJoin(player);
 			_plugin.getLogger().info(player.getName() + " has staff permissions.");
 		}
 		if (tm.isExempted(player)) {
 			_plugin.getLogger().info(player.getName() + " is exempted from team assignment.");
-			return;
 		}
 
 		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
-		if (teamPlayer == null) {
-			// We don't care whether they have played before or not. If not
-			// exempted, allocate to a team now.
-			tm.onFirstJoin(player);
-			teamPlayer = tm.getTeamPlayer(player);
-		} else {
+		if (teamPlayer != null) {
 			Team team = teamPlayer.getTeam();
+			team.setTeamAttributes(player);
 			player.sendMessage("You're on " + team.encodeTeamColor(team.getName()) + ".");
+			event.setJoinMessage(player.getDisplayName() + " joined the game.");
 			_plugin.getLogger().info(player.getName() + " rejoined " + team.getName() + ".");
 		}
 
-		player.setDisplayName(teamPlayer.getTeam().encodeTeamColor(player.getName()));
-		setHelmet(player, teamPlayer.getTeam());
-		event.setJoinMessage(player.getDisplayName() + " joined the game.");
-	}
+		// If this is the first join, spawn in the designated location.
+		// Also set respawn location in case they choose not to join a team.
+		if (!player.hasPlayedBefore()) {
+			player.teleport(config.FIRST_JOIN_SPAWN_LOCATION);
+
+			// This overrides the spawn set by Team.setTeamAttributes(player).
+			player.setBedSpawnLocation(config.NON_TEAM_RESPAWN_LOCATION, true);
+		}
+	} // onPlayerJoin
 
 	// ------------------------------------------------------------------------
 	/**
@@ -138,7 +142,6 @@ public class CutePVPListener implements Listener {
 		if (teamPlayer != null && teamPlayer.isCarryingFlag()) {
 			teamPlayer.getCarriedFlag().drop();
 		}
-		tm.onPlayerQuit(player);
 	}
 
 	// ------------------------------------------------------------------------
@@ -319,7 +322,11 @@ public class CutePVPListener implements Listener {
 	// ------------------------------------------------------------------------
 	/**
 	 * If a player attempts to carry a flag out of the world, it is
-	 * automatically returned.
+	 * automatically returned. If the player clicks a warp sign to go to the
+	 * lobby, set his bed spawn back into the lobby area so that he will return
+	 * there when dying in minigames. While in the lobby (The End) the /join
+	 * command will return him to the Overworld and set the spawn back to the
+	 * team spawn.
 	 * 
 	 * This event is called after the player has already changed worlds, so
 	 * don't check that the player is in the match area.
@@ -335,6 +342,8 @@ public class CutePVPListener implements Listener {
 								" tried to carry " + flag.getTeam().getName() + "'s " +
 								flag.getName() + " flag out of the world. It was returned.");
 		}
+
+		player.setBedSpawnLocation(_plugin.getConfiguration().NON_TEAM_RESPAWN_LOCATION, true);
 	}
 
 	// ------------------------------------------------------------------------
@@ -421,8 +430,8 @@ public class CutePVPListener implements Listener {
 		}
 
 		// Copy the message to staff (all non-participants).
-		for (String staffName : _plugin.getTeamManager().getOnlineStaff()) {
-			Bukkit.getPlayerExact(staffName).sendMessage(message);
+		for (Player staff : _plugin.getTeamManager().getOnlineStaff()) {
+			staff.sendMessage(message);
 		}
 	}
 
@@ -500,32 +509,6 @@ public class CutePVPListener implements Listener {
 			return false;
 		} else {
 			return true;
-		}
-	}
-
-	// ------------------------------------------------------------------------
-	/**
-	 * Put on the Team's helmet on the player.
-	 * 
-	 * Note:
-	 * "getPlayer getPlayerExact returns null when called during respawn event"
-	 * https://bukkit.atlassian.net/browse/BUKKIT-4561
-	 * 
-	 */
-	public void setHelmet(Player player, Team team) {
-		// Occasionally, this had NullPointerExceptions when players were being
-		// referenced by OfflinePlayer. Extra logging has been added to try to
-		// diagnose.
-		Logger logger = team.getPlugin().getLogger();
-		if (player == null) {
-			logger.severe("Player was unexpectedly null in setHelmet().");
-		} else {
-			PlayerInventory inventory = player.getInventory();
-			if (inventory == null) {
-				logger.severe("Player " + player.getName() + "'s inventory was unexpectedly null in setHelmet().");
-			} else {
-				inventory.setHelmet(team.getTeamItemStack());
-			}
 		}
 	}
 
