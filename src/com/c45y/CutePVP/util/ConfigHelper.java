@@ -76,9 +76,9 @@ public class ConfigHelper {
 	 * @param location the Location to save.
 	 */
 	public void saveLocation(ConfigurationSection section, Location location) {
-		section.set("x", location.getBlockX());
-		section.set("y", location.getBlockY());
-		section.set("z", location.getBlockZ());
+		section.set("x", location.getX());
+		section.set("y", location.getY());
+		section.set("z", location.getZ());
 		section.set("pitch", location.getPitch());
 		section.set("yaw", location.getYaw());
 		section.set("world", location.getWorld().getName());
