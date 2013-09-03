@@ -1,9 +1,11 @@
 package com.c45y.CutePVP;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 
@@ -46,6 +48,7 @@ public class TeamManager implements Iterable<Team> {
 			team.load(teamSection);
 			_teams.put(teamId, team);
 		}
+		_connectionRecords.load(getConnectionRecordsFile(), _plugin.getLogger());
 	} // load
 
 	// ------------------------------------------------------------------------
@@ -60,6 +63,17 @@ public class TeamManager implements Iterable<Team> {
 			Team team = getTeam(teamId);
 			team.save(teamSection);
 		}
+		_connectionRecords.save(getConnectionRecordsFile(), _plugin.getLogger());
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Return the File used to store connection records, for alts checks.
+	 * 
+	 * @return the File used to store connection records, for alts checks.
+	 */
+	public File getConnectionRecordsFile() {
+		return new File(_plugin.getDataFolder(), "alts.yml");
 	}
 
 	// ------------------------------------------------------------------------
@@ -247,6 +261,17 @@ public class TeamManager implements Iterable<Team> {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Called when a player joins the server to update the connection records,
+	 * which are then used to allocate alts to the same team.
+	 * 
+	 * @param player the player.
+	 */
+	public void onPlayerJoin(Player player) {
+		_connectionRecords.addRecord(player);
+	}
+
+	// ------------------------------------------------------------------------
+	/**
 	 * Handle staff (non-participants) joining the server by adding the player
 	 * to the set of online staff.
 	 * 
@@ -289,6 +314,21 @@ public class TeamManager implements Iterable<Team> {
 		if (isExempted(player)) {
 			return null;
 		}
+
+		// Try to allocate the player to the same team as his alts, irrespective
+		// of team balance. But disregard alts data for over 5 names (proxy).
+		HashSet<String> alts = _connectionRecords.getAlts(player.getName());
+		if (alts.size() > 5) {
+			_plugin.getLogger().warning(player.getName() + " has too many alts to allocate to the same team.");
+		} else {
+			for (String alt : alts) {
+				TeamPlayer teamPlayer = _players.get(alt);
+				if (teamPlayer != null) {
+					return teamPlayer.getTeam();
+				}
+			}
+		}
+
 		HashMap<Team, Integer> weights = new HashMap<Team, Integer>();
 		int totalWeight = 0;
 		for (Team team : _teams.values()) {
@@ -330,4 +370,8 @@ public class TeamManager implements Iterable<Team> {
 	 */
 	private HashMap<String, TeamPlayer> _players = new HashMap<String, TeamPlayer>();
 
+	/**
+	 * Records addresses of players.
+	 */
+	private ConnectionRecords _connectionRecords = new ConnectionRecords();
 } // class TeamManager

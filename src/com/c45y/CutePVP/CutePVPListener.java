@@ -101,6 +101,7 @@ public class CutePVPListener implements Listener {
 		Configuration config = _plugin.getConfiguration();
 
 		TeamManager tm = _plugin.getTeamManager();
+		tm.onPlayerJoin(player);
 		if (player.hasPermission(Permissions.MOD)) {
 			tm.onStaffJoin(player);
 			_plugin.getLogger().info(player.getName() + " has staff permissions.");
