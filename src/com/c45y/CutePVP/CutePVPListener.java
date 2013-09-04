@@ -366,37 +366,40 @@ public class CutePVPListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onPlayerDeath(PlayerDeathEvent event) {
 		Player player = event.getEntity();
-		if (!_plugin.isInMatchArea(player)) {
-			return;
-		}
 
+		// Do some of this processing even if not in the match area.
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {
-			if (teamPlayer.isCarryingFlag()) {
-				// Flags that fall out of the world are returned.
-				Flag flag = teamPlayer.getCarriedFlag();
-				Location loc = flag.getHomeLocation();
-				if (player.getLocation().getY() < 0) {
-					flag.doReturn();
-					Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
-										" fell out of the world with " + flag.getTeam().getName() + "'s " +
-										flag.getName() + " flag. It was returned.");
-					if (_plugin.getConfiguration().FLAG_RETURN_SOUND != null) {
-						loc.getWorld().playSound(loc, _plugin.getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
+			if (_plugin.isInMatchArea(player)) {
+				// Flags cannot leave the world (match area).
+				if (teamPlayer.isCarryingFlag()) {
+					// Flags that fall out of the world are returned.
+					Flag flag = teamPlayer.getCarriedFlag();
+					Location loc = flag.getHomeLocation();
+					if (player.getLocation().getY() < 0) {
+						flag.doReturn();
+						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
+											" fell out of the world with " + flag.getTeam().getName() + "'s " +
+											flag.getName() + " flag. It was returned.");
+						if (_plugin.getConfiguration().FLAG_RETURN_SOUND != null) {
+							loc.getWorld().playSound(loc, _plugin.getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
+						}
+					} else {
+						flag.drop();
 					}
-				} else {
-					flag.drop();
 				}
-			}
 
-			Player killer = player.getKiller();
-			TeamPlayer teamKiller = _plugin.getTeamManager().getTeamPlayer(killer);
-			if (teamKiller != null && teamPlayer.getTeam() != teamKiller.getTeam()) {
-				teamKiller.getTeam().getScore().kills.increment();
-				teamKiller.getScore().kills.increment();
-			}
+				// Only count kills towards the score in the match area.
+				Player killer = player.getKiller();
+				TeamPlayer teamKiller = _plugin.getTeamManager().getTeamPlayer(killer);
+				if (teamKiller != null && teamPlayer.getTeam() != teamKiller.getTeam()) {
+					teamKiller.getTeam().getScore().kills.increment();
+					teamKiller.getScore().kills.increment();
+				}
+			} // in the match area
 
 			// Remove the helmet from the drops to prevent farming wool.
+			// This applies in The End as well as the Overworld.
 			ItemStack teamBlockStack = null;
 			for (Iterator<ItemStack> it = event.getDrops().iterator(); it.hasNext();) {
 				ItemStack stack = it.next();

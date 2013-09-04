@@ -106,11 +106,16 @@ public class CutePVP extends JavaPlugin {
 					team.updateCompasses();
 				}
 
-				// Only apply block buffs in the overworld, not the minigames
-				// area in The End.
 				for (Player player : Bukkit.getOnlinePlayers()) {
 					TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 					if (teamPlayer != null) {
+						// Handle inventory clearing in The End.
+						if (getConfiguration().CHECK_HELMET) {
+							teamPlayer.getTeam().setTeamAttributes(player);
+						}
+
+						// Only apply block buffs in the Overworld, not the
+						// minigames area in The End.
 						if (isInMatchArea(player)) {
 							updateTeamPlayerEffects(teamPlayer);
 						}

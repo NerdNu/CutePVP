@@ -19,6 +19,8 @@ spawn:
     pitch: 0
     yaw: 0
     world: world_the_end
+misc:
+  check_helmet: true
 protections:
   can_attack_in_enemy_base: false
   can_edit_enemy_base: false

@@ -99,6 +99,13 @@ public class Configuration {
 	 */
 	public Location NON_TEAM_RESPAWN_LOCATION;
 
+	/**
+	 * If enabled, team block helmets will be periodically reattached. Since
+	 * some of the warp signs in the end will probably clear inventory, we'll
+	 * need this.
+	 */
+	public boolean CHECK_HELMET;
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Sound played when a player steals a flag.
@@ -145,6 +152,7 @@ public class Configuration {
 
 		CAN_ATTACK_IN_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_attack_in_enemy_base", false);
 		CAN_EDIT_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_edit_enemy_base", false);
+		CHECK_HELMET = _plugin.getConfig().getBoolean("misc.check_helmet", true);
 
 		ConfigurationSection spawn = _plugin.getConfig().getConfigurationSection("spawn");
 		FIRST_JOIN_SPAWN_LOCATION = helper.loadLocation(spawn, "first_join");
