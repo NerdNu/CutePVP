@@ -1,5 +1,9 @@
 package com.c45y.CutePVP;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
@@ -162,6 +166,18 @@ public class Configuration {
 	 * Save all configuration.
 	 */
 	public void save() {
+		// Move aside the current configuration to a backup.
+		File backupsDir = new File(_plugin.getDataFolder(), "backups");
+		if (!backupsDir.isDirectory()) {
+			backupsDir.mkdirs();
+		}
+
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss");
+		File backupFile = new File(backupsDir, "config.yml.backup-" + format.format(new Date()));
+		File configFile = new File(_plugin.getDataFolder(), "config.yml");
+		configFile.renameTo(backupFile);
+
+		// Save the new configuration.
 		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
 		_plugin.getTeamManager().save();
 		_plugin.getBuffManager().save();
@@ -177,7 +193,7 @@ public class Configuration {
 		helper.saveLocation(firstJoin, FIRST_JOIN_SPAWN_LOCATION);
 		helper.saveLocation(nonTeam, NON_TEAM_RESPAWN_LOCATION);
 		_plugin.saveConfig();
-	}
+	} // save
 
 	// ------------------------------------------------------------------------
 	/**

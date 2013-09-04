@@ -70,9 +70,9 @@ public class CutePVP extends JavaPlugin {
 	// ------------------------------------------------------------------------
 
 	/**
-	 * Return the {@link Configuration} .
+	 * Return the {@link Configuration}.
 	 * 
-	 * @return the {@link Configuration} .
+	 * @return the {@link Configuration}.
 	 */
 	public Configuration getConfiguration() {
 		return _configuration;
@@ -149,7 +149,24 @@ public class CutePVP extends JavaPlugin {
 				}
 			}
 		}, 0, getConfiguration().FLAG_FLAME_TICKS);
-	}
+
+		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
+			// Save the configuration, with backups at 10 minute intervals.
+			// Log team membership and total scores.
+			@Override
+			public void run() {
+				getConfiguration().save();
+				for (Team team : getTeamManager()) {
+					getLogger().info(team.getName() + " score: " + ChatColor.stripColor(team.getScore().toString()));
+				}
+				for (Team team : getTeamManager()) {
+					int onlineSize = team.getOnlineMembers().size();
+					int totalSize = team.getMembers().size();
+					getLogger().info(team.getName() + " " + onlineSize + " of " + totalSize + " online: " + team.getOnlineList());
+				}
+			}
+		}, 0, 10 * Constants.ONE_MINUTE_TICKS);
+	} // onEnable
 
 	// ------------------------------------------------------------------------
 	/**
@@ -273,7 +290,7 @@ public class CutePVP extends JavaPlugin {
 	 * Handle the /cutepvp command.
 	 * 
 	 * <ul>
-	 * <li>/cutepvp reload|save - reload/save configuration</li>
+	 * <li>/cutepvp save - save configuration</li>
 	 * <li>/cutepvp setspawn &lt;team&gt; - set spawn of team</li>
 	 * <li>/cutepvp flag list - list flag locations</li>
 	 * <li>/cutepvp flag set &lt;team&gt; &lt;id&gt; - set the location of the
@@ -289,14 +306,7 @@ public class CutePVP extends JavaPlugin {
 	 */
 	protected boolean handleCutePvPCommand(CommandSender sender, String[] args) {
 		if (args.length == 1) {
-			if (args[0].equals("reload")) {
-				// Currrently risky. No gerfingerpoken.
-				// getConfiguration().load();
-				// Messages.success(sender, Messages.PREFIX,
-				// "Configuration reloaded.");
-				Messages.failure(sender, Messages.PREFIX, "That command is disabled.");
-				return true;
-			} else if (args[0].equals("save")) {
+			if (args[0].equals("save")) {
 				getConfiguration().save();
 				Messages.success(sender, Messages.PREFIX, "Configuration saved.");
 				return true;
