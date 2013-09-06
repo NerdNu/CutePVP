@@ -205,9 +205,13 @@ public class CutePVP extends JavaPlugin {
 	 * @param teamPlayer the non-null TeamPlayer who is affected.
 	 */
 	public void updateTeamPlayerEffects(TeamPlayer teamPlayer) {
-		Location loc = teamPlayer.getPlayer().getLocation();
-		Block block = loc.getBlock().getRelative(BlockFace.DOWN);
-		getBuffManager().applyFloorBuff(block, teamPlayer);
+		// Player should NOT be null, but server gets confused by ModMode.
+		Player player = teamPlayer.getPlayer();
+		if (player != null) {
+			Location loc = player.getLocation();
+			Block block = loc.getBlock().getRelative(BlockFace.DOWN);
+			getBuffManager().applyFloorBuff(block, teamPlayer);
+		}
 	}
 
 	// ------------------------------------------------------------------------

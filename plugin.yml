@@ -5,12 +5,17 @@ softdepend: [WorldGuard]
 
 permissions:
   CutePVP.admin:
-    description: Admin with access to all CutePVP commands, not allocated to teams.  A strict superset of the CutePVP.mod permission.
+    description: Admin with access to all CutePVP commands.  A strict superset of the CutePVP.mod permission.
     default: op
     children:
       CutePVP.mod: true
   CutePVP.mod:
-    description: Moderator, not allocated to teams. Can see all team chats.
+    description: Moderator. Can see all team chats.
+    default: op
+    children:
+      CutePVP.build: true
+  CutePVP.build:
+    description: Permission to build in an enemy team's base.  Assigned to moderators.
     default: op
   CutePVP.user:
     description: An ordinary player, allocated to a team.

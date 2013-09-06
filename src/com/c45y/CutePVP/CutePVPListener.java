@@ -505,7 +505,7 @@ public class CutePVPListener implements Listener {
 	 */
 	protected boolean allowBlockEdit(Player player, Location location) {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
-		if (teamPlayer == null) {
+		if (teamPlayer == null || player.hasPermission(Permissions.BUILD)) {
 			// Staff member.
 			return true;
 		}
