@@ -262,11 +262,13 @@ public class CutePVP extends JavaPlugin {
 
 		} else if (command.getName().equalsIgnoreCase("score")) {
 			for (Team team : getTeamManager()) {
-				sender.sendMessage(team.encodeTeamColor(team.getName()) + " :-" + team.getScore());
+				sender.sendMessage(team.encodeTeamColor(team.getName()) + ":");
+				sender.sendMessage(team.getScore().toString());
 			}
 			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 			if (teamPlayer != null) {
-				sender.sendMessage(player.getDisplayName() + " :-" + teamPlayer.getScore());
+				sender.sendMessage(player.getDisplayName() + ":");
+				sender.sendMessage(teamPlayer.getScore().toString());
 			}
 			return true;
 		} else if (command.getName().equalsIgnoreCase("flag")) {

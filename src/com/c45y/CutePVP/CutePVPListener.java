@@ -392,6 +392,12 @@ public class CutePVPListener implements Listener {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {
 			if (_plugin.isInMatchArea(player)) {
+				// Player deaths count towards the death score whether caused
+				// by PvP, mobs or natural causes like falling and lava.
+				// Players routinely try to suicide to avoid giving a kill.
+				teamPlayer.getTeam().getScore().deaths.increment();
+				teamPlayer.getScore().deaths.increment();
+
 				// Flags cannot leave the world (match area).
 				if (teamPlayer.isCarryingFlag()) {
 					// Flags that fall out of the world are returned.

@@ -19,6 +19,12 @@ public class Score {
 	public Count kills = new Count("Kills");
 
 	/**
+	 * Number of times the scorer dies in the match area. "Natural" deaths count
+	 * the same as PvP deaths because sometime people suicide to avoid PvP.
+	 */
+	public Count deaths = new Count("Deaths");
+
+	/**
 	 * Number of times this scorer has taken an enemy flag.
 	 */
 	public Count steals = new Count("Steals");
@@ -97,7 +103,7 @@ public class Score {
 		public String getName() {
 			return _name;
 		}
-		
+
 		// --------------------------------------------------------------------
 		/**
 		 * Load the count value from the configuration.
@@ -170,7 +176,7 @@ public class Score {
 	public String toString() {
 		StringBuilder message = new StringBuilder();
 		for (Count count : _counts) {
-			message.append(ChatColor.LIGHT_PURPLE).append(" ").append(count.getName()).append(": ");
+			message.append(ChatColor.GOLD).append(" ").append(count.getName()).append(": ");
 			message.append(ChatColor.WHITE).append(count.get());
 		}
 		return message.toString();
@@ -181,5 +187,5 @@ public class Score {
 	 * A list of all Count fields, used to automate load(), save() and
 	 * toString().
 	 */
-	private Count[] _counts = new Count[] { kills, steals, captures, returns, buffs };
+	private Count[] _counts = new Count[] { kills, deaths, steals, captures, returns, buffs };
 } // class Score
