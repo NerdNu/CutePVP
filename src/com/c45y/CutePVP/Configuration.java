@@ -106,6 +106,13 @@ public class Configuration {
 	 */
 	public boolean CHECK_HELMET;
 
+	/**
+	 * If true, helmets can be crafted. Since just about everybody will be
+	 * wearing team blocks on their heads, helmets are a waste of materials.
+	 * Defaults to false.
+	 */
+	public boolean ALLOW_HELMET_CRAFTING;
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Sound played when a player steals a flag.
@@ -153,6 +160,7 @@ public class Configuration {
 		CAN_ATTACK_IN_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_attack_in_enemy_base", false);
 		CAN_EDIT_ENEMY_BASE = _plugin.getConfig().getBoolean("protections.can_edit_enemy_base", false);
 		CHECK_HELMET = _plugin.getConfig().getBoolean("misc.check_helmet", true);
+		ALLOW_HELMET_CRAFTING = _plugin.getConfig().getBoolean("misc.allow_helmet_crafting", false);
 
 		ConfigurationSection spawn = _plugin.getConfig().getConfigurationSection("spawn");
 		FIRST_JOIN_SPAWN_LOCATION = helper.loadLocation(spawn, "first_join");

@@ -21,6 +21,7 @@ spawn:
     world: world_the_end
 misc:
   check_helmet: true
+  allow_helmet_crafting: false
 protections:
   can_attack_in_enemy_base: false
   can_edit_enemy_base: false

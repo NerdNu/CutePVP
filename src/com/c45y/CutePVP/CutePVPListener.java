@@ -4,6 +4,7 @@ import java.util.Iterator;
 
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -15,7 +16,9 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -53,8 +56,26 @@ public class CutePVPListener implements Listener {
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
 	public void onInventoryClick(InventoryClickEvent event) {
 		Player player = (Player) event.getWhoClicked();
-		if (!_plugin.getTeamManager().isExempted(player) && event.getSlot() == 39) {
+		if (event.getSlotType() == SlotType.ARMOR &&
+			!_plugin.getTeamManager().isExempted(player) && event.getSlot() == 39) {
 			event.setCancelled(true);
+		}
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Disable crafting of helmets, per configuration.
+	 */
+	@EventHandler(ignoreCancelled = true)
+	public void onCraftItemEvent(CraftItemEvent event) {
+		if (!_plugin.getConfiguration().ALLOW_HELMET_CRAFTING && event.getRecipe().getResult() != null) {
+			Material result = event.getRecipe().getResult().getType();
+			if (result == Material.DIAMOND_HELMET ||
+				result == Material.IRON_HELMET ||
+				result == Material.GOLD_HELMET ||
+				result == Material.LEATHER_HELMET) {
+				event.setCancelled(true);
+			}
 		}
 	}
 
@@ -158,7 +179,7 @@ public class CutePVPListener implements Listener {
 		if (_plugin.isInMatchArea(player)) {
 			TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 			if (teamPlayer != null) {
-				_plugin.updateTeamPlayerEffects(teamPlayer);
+				_plugin.applyFloorBuffs(teamPlayer);
 			}
 		}
 	}

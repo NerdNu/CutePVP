@@ -8,6 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -117,7 +118,7 @@ public class CutePVP extends JavaPlugin {
 						// Only apply block buffs in the Overworld, not the
 						// minigames area in The End.
 						if (isInMatchArea(player)) {
-							updateTeamPlayerEffects(teamPlayer);
+							applyFloorBuffs(teamPlayer);
 						}
 					}
 				}
@@ -204,13 +205,23 @@ public class CutePVP extends JavaPlugin {
 	 * 
 	 * @param teamPlayer the non-null TeamPlayer who is affected.
 	 */
-	public void updateTeamPlayerEffects(TeamPlayer teamPlayer) {
+	public void applyFloorBuffs(TeamPlayer teamPlayer) {
 		// Player should NOT be null, but server gets confused by ModMode.
 		Player player = teamPlayer.getPlayer();
 		if (player != null) {
 			Location loc = player.getLocation();
-			Block block = loc.getBlock().getRelative(BlockFace.DOWN);
-			getBuffManager().applyFloorBuff(block, teamPlayer);
+
+			// If the player is standing on certain low height blocks (carpets,
+			// soul sand) then the block he is standing on is the one containing
+			// his legs, rather than that below. For efficiency, we don't
+			// support every case (e.g. not cake or slabs or enchanting tables).
+			Block legBlock = loc.getBlock();
+			if (legBlock.getType() == Material.SOUL_SAND || legBlock.getType() == Material.CARPET) {
+				getBuffManager().applyFloorBuff(legBlock, teamPlayer);
+			} else {
+				Block floorBlock = legBlock.getRelative(BlockFace.DOWN);
+				getBuffManager().applyFloorBuff(floorBlock, teamPlayer);
+			}
 		}
 	}
 
