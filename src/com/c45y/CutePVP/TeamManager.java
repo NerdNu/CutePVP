@@ -329,26 +329,26 @@ public class TeamManager implements Iterable<Team> {
 			}
 		}
 
-		HashMap<Team, Integer> weights = new HashMap<Team, Integer>();
-		int totalWeight = 0;
+		HashMap<Team, Double> advantage = new HashMap<Team, Double>();
+		double totalWeight = 0;
 		for (Team team : _teams.values()) {
 			// Yes, I know that getMembers() includes the online ones. :)
 			// The intent is that neither figure should dominate the decision.
-			int teamWeight = team.getOnlineMembers().size() + team.getMembers().size();
-			totalWeight += teamWeight;
-			weights.put(team, teamWeight);
+			double teamAdvantage = team.getOnlineMembers().size() + team.getMembers().size() + 2.0 * team.getScore().captures.get();
+			totalWeight += teamAdvantage;
+			advantage.put(team, teamAdvantage);
 		}
 
 		WeightedSelection<Team> chooser = new WeightedSelection<Team>();
-		if (totalWeight == 0) {
+		if (totalWeight < 1.0) {
 			// Selection weights are 0 when there are no players.
 			// Assign equal weights to all teams.
 			for (Team team : _teams.values()) {
 				chooser.addChoice(team, 1.0);
 			}
 		} else {
-			for (Team team : weights.keySet()) {
-				chooser.addChoice(team, totalWeight - weights.get(team));
+			for (Team team : advantage.keySet()) {
+				chooser.addChoice(team, totalWeight - advantage.get(team));
 			}
 		}
 		return chooser.choose();
