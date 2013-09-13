@@ -180,6 +180,15 @@ public class CutePVPListener implements Listener {
 			TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 			if (teamPlayer != null) {
 				_plugin.applyFloorBuffs(teamPlayer);
+
+				// Return flags carried into a player's own base.
+				if (teamPlayer.isCarryingFlag() && teamPlayer.getTeam().inTeamBase(player.getLocation())) {
+					Flag flag = teamPlayer.getCarriedFlag();
+					flag.doReturn();
+					Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR +
+										" tried to carry " + flag.getTeam().getName() + "'s " +
+										flag.getName() + " flag into his base's safe area. It was returned.");
+				}
 			}
 		}
 	}
