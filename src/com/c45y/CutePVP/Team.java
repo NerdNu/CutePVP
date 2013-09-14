@@ -232,6 +232,18 @@ public class Team {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Return true if the block is the team block or carpet in the team's color.
+	 * 
+	 * @return true if the block is the team block or carpet in the team's
+	 *         color.
+	 */
+	public boolean isTeamFloor(Block block) {
+		return (block.getType() == _materialData.getItemType() || block.getType() == Material.CARPET) &&
+				block.getData() == _materialData.getData();
+	}
+
+	// ------------------------------------------------------------------------
+	/**
 	 * Encode a chat message in the team's color.
 	 * 
 	 * Text after the message is reset back to white.

@@ -182,8 +182,8 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 * @param teamPlayer the player, who must belong to a team.
 	 */
 	public void applyFloorBuff(Block block, TeamPlayer teamPlayer) {
-		// Check whether it is the player's own team block.
-		if (teamPlayer.getTeam().isTeamBlock(block)) {
+		// Check whether it is the player's own team block or carpet.
+		if (teamPlayer.getTeam().isTeamFloor(block)) {
 			for (PotionEffect potion : _friendPotions) {
 				teamPlayer.getPlayer().addPotionEffect(potion, true);
 			}
@@ -204,7 +204,7 @@ public class BuffManager implements Iterable<TeamBuff> {
 
 		// Check whether the block is that of an enemy team.
 		for (Team otherTeam : _plugin.getTeamManager()) {
-			if (teamPlayer.getTeam() != otherTeam && otherTeam.isTeamBlock(block)) {
+			if (teamPlayer.getTeam() != otherTeam && otherTeam.isTeamFloor(block)) {
 				for (PotionEffect potion : _enemyPotions) {
 					teamPlayer.getPlayer().addPotionEffect(potion, true);
 				}
