@@ -2,6 +2,7 @@ package com.c45y.CutePVP;
 
 import java.util.Iterator;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -463,17 +464,24 @@ public class CutePVPListener implements Listener {
 	public void onPlayerChat(PlayerChatEvent event) {
 		event.setCancelled(true);
 		Player player = event.getPlayer();
+
 		_plugin.getLogger().info(player.getName() + ": " + ChatColor.stripColor(event.getMessage()));
+		String message = "<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage());
 
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
-		String message = "<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage());
 		if (teamPlayer != null) {
 			// A match participant.
-			Team team = teamPlayer.getTeam();
-			team.message(message);
+			teamPlayer.getTeam().message(message);
+		} else {
+			// If a player hasn't joined, send to all non-staff in the end.
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				if (!_plugin.isInMatchArea(online) && !online.hasPermission(Permissions.MOD)) {
+					online.sendMessage(message);
+				}
+			}
 		}
 
-		// Copy the message to staff (all non-participants).
+		// Copy the message to staff.
 		for (Player staff : _plugin.getTeamManager().getOnlineStaff()) {
 			staff.sendMessage(message);
 		}

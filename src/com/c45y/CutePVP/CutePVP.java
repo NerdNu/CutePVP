@@ -255,7 +255,6 @@ public class CutePVP extends JavaPlugin {
 				recipient.sendMessage(message);
 			}
 			return true;
-
 		} else if (command.getName().equalsIgnoreCase("teams")) {
 			getTeamManager().sendTeamLists(player);
 			return true;

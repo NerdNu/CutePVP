@@ -5,4 +5,4 @@
 *~
 bin/
 target/
-config.yml.example
+config.yml.*
