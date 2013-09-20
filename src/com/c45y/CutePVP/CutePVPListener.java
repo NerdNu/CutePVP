@@ -465,7 +465,8 @@ public class CutePVPListener implements Listener {
 		event.setCancelled(true);
 		Player player = event.getPlayer();
 
-		_plugin.getLogger().info(player.getName() + ": " + ChatColor.stripColor(event.getMessage()));
+		// Log chat in standard form so Mark2 triggers work.
+		Bukkit.getLogger().info("<" + player.getName() + "> " + ChatColor.stripColor(event.getMessage()));
 		String message = "<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage());
 
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
