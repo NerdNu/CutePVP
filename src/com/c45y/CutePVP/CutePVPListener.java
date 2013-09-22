@@ -7,6 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
+import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
@@ -224,7 +225,12 @@ public class CutePVPListener implements Listener {
 			if (projectile.getShooter() instanceof Player) {
 				TeamPlayer teamAttacker = _plugin.getTeamManager().getTeamPlayer((Player) projectile.getShooter());
 				TeamPlayer teamVictim = _plugin.getTeamManager().getTeamPlayer(victim);
-				handlePvPDamage(event, teamAttacker, teamVictim);
+
+				// Allow players to hurt themselves throwing ender pearls.
+				boolean pearlDamage = (teamAttacker == teamVictim && projectile instanceof EnderPearl);
+				if (!pearlDamage) {
+					handlePvPDamage(event, teamAttacker, teamVictim);
+				}
 			}
 		}
 	}
