@@ -76,7 +76,7 @@ There are 4 predefined spawns in the default configuration:
  * The Red Team spawn, named "red".
  * The Blue Team spawn, named "blue".
  
-To set a spawn, stand in the desired location, looking in the direction that the player should look and run the the ```/cutepvp setspawn <name>``` command:
+To set a spawn, stand in the desired location, looking in the direction that the player should look and run the ```/cutepvp setspawn <name>``` command:
 ```
 /cutepvp setspawn firstjoin
 /cutepvp setspawn nonteam
