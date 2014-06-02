@@ -102,13 +102,22 @@ public class CutePVPListener implements Listener {
 			teamPlayer.getTeam().setTeamAttributes(player);
 		}
 
-		// Hopefully, explicitly setting a spawn location will prevent a
-		// message about a missing bed.
+		// If the player's bed (including minigame sleep signs in the End) is
+		// obstructed, Player.getBedSpawnLocation() is cleared to null and the
+		// player will respawn at vanilla spawn in the overworld. Instead,
+		// restore the bed spawn to the default, non-team spawn in the End.
+		if (player.getBedSpawnLocation() == null) {
+			player.setBedSpawnLocation(_plugin.getConfiguration().NON_TEAM_RESPAWN_LOCATION, true);
+		}
+
+		// If the player is on a team and in the overworld, then spawn them in
+		// their base.
 		if (teamPlayer != null && _plugin.isInMatchArea(player)) {
 			event.setRespawnLocation(teamPlayer.getTeam().getSpawn());
+		} else {
+			// Otherwise, spawn them at their (now valid) bed spawn location.
+			event.setRespawnLocation(player.getBedSpawnLocation());
 		}
-		// If not in the match or on a team, the existing bed spawn in the end
-		// (which can be changed by minigames) should take effect.
 	}
 
 	// ------------------------------------------------------------------------
