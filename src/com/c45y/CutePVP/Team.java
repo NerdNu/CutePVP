@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.TreeSet;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -99,6 +100,9 @@ public class Team {
 				teamPlayer.getScore().load(membersSection.getConfigurationSection(playerName));
 			}
 		}
+
+		// Force recomputation of the message highlighting regexp.
+		_memberNamesPattern = null;
 	} // load
 
 	// --------------------------------------------------------------------------
@@ -254,7 +258,50 @@ public class Team {
 		return getTeamChatColor() + message + ChatColor.WHITE;
 	}
 
-	// --------------------------------------------------------------------------
+	// ------------------------------------------------------------------------
+	/**
+	 * Highlight the names of all team members mentioned in the message using
+	 * the team color, whether they are online or not.
+	 * 
+	 * Player names within words are not highlighted because they might refer to
+	 * a different player. For example, if a player named Fred is on the team,
+	 * then "hi fred" would be highlighted, but "hi alfred" would not.
+	 * 
+	 * Non-highlighted text is set to the same color as the end of the input
+	 * message, defaulting to white if the message contains no color codes.
+	 * 
+	 * @param message the message text to highlight.
+	 * @return the new message text with embedded highlight codes.
+	 */
+	public String highlightAllMembers(String message) {
+		if (_memberNamesPattern == null) {
+			// The regexp takes the form of a single group containing all
+			// member names as alternatives, e.g. "\b(totemo|Notch)\b".
+			StringBuilder pattern = new StringBuilder();
+			pattern.append("\\b(");
+			boolean first = true;
+			for (String member : getMembers()) {
+				if (first) {
+					first = false;
+				} else {
+					pattern.append('|');
+				}
+				pattern.append(member);
+			}
+			pattern.append(")\\b");
+			_memberNamesPattern = Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE);
+		}
+
+		// Work out the default color of the non-matching parts of the message.
+		String resetColor = ChatColor.getLastColors(message);
+		if (resetColor.length() == 0) {
+			resetColor = ChatColor.WHITE.toString();
+		}
+
+		return _memberNamesPattern.matcher(message).replaceAll(_chatColor + "$1" + resetColor);
+	}
+
+	// ------------------------------------------------------------------------
 	/**
 	 * Set the attributes of the player to those of this team; specifically:
 	 * 
@@ -267,7 +314,7 @@ public class Team {
 	 * "getPlayer getPlayerExact returns null when called during respawn event"
 	 * https://bukkit.atlassian.net/browse/BUKKIT-4561
 	 * 
-	 * @param player the affected plaeyr.
+	 * @param player the affected player.
 	 */
 	public void setTeamAttributes(Player player) {
 		// Helmet setting:
@@ -299,7 +346,7 @@ public class Team {
 		return _flags;
 	}
 
-	// --------------------------------------------------------------------------
+	// ------------------------------------------------------------------------
 	/**
 	 * Return the flag with the specified ID, or null if none matches.
 	 * 
@@ -315,7 +362,7 @@ public class Team {
 		return null;
 	}
 
-	// --------------------------------------------------------------------------
+	// ------------------------------------------------------------------------
 	/**
 	 * Return the flag at the specified, non-null block (if dropped or home), or
 	 * null if the block is not a flag.
@@ -334,7 +381,7 @@ public class Team {
 		return null;
 	}
 
-	// --------------------------------------------------------------------------
+	// ------------------------------------------------------------------------
 	/**
 	 * Return true if the specified location is the home location of a Flag.
 	 * 
@@ -508,6 +555,9 @@ public class Team {
 		if (region != null) {
 			region.getMembers().addPlayer(playerName);
 		}
+
+		// Force recomputation of the message highlighting regexp.
+		_memberNamesPattern = null;
 	}
 
 	// ------------------------------------------------------------------------
@@ -609,4 +659,9 @@ public class Team {
 	 */
 	private HashSet<String> _members = new HashSet<String>();
 
+	/**
+	 * A regexp that matches the name of any member of the team (whether online
+	 * or not). Lazily updated when used in highlightAllMembers().
+	 */
+	private Pattern _memberNamesPattern;
 } // class Team

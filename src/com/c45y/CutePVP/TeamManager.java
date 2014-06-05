@@ -302,6 +302,23 @@ public class TeamManager implements Iterable<Team> {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Highlight the names of all team members in the message in their
+	 * respective team color, whether they are online or not.
+	 * 
+	 * @param message the message text to highlight.
+	 * @return the new message text with embedded highlight codes.
+	 * @see Team#highlightAllMembers(String)
+	 */
+	public String highlightTeamMemberNames(String message)
+	{
+		for (Team team : this) {
+			message = team.highlightAllMembers(message);
+		}
+		return message;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
 	 * Return the Team to which the player should be assigned.
 	 * 
 	 * Consider both the total number of players in a team and the number

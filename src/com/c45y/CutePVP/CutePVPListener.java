@@ -468,6 +468,8 @@ public class CutePVPListener implements Listener {
 				}
 			}
 		}
+
+		event.setDeathMessage(_plugin.getTeamManager().highlightTeamMemberNames(event.getDeathMessage()));
 	} // onPlayerDeath
 
 	// ------------------------------------------------------------------------
@@ -482,7 +484,7 @@ public class CutePVPListener implements Listener {
 
 		// Log chat in standard form so Mark2 triggers work.
 		Bukkit.getLogger().info("<" + player.getName() + "> " + ChatColor.stripColor(event.getMessage()));
-		String message = "<" + player.getDisplayName() + "> " + ChatColor.stripColor(event.getMessage());
+		String message = "<" + player.getDisplayName() + "> " + _plugin.getTeamManager().highlightTeamMemberNames(event.getMessage());
 
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {

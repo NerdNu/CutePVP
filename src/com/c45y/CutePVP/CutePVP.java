@@ -249,8 +249,9 @@ public class CutePVP extends JavaPlugin {
 			return true;
 		} else if (command.getName().equalsIgnoreCase("g")) {
 			String message = ChatColor.RED + ">" + ChatColor.BLUE + ">" +
-								ChatColor.GREEN + ">" + ChatColor.YELLOW + ">" + ChatColor.WHITE
-								+ " <" + player.getDisplayName() + "> " + StringUtils.join(args, " ");
+								ChatColor.GREEN + ">" + ChatColor.YELLOW + ">" + ChatColor.WHITE +
+								" <" + player.getDisplayName() + "> " +
+								getTeamManager().highlightTeamMemberNames(StringUtils.join(args, " "));
 			for (Player recipient : getServer().getOnlinePlayers()) {
 				recipient.sendMessage(message);
 			}
@@ -396,8 +397,8 @@ public class CutePVP extends JavaPlugin {
 						teamBuff.setLocation(target.getLocation());
 						Messages.success(sender, Messages.PREFIX,
 							"Team buff " + teamBuff.getId() + " (\"" + teamBuff.getName() + "\") set to " +
-								target.getType().name().toLowerCase() + " at " +
-								Messages.formatIntegerXYZ(teamBuff.getLocation()));
+							target.getType().name().toLowerCase() + " at " +
+							Messages.formatIntegerXYZ(teamBuff.getLocation()));
 					} else {
 						Messages.failure(sender, Messages.PREFIX, "You need to be in game to set team buff locations.");
 					}
