@@ -20,6 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.c45y.CutePVP.buff.BuffManager;
 import com.c45y.CutePVP.buff.TeamBuff;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+import java.util.HashSet;
 
 // ----------------------------------------------------------------------------
 /**
@@ -392,7 +393,7 @@ public class CutePVP extends JavaPlugin {
 				} else {
 					if (sender instanceof Player) {
 						Player player = (Player) sender;
-						List<Block> inSight = player.getLastTwoTargetBlocks(null, 50);
+						List<Block> inSight = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 50);
 						Block target = inSight.get(1);
 						teamBuff.setLocation(target.getLocation());
 						Messages.success(sender, Messages.PREFIX,
@@ -420,7 +421,7 @@ public class CutePVP extends JavaPlugin {
 					} else {
 						if (sender instanceof Player) {
 							Player player = (Player) sender;
-							List<Block> inSight = player.getLastTwoTargetBlocks(null, 50);
+							List<Block> inSight = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 50);
 							Block target = inSight.get(1);
 							if (team.isTeamBlock(target)) {
 								flag.setHomeLocation(target.getLocation());

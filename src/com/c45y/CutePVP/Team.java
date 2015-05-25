@@ -550,8 +550,8 @@ public class Team {
 		// Add the player to the team's "chest region" used as a group to
 		// protect chests.
 		World overworld = Bukkit.getWorlds().get(0);
-		RegionManager mgr = _plugin.getWorldGuard().getGlobalRegionManager().get(overworld);
-		ProtectedRegion region = mgr.getRegionExact(_chestRegion);
+		RegionManager mgr = _plugin.getWorldGuard().getRegionManager(overworld);
+		ProtectedRegion region = mgr.getRegion(_chestRegion);
 		if (region != null) {
 			region.getMembers().addPlayer(playerName);
 		}
