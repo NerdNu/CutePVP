@@ -274,6 +274,10 @@ public class Team {
 	 * @return the new message text with embedded highlight codes.
 	 */
 	public String highlightAllMembers(String message) {
+                if (getMembers().isEmpty()) {
+                    return message;
+                }
+            
 		if (_memberNamesPattern == null) {
 			// The regexp takes the form of a single group containing all
 			// member names as alternatives, e.g. "\b(totemo|Notch)\b".
@@ -290,15 +294,15 @@ public class Team {
 			}
 			pattern.append(")\\b");
 			_memberNamesPattern = Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE);
+                        
 		}
-
 		// Work out the default color of the non-matching parts of the message.
 		String resetColor = ChatColor.getLastColors(message);
 		if (resetColor.length() == 0) {
 			resetColor = ChatColor.WHITE.toString();
 		}
 
-		return _memberNamesPattern.matcher(message).replaceAll(_chatColor + "$1" + resetColor);
+		return message; // _memberNamesPattern.matcher(message).replaceAll(_chatColor + "$1" + resetColor);
 	}
 
 	// ------------------------------------------------------------------------

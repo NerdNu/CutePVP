@@ -22,7 +22,6 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType.SlotType;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -31,6 +30,7 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 
 import com.c45y.CutePVP.buff.TeamBuff;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
 
 // ----------------------------------------------------------------------------
 /**
@@ -39,7 +39,6 @@ import com.c45y.CutePVP.buff.TeamBuff;
  * The synchronous PlayerChatEvent is deprecated but it's just so much easier to
  * handle that way.
  */
-@SuppressWarnings("deprecation")
 public class CutePVPListener implements Listener {
 	// ------------------------------------------------------------------------
 	/**
@@ -478,7 +477,7 @@ public class CutePVPListener implements Listener {
 	 * with team colors inserted.
 	 */
 	@EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
-	public void onPlayerChat(PlayerChatEvent event) {
+	public void onPlayerChat(AsyncPlayerChatEvent event) {
 		event.setCancelled(true);
 		Player player = event.getPlayer();
 

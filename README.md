@@ -14,6 +14,7 @@ Team Insignia
 Game Mechanics
 --------------
 
+ * Players are assigned a team once they run /join
  * Each team owns (defends) one or more flags, which is a wool block of the team's color.
  * Right-clicking on an opposition team's flag "steals" it.
  * To score, you must steal a flag and carry it back to your base, then click on one of your own team flags.  This is called a "capture".
@@ -66,6 +67,14 @@ Moderation
 
 Commands
 --------
+
+### Player Commands
+
+ * To be assigned a team, players must run the command `/join`
+ * A list of teams can be accessed via the use of `/teams`
+ * Team based score can be retrieved with `/score`
+ * The nearest flag location can be retrieved by running `/flag`
+ * To forcefully drop a flag you are holding, run `/drop`
 
 ### Setting Up Spawns
 
