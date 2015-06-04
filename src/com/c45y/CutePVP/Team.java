@@ -274,6 +274,10 @@ public class Team {
 	 * @return the new message text with embedded highlight codes.
 	 */
 	public String highlightAllMembers(String message) {
+		if (getMembers().isEmpty()) {
+			return message;
+		}
+
 		if (_memberNamesPattern == null) {
 			// The regexp takes the form of a single group containing all
 			// member names as alternatives, e.g. "\b(totemo|Notch)\b".
