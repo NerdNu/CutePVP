@@ -557,7 +557,7 @@ public class Team {
 		RegionManager mgr = _plugin.getWorldGuard().getRegionManager(overworld);
 		ProtectedRegion region = mgr.getRegion(_chestRegion);
 		if (region != null) {
-			region.getMembers().addPlayer(playerName);
+			region.getMembers().addPlayer(_plugin.getServer().getPlayer(playerName).getUniqueId());
 		}
 
 		// Force recomputation of the message highlighting regexp.
