@@ -20,6 +20,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import com.c45y.CutePVP.buff.BuffManager;
 import com.c45y.CutePVP.buff.TeamBuff;
 import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
+
 import java.util.HashSet;
 
 // ----------------------------------------------------------------------------
@@ -67,6 +68,17 @@ public class CutePVP extends JavaPlugin {
 	 */
 	public BuffManager getBuffManager() {
 		return _buffManager;
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Return the {@link ScoreboardManager}.
+	 *
+	 * @return the {@link ScoreboardManager}.
+	 */
+	public ScoreboardManager getScoreboardManager() {
+		return _scoreboardManager;
 	}
 
 	// ------------------------------------------------------------------------
@@ -173,6 +185,10 @@ public class CutePVP extends JavaPlugin {
 				}
 			}
 		}, 0, 10 * Constants.ONE_MINUTE_TICKS);
+
+		if (getConfiguration().SCOREBOARD_ENABLE) {
+			_scoreboardManager.enable();
+		}
 	} // onEnable
 
 	// ------------------------------------------------------------------------
@@ -507,4 +523,9 @@ public class CutePVP extends JavaPlugin {
 	 * The {@link BuffManager}.
 	 */
 	private BuffManager _buffManager = new BuffManager(this);
+
+	/**
+	 * The {@link ScoreboardManager}.
+	 */
+	private ScoreboardManager _scoreboardManager = new ScoreboardManager(this);
 } // class CutePVP

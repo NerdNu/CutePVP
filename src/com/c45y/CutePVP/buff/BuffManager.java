@@ -48,7 +48,7 @@ public class BuffManager implements Iterable<TeamBuff> {
 			for (String id : teamBuffsSection.getKeys(false)) {
 				ConfigurationSection section = teamBuffsSection.getConfigurationSection(id);
 				if (section != null) {
-					TeamBuff teamBuff = new TeamBuff();
+					TeamBuff teamBuff = new TeamBuff(_plugin);
 					if (teamBuff.load(section, _plugin.getTeamManager(), _plugin.getLogger())) {
 						_teamBuffs.add(teamBuff);
 					}

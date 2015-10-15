@@ -1,20 +1,14 @@
 package com.c45y.CutePVP.buff;
 
-import java.util.logging.Logger;
-
+import com.c45y.CutePVP.*;
+import com.c45y.CutePVP.util.ConfigHelper;
+import com.c45y.CutePVP.util.RateLimiter;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 
-import com.c45y.CutePVP.Configuration;
-import com.c45y.CutePVP.Constants;
-import com.c45y.CutePVP.Messages;
-import com.c45y.CutePVP.Team;
-import com.c45y.CutePVP.TeamManager;
-import com.c45y.CutePVP.TeamPlayer;
-import com.c45y.CutePVP.util.ConfigHelper;
-import com.c45y.CutePVP.util.RateLimiter;
+import java.util.logging.Logger;
 
 // ----------------------------------------------------------------------------
 /**
@@ -27,6 +21,16 @@ import com.c45y.CutePVP.util.RateLimiter;
  * Instead, the normal Minecraft potion expiry mechanism is allowed to occur.
  */
 public class TeamBuff extends Buff {
+	// ------------------------------------------------------------------------
+	/**
+	 * Constructor.
+	 *
+	 * @param plugin the CutePVP instance.
+	 */
+	public TeamBuff(CutePVP plugin) {
+		_plugin = plugin;
+	}
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Load this buff from the specified configuration section.
@@ -129,6 +133,16 @@ public class TeamBuff extends Buff {
 
 	// ------------------------------------------------------------------------
 	/**
+	 * Return the team that has claimed this buff.
+	 *
+	 * @return the team that has claimed this buff.
+	 */
+	public Team getTeam() {
+		return _team;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
 	 * Return true if this buff has been claimed by a team.
 	 * 
 	 * @eturn true if this buff has been claimed by a team.
@@ -150,6 +164,8 @@ public class TeamBuff extends Buff {
 			// Only score if ownership has changed.
 			teamPlayer.getTeam().getScore().buffs.increment();
 			teamPlayer.getScore().buffs.increment();
+
+			_plugin.getScoreboardManager().refreshTeamEffects();
 
 			// Prevent chat and audio spam.
 			if (_claimRateLimiter.canAct(BUFF_CLAIM_MILLIS)) {
@@ -200,11 +216,17 @@ public class TeamBuff extends Buff {
 				Messages.broadcast(_team.getName() + Messages.BROADCAST_COLOR +
 									"'s claim on the " + _name + " buff has expired.");
 				_team = null;
+				_plugin.getScoreboardManager().refreshTeamEffects();
 			}
 		}
 	}
 
 	// ------------------------------------------------------------------------
+	/**
+	 * The owning plugin.
+	 */
+	private CutePVP _plugin;
+
 	/**
 	 * The identifier of this buff in the configuration, used when saving.
 	 */

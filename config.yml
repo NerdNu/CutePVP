@@ -30,6 +30,8 @@ sounds:
   return: orb_pickup
   capture: level_up
   buff: wither_spawn
+scoreboard:
+  enable: true
 buffs:
   team_specific_floor_buffs: true
   team:

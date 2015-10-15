@@ -2,6 +2,7 @@ package com.c45y.CutePVP.buff;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.logging.Logger;
 
 import org.bukkit.configuration.ConfigurationSection;
@@ -24,7 +25,7 @@ import com.c45y.CutePVP.util.ConfigHelper;
  * not move.)</li>
  * </ul>
  */
-public class Buff {
+public class Buff implements Iterable<PotionEffect> {
 	// ------------------------------------------------------------------------
 	/**
 	 * Load this buff from the specified configuration section.
@@ -90,9 +91,14 @@ public class Buff {
 		}
 	} // apply
 
+	public Iterator<PotionEffect> iterator() {
+		return _potions.iterator();
+	}
+
 	// ------------------------------------------------------------------------
 	/**
 	 * The potion effects of this buff.
 	 */
 	private HashSet<PotionEffect> _potions;
+
 } // class Buff

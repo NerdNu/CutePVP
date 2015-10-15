@@ -189,6 +189,8 @@ public class TeamManager implements Iterable<Team> {
 			player.teleport(team.getSpawn());
 			player.sendMessage(team.getTeamChatColor() + "Welcome to " + team.getName() + "!");
 			_plugin.getLogger().info(player.getName() + " was assigned to " + team.getName() + ".");
+			_plugin.getScoreboardManager().incrementTeamPlayers(team);
+			_plugin.getScoreboardManager().assignPlayer(player);
 			return teamPlayer;
 		}
 		return null;

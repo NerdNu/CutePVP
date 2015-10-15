@@ -134,6 +134,12 @@ public class Configuration {
 	 */
 	public Sound TEAM_BUFF_SOUND;
 
+	/**
+	 * If true, a scoreboard will be displayed to players, containing each
+	 * team's score, player count, and buffs.
+	 */
+	public boolean SCOREBOARD_ENABLE;
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Constructor.
@@ -171,6 +177,8 @@ public class Configuration {
 		FLAG_RETURN_SOUND = helper.loadSound(sounds, "return", Sound.ORB_PICKUP, true);
 		FLAG_CAPTURE_SOUND = helper.loadSound(sounds, "capture", Sound.LEVEL_UP, true);
 		TEAM_BUFF_SOUND = helper.loadSound(sounds, "buff", Sound.WITHER_SPAWN, true);
+
+		SCOREBOARD_ENABLE = _plugin.getConfig().getBoolean("scoreboard.enable", true);
 
 		TEAM_SPECIFIC_FLOOR_BUFFS = _plugin.getConfig().getBoolean("buffs.team_specific_floor_buffs", true);
 		_plugin.getTeamManager().load();

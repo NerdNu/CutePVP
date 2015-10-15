@@ -149,6 +149,8 @@ public class CutePVPListener implements Listener {
 			player.sendMessage("You're on " + team.encodeTeamColor(team.getName()) + ".");
 			event.setJoinMessage(player.getDisplayName() + " joined the game.");
 			_plugin.getLogger().info(player.getName() + " rejoined " + team.getName() + ".");
+			_plugin.getScoreboardManager().incrementTeamPlayers(team);
+			_plugin.getScoreboardManager().assignPlayer(player);
 		}
 
 		// If this is the first join, spawn in the designated location.
@@ -174,8 +176,12 @@ public class CutePVPListener implements Listener {
 
 		TeamManager tm = _plugin.getTeamManager();
 		TeamPlayer teamPlayer = tm.getTeamPlayer(player);
-		if (teamPlayer != null && teamPlayer.isCarryingFlag()) {
-			teamPlayer.getCarriedFlag().drop();
+		if (teamPlayer != null) {
+			Team team = teamPlayer.getTeam();
+			_plugin.getScoreboardManager().decrementTeamPlayers(team);
+			if (teamPlayer.isCarryingFlag()) {
+				teamPlayer.getCarriedFlag().drop();
+			}
 		}
 	}
 
@@ -337,6 +343,7 @@ public class CutePVPListener implements Listener {
 						// Capturing an opposition team's flag.
 						teamPlayer.getScore().captures.increment();
 						teamPlayer.getTeam().getScore().captures.increment();
+						_plugin.getScoreboardManager().refreshTeamCaptures(teamPlayer.getTeam());
 
 						Flag carriedFlag = teamPlayer.getCarriedFlag();
 						carriedFlag.doReturn();
