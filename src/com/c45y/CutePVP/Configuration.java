@@ -183,6 +183,7 @@ public class Configuration {
 		TEAM_SPECIFIC_FLOOR_BUFFS = _plugin.getConfig().getBoolean("buffs.team_specific_floor_buffs", true);
 		_plugin.getTeamManager().load();
 		_plugin.getBuffManager().load();
+		_plugin.getAlertManager().load();
 	} // load
 
 	// ------------------------------------------------------------------------
@@ -205,6 +206,7 @@ public class Configuration {
 		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
 		_plugin.getTeamManager().save();
 		_plugin.getBuffManager().save();
+		_plugin.getAlertManager().save();
 
 		_plugin.getConfig().set("time.flag_flame_ticks", FLAG_FLAME_TICKS);
 		_plugin.getConfig().set("time.flag_dropped_seconds", FLAG_DROPPED_SECONDS);

@@ -32,6 +32,19 @@ sounds:
   buff: wither_spawn
 scoreboard:
   enable: true
+alerts:
+  global:
+    period: 6000
+    offset: 3000
+    messages: []
+  red:
+    period: 6000
+    offset: 6000
+    messages: []
+  blue:
+    period: 6000
+    offset: 6000
+    messages: []
 buffs:
   team_specific_floor_buffs: true
   team:

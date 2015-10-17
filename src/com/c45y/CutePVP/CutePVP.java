@@ -3,6 +3,7 @@ package com.c45y.CutePVP;
 import java.util.List;
 import java.util.logging.Level;
 
+import com.c45y.CutePVP.alert.AlertManager;
 import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -79,6 +80,17 @@ public class CutePVP extends JavaPlugin {
 	 */
 	public ScoreboardManager getScoreboardManager() {
 		return _scoreboardManager;
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Return the {@link AlertManager}.
+	 *
+	 * @return the {@link AlertManager}.
+	 */
+	public AlertManager getAlertManager() {
+		return _alertManager;
 	}
 
 	// ------------------------------------------------------------------------
@@ -528,4 +540,10 @@ public class CutePVP extends JavaPlugin {
 	 * The {@link ScoreboardManager}.
 	 */
 	private ScoreboardManager _scoreboardManager = new ScoreboardManager(this);
+
+	/**
+	 * The {@link AlertManager}.
+	 */
+	private AlertManager _alertManager = new AlertManager(this);
+
 } // class CutePVP
