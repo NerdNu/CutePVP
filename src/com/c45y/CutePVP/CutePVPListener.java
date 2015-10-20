@@ -496,7 +496,7 @@ public class CutePVPListener implements Listener {
 		TeamPlayer teamPlayer = _plugin.getTeamManager().getTeamPlayer(player);
 		if (teamPlayer != null) {
 			// A match participant.
-			teamPlayer.getTeam().message(message);
+			teamPlayer.getTeam().message(message, true);
 		} else {
 			// If a player hasn't joined, send to all non-staff in the end.
 			for (Player online : Bukkit.getOnlinePlayers()) {

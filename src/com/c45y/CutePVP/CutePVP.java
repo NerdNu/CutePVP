@@ -330,7 +330,17 @@ public class CutePVP extends JavaPlugin {
 			}
 			return true;
 		} else if (command.getName().equals("cutepvp")) {
-			return handleCutePvPCommand(sender, args);
+			if (!handleCutePvPCommand(sender, args)) {
+				sender.sendMessage("CutePVP Admin Commands:");
+				sender.sendMessage("/cutepvp save");
+				sender.sendMessage("/cutepvp setspawn <team>");
+				sender.sendMessage("/cutepvp flag list");
+				sender.sendMessage("/cutepvp flag set <team> <id>");
+				sender.sendMessage("/cutepvp buff list");
+				sender.sendMessage("/cutepvp buff set <id>");
+				sender.sendMessage("/cutepvp broadcast <team> <message>");
+			}
+			return true;
 		}
 
 		return false;
@@ -349,6 +359,8 @@ public class CutePVP extends JavaPlugin {
 	 * <li>/cutepvp buff list - list team buff locations</li>
 	 * <li>/cutepvp buff set &lt;id&gt; - set the location of the buff with the
 	 * specified ID.</li>
+	 * <li>/cutepvp broadcast &lt;team&gt; &lt;message&gt; - broadcast a
+	 * message to the specified team</li>
 	 * </ul>
 	 * 
 	 * @param sender the CommandSender.
@@ -356,15 +368,21 @@ public class CutePVP extends JavaPlugin {
 	 * @return true if the command was handled.
 	 */
 	protected boolean handleCutePvPCommand(CommandSender sender, String[] args) {
-		if (args.length == 1) {
-			if (args[0].equals("save")) {
+		if (args.length == 0) {
+			return false;
+		}
+
+		if (args[0].equalsIgnoreCase("save")) {
+			if (args.length == 1) {
 				getConfiguration().save();
 				Messages.success(sender, Messages.PREFIX, "Configuration saved.");
-				return true;
+			} else {
+				Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp save");
 			}
-		} else if (args.length == 2) {
-			if (args[0].equals("setspawn")) {
-				if (sender instanceof Player) {
+			return true;
+		} else if (args[0].equalsIgnoreCase("setspawn")) {
+			if (sender instanceof Player) {
+				if (args.length == 2) {
 					Player player = (Player) sender;
 					String teamId = args[1];
 
@@ -387,86 +405,120 @@ public class CutePVP extends JavaPlugin {
 						}
 					}
 				} else {
-					Messages.failure(sender, Messages.PREFIX, " You need to be in game to set team spawns.");
+					Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp setspawn <team>");
 				}
-				return true;
-			} else if (args[0].equals("flag") && args[1].equals("list")) {
-				for (Team team : getTeamManager()) {
-					StringBuilder message = new StringBuilder();
-					message.append(team.getName()).append(' ').append("flags: ");
-					for (Flag flag : team.getFlags()) {
-						message.append(" ").append(flag.getId()).append(" \"").append(flag.getName());
-						message.append("\" @ ").append(Messages.formatIntegerXYZ(flag.getLocation()));
-					}
-					Messages.success(sender, Messages.PREFIX, message.toString());
-				}
-				return true;
-			} else if (args[0].equals("buff") && args[1].equals("list")) {
-				StringBuilder message = new StringBuilder();
-				message.append("Team buffs: ");
-				for (TeamBuff teamBuff : getBuffManager()) {
-					message.append(" ").append(teamBuff.getId()).append(" \"").append(teamBuff.getName());
-					message.append("\" @ ").append(Messages.formatIntegerXYZ(teamBuff.getLocation()));
-				}
-				Messages.success(sender, Messages.PREFIX, message.toString());
-				return true;
+			} else {
+				Messages.failure(sender, Messages.PREFIX, "You need to be in game to set team spawns.");
 			}
-		} else if (args.length == 3) {
-			// /cutepvp buff set <buffId>
-			if (args[0].equals("buff") && args[1].equals("set")) {
-				String buffId = args[2];
-				TeamBuff teamBuff = getBuffManager().getTeamBuff(buffId);
-				if (teamBuff == null) {
-					Messages.failure(sender, Messages.PREFIX, "There is no team buff with that ID.");
-				} else {
-					if (sender instanceof Player) {
-						Player player = (Player) sender;
-						List<Block> inSight = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 50);
-						Block target = inSight.get(1);
-						teamBuff.setLocation(target.getLocation());
-						Messages.success(sender, Messages.PREFIX,
-							"Team buff " + teamBuff.getId() + " (\"" + teamBuff.getName() + "\") set to " +
-							target.getType().name().toLowerCase() + " at " +
-							Messages.formatIntegerXYZ(teamBuff.getLocation()));
-					} else {
-						Messages.failure(sender, Messages.PREFIX, "You need to be in game to set team buff locations.");
-					}
-				}
-				return true;
-			}
-		} else if (args.length == 4) {
-			// /cutepvp flag set <teamId> <flagId>
-			if (args[0].equals("flag") && args[1].equals("set")) {
-				String teamId = args[2];
-				Team team = getTeamManager().getTeam(teamId);
-				if (team == null) {
-					Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
-				} else {
-					String flagId = args[3];
-					Flag flag = team.getFlag(flagId);
-					if (flag == null) {
-						Messages.failure(sender, Messages.PREFIX, team.getName() + " doesn't have a flag with the ID " + flagId + ".");
-					} else {
-						if (sender instanceof Player) {
-							Player player = (Player) sender;
-							List<Block> inSight = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 50);
-							Block target = inSight.get(1);
-							if (team.isTeamBlock(target)) {
-								flag.setHomeLocation(target.getLocation());
-								Messages.success(sender, Messages.PREFIX,
-									team.getName() + " flag " + flag.getId() + " (\"" + flag.getName() + "\") home set to " +
-									Messages.formatIntegerXYZ(flag.getLocation()));
-
-							} else {
-								Messages.failure(sender, Messages.PREFIX, "The flag needs to be of the team's block type.");
+			return true;
+		} else if (args[0].equalsIgnoreCase("flag")) {
+			if (args.length > 1) {
+				if (args[1].equalsIgnoreCase("list")) {
+					if (args.length == 2) {
+						for (Team team : getTeamManager()) {
+							StringBuilder message = new StringBuilder();
+							message.append(team.getName()).append(' ').append("flags: ");
+							for (Flag flag : team.getFlags()) {
+								message.append(" ").append(flag.getId()).append(" \"").append(flag.getName());
+								message.append("\" @ ").append(Messages.formatIntegerXYZ(flag.getLocation()));
 							}
-						} else {
-							Messages.failure(sender, Messages.PREFIX, "You need to be in game to set flags.");
+							Messages.success(sender, Messages.PREFIX, message.toString());
 						}
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp flag list");
 					}
+					return true;
+				} else if (args[1].equalsIgnoreCase("set")) {
+					if (args.length == 4) {
+						String teamId = args[2];
+						Team team = getTeamManager().getTeam(teamId);
+						if (team == null) {
+							Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
+						} else {
+							String flagId = args[3];
+							Flag flag = team.getFlag(flagId);
+							if (flag == null) {
+								Messages.failure(sender, Messages.PREFIX, team.getName() + " doesn't have a flag with the ID " + flagId + ".");
+							} else {
+								if (sender instanceof Player) {
+									Player player = (Player) sender;
+									List<Block> inSight = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 50);
+									Block target = inSight.get(1);
+									if (team.isTeamBlock(target)) {
+										flag.setHomeLocation(target.getLocation());
+										Messages.success(sender, Messages.PREFIX,
+												team.getName() + " flag " + flag.getId() + " (\"" + flag.getName() + "\") home set to " +
+														Messages.formatIntegerXYZ(flag.getLocation()));
+
+									} else {
+										Messages.failure(sender, Messages.PREFIX, "The flag needs to be of the team's block type.");
+									}
+								} else {
+									Messages.failure(sender, Messages.PREFIX, "You need to be in game to set flags.");
+								}
+							}
+						}
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp flag set <team> <id>");
+					}
+					return true;
 				}
-				return true;
-			} // handling /cutepvp flag set <teamId> <flagId>
+			}
+		} else if (args[0].equalsIgnoreCase("buff")) {
+			if (args.length > 1) {
+				if (args[1].equalsIgnoreCase("list")) {
+					if (args.length == 2) {
+						StringBuilder message = new StringBuilder();
+						message.append("Team buffs: ");
+						for (TeamBuff teamBuff : getBuffManager()) {
+							message.append(" ").append(teamBuff.getId()).append(" \"").append(teamBuff.getName());
+							message.append("\" @ ").append(Messages.formatIntegerXYZ(teamBuff.getLocation()));
+						}
+						Messages.success(sender, Messages.PREFIX, message.toString());
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp buff list");
+					}
+					return true;
+				} else if (args[1].equalsIgnoreCase("set")) {
+					if (args.length == 3) {
+						String buffId = args[2];
+						TeamBuff teamBuff = getBuffManager().getTeamBuff(buffId);
+						if (teamBuff == null) {
+							Messages.failure(sender, Messages.PREFIX, "There is no team buff with that ID.");
+						} else {
+							if (sender instanceof Player) {
+								Player player = (Player) sender;
+								List<Block> inSight = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 50);
+								Block target = inSight.get(1);
+								teamBuff.setLocation(target.getLocation());
+								Messages.success(sender, Messages.PREFIX,
+										"Team buff " + teamBuff.getId() + " (\"" + teamBuff.getName() + "\") set to " +
+												target.getType().name().toLowerCase() + " at " +
+												Messages.formatIntegerXYZ(teamBuff.getLocation()));
+							} else {
+								Messages.failure(sender, Messages.PREFIX, "You need to be in game to set team buff locations.");
+							}
+						}
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp buff set <id>");
+					}
+					return true;
+				}
+			}
+		} else if (args[0].equalsIgnoreCase("broadcast")) {
+			if (args.length > 2) {
+				Team team = getTeamManager().getTeam(args[1]);
+				if (team == null) {
+					Messages.failure(sender, Messages.PREFIX, args[1] + " is not a valid team ID.");
+				} else {
+					String msg = team.encodeTeamColor("[" + team.getName() + "] ") + StringUtils.join(args, ' ', 2, args.length);
+					team.message(msg, false);
+					getLogger().info(msg);
+				}
+			} else {
+				Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp broadcast <team> <message>");
+			}
+			return true;
 		}
 		return false;
 	} // handleCutePvPCommand

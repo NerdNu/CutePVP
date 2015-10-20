@@ -24,12 +24,13 @@ public class TeamAlert extends Alert {
 
     @Override
     protected void displayMessage(String message) {
-        _team.message(message);
+        _team.message(message, false);
+        _plugin.getLogger().info(message);
     }
 
     @Override
     protected String formatMessage(String message) {
-        return _team.getTeamChatColor() + "[" + _team.getName() + "] " + ChatColor.WHITE + message;
+        return _team.encodeTeamColor("[" + _team.getName() + "] ") + ChatColor.WHITE + message;
     }
 
     // ------------------------------------------------------------------------

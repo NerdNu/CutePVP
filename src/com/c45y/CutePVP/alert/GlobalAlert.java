@@ -1,6 +1,7 @@
 package com.c45y.CutePVP.alert;
 
 import com.c45y.CutePVP.CutePVP;
+import com.c45y.CutePVP.Messages;
 import org.bukkit.ChatColor;
 
 // ----------------------------------------------------------------------------
@@ -21,12 +22,12 @@ public class GlobalAlert extends Alert {
 
     @Override
     protected void displayMessage(String message) {
-        _plugin.getServer().broadcastMessage(message);
+        Messages.broadcast(message);
     }
 
     @Override
     protected String formatMessage(String message) {
-        return ChatColor.LIGHT_PURPLE + "[Alert] " + ChatColor.WHITE + message;
+        return message;
     }
 
 }

@@ -459,11 +459,11 @@ public class Team {
 	 * 
 	 * @param message the full text of the message.
 	 */
-	public void message(String message) {
+	public void message(String message, boolean ignoreStaff) {
 		for (Player player : getOnlineMembers()) {
 			// Don't send team messages to staff here, since they will get a
 			// copy of them anyway.
-			if (!player.hasPermission(Permissions.MOD)) {
+			if (!ignoreStaff || !player.hasPermission(Permissions.MOD)) {
 				player.sendMessage(message);
 			}
 		}
