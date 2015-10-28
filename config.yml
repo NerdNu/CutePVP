@@ -1,3 +1,4 @@
+match_world: world
 time:
   flag_flame_ticks: 7
   flag_dropped_seconds: 300

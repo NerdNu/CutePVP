@@ -10,7 +10,6 @@ import org.bukkit.ChatColor;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.Command;
@@ -216,15 +215,12 @@ public class CutePVP extends JavaPlugin {
 	// ------------------------------------------------------------------------
 	/**
 	 * Return true if the player is in the area where CutePvP match rules apply.
-	 * 
-	 * Currently this is the whole of the Overworld.
-	 * 
+	 *
 	 * @return true if the player is in the area where CutePvP match rules
 	 *         apply.
 	 */
 	public boolean isInMatchArea(Player player) {
-		World overWorld = Bukkit.getWorlds().get(0);
-		return (player.getLocation().getWorld() == overWorld);
+		return player.getWorld().getName().equals(getConfiguration().MATCH_WORLD);
 	}
 
 	// ------------------------------------------------------------------------

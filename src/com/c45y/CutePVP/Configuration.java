@@ -32,6 +32,11 @@ import com.c45y.CutePVP.util.ConfigHelper;
 public class Configuration {
 	// ------------------------------------------------------------------------
 	/**
+	 * The name of the world in which CutePvP match rules apply.
+	 */
+	public String MATCH_WORLD;
+
+	/**
 	 * Number of seconds before a dropped flag is automatically returned.
 	 */
 	public int FLAG_DROPPED_SECONDS;
@@ -156,6 +161,8 @@ public class Configuration {
 	 */
 	public void load() {
 		ConfigHelper helper = new ConfigHelper(_plugin.getLogger());
+
+		MATCH_WORLD = _plugin.getConfig().getString("match_world", "world");
 
 		FLAG_FLAME_TICKS = _plugin.getConfig().getInt("time.flag_flame_ticks", 7);
 		FLAG_DROPPED_SECONDS = _plugin.getConfig().getInt("time.flag_dropped_seconds", 300);
