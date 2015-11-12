@@ -334,6 +334,8 @@ public class CutePVP extends JavaPlugin {
 				sender.sendMessage("/cutepvp flag set <team> <id>");
 				sender.sendMessage("/cutepvp buff list");
 				sender.sendMessage("/cutepvp buff set <id>");
+				sender.sendMessage("/cutepvp player add <player> <team>");
+				sender.sendMessage("/cutepvp player remove <player>");
 				sender.sendMessage("/cutepvp broadcast <team> <message>");
 			}
 			return true;
@@ -355,6 +357,10 @@ public class CutePVP extends JavaPlugin {
 	 * <li>/cutepvp buff list - list team buff locations</li>
 	 * <li>/cutepvp buff set &lt;id&gt; - set the location of the buff with the
 	 * specified ID.</li>
+	 * <li>/cutepvp player add &lt;player&gt; &lt;team&gt; - add the player to
+	 * the specified team.</li>
+	 * <li>/cutepvp player remove &lt;player&gt; - remove the player from their
+	 * team.</li>
 	 * <li>/cutepvp broadcast &lt;team&gt; &lt;message&gt; - broadcast a
 	 * message to the specified team</li>
 	 * </ul>
@@ -501,13 +507,58 @@ public class CutePVP extends JavaPlugin {
 					return true;
 				}
 			}
+		} else if (args[0].equalsIgnoreCase("player")) {
+			if (args.length > 1) {
+				if (args[1].equalsIgnoreCase("add")) {
+					if (args.length == 4) {
+						Player player = getServer().getPlayer(args[2]);
+						if (player == null) {
+							Messages.failure(sender, Messages.PREFIX, "That player is not online.");
+						} else {
+							TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
+							if (teamPlayer == null) {
+								Team team = getTeamManager().getTeam(args[3]);
+								if (team == null) {
+									Messages.failure(sender, Messages.PREFIX, "Invalid team. Available teams: "
+											+ StringUtils.join(getTeamManager().iterator(), ", ") + ".");
+								} else {
+									if (getTeamManager().assignTeam(player, team) != null) {
+										Messages.success(sender, Messages.PREFIX, player.getName() + " is now on "
+												+ team.getName() + ".");
+									}
+								}
+							} else {
+								Messages.failure(sender, Messages.PREFIX, "That player is already on "
+										+ teamPlayer.getTeam().getName() + ".");
+							}
+						}
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp player add <player> <team>");
+					}
+					return true;
+				} else if (args[1].equalsIgnoreCase("remove")) {
+					if (args.length == 3) {
+						TeamPlayer teamPlayer = getTeamManager().removeTeamPlayer(args[2]);
+						if (teamPlayer == null) {
+							Messages.failure(sender, Messages.PREFIX, "That player is not currently on a team.");
+						} else {
+							Messages.failure(sender, Messages.PREFIX, args[2] + " has been removed from "
+									+ teamPlayer.getTeam().getName() + ".");
+						}
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp player remove <player>");
+					}
+					return true;
+				}
+			}
 		} else if (args[0].equalsIgnoreCase("broadcast")) {
 			if (args.length > 2) {
 				Team team = getTeamManager().getTeam(args[1]);
 				if (team == null) {
 					Messages.failure(sender, Messages.PREFIX, args[1] + " is not a valid team ID.");
 				} else {
-					String msg = team.encodeTeamColor("[" + team.getName() + "] ") + StringUtils.join(args, ' ', 2, args.length);
+					String msg = team.encodeTeamColor("[" + team.getName() + "] ")
+							+ StringUtils.join(args, ' ', 2, args.length);
 					team.message(msg, false);
 					getLogger().info(msg);
 				}

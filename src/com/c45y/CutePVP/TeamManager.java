@@ -119,7 +119,7 @@ public class TeamManager implements Iterable<Team> {
 	 * Return the {@link TeamPlayer} representing the specified OfflinePlayer,
 	 * or create a new instance if it does not exist.
 	 * 
-	 * @param offlinePlayer the player, whether online or offline.
+	 * @param playerName the player, whether online or offline.
 	 * @param team the player's {@link Team}.
 	 * @return the {@link TeamPlayer} representing the specified OfflinePlayer,
 	 *         or create a new instance if it does not exist.
@@ -130,6 +130,32 @@ public class TeamManager implements Iterable<Team> {
 			teamPlayer = new TeamPlayer(playerName, team);
 			_players.put(playerName, teamPlayer);
 			team.addMember(playerName);
+		}
+		return teamPlayer;
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Remove the specified player from their team.
+	 *
+	 * @param playerName the player.
+	 * @return the {@link TeamPlayer}, or null if the specified player wasn't on a team.
+	 */
+	public TeamPlayer removeTeamPlayer(String playerName) {
+		TeamPlayer teamPlayer = _players.remove(playerName);
+		if (teamPlayer != null) {
+			Flag flag = teamPlayer.getCarriedFlag();
+			if (flag != null) {
+				flag.drop();
+			}
+			teamPlayer.getTeam().removeMember(playerName);
+			Player player = teamPlayer.getPlayer();
+			if (player != null) {
+				player.sendMessage("You have been removed from " + teamPlayer.getTeam().getName() + ".");
+				_plugin.getScoreboardManager().decrementTeamPlayers(teamPlayer.getTeam());
+				player.teleport(_plugin.getConfiguration().NON_TEAM_RESPAWN_LOCATION);
+				player.setScoreboard(_plugin.getServer().getScoreboardManager().getMainScoreboard());
+			}
 		}
 		return teamPlayer;
 	}
@@ -152,7 +178,7 @@ public class TeamManager implements Iterable<Team> {
 	 * Return the {@link TeamPlayer} with the specified name, or null if the
 	 * player has no assigned {@link Team}.
 	 * 
-	 * @param plaerName the name of the Player.
+	 * @param playerName the name of the Player.
 	 * @return the {@link TeamPlayer} with the specified name, or null if the
 	 *         player has no assigned {@link Team}.
 	 */
@@ -176,13 +202,26 @@ public class TeamManager implements Iterable<Team> {
 	// ------------------------------------------------------------------------
 	/**
 	 * Allocate non-exempted players to a team.
-	 * 
+	 *
 	 * @param player the joining player.
 	 * @return the {@link TeamPlayer} instance representing the player, or null
 	 *         if not assigned to a {@link Team}.
 	 */
 	public TeamPlayer assignTeam(Player player) {
 		Team team = decideTeam(player);
+		return assignTeam(player, team);
+	}
+
+	// ------------------------------------------------------------------------
+	/**
+	 * Allocate non-exempted players to a team.
+	 *
+	 * @param player the joining player.
+	 * @param team the team to which to assign the player.
+	 * @return the {@link TeamPlayer} instance representing the player, or null
+	 *         if not assigned to a {@link Team}.
+	 */
+	public TeamPlayer assignTeam(Player player, Team team) {
 		if (team != null) {
 			TeamPlayer teamPlayer = createTeamPlayer(player.getName(), team);
 			team.setTeamAttributes(player);

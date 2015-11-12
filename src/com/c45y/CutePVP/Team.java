@@ -546,7 +546,7 @@ public class Team {
 	 * 
 	 * Called by the {@link TeamManager} only.
 	 * 
-	 * @param offlinePlayer the player.
+	 * @param playerName the player.
 	 */
 	void addMember(String playerName) {
 		_members.add(playerName);
@@ -558,6 +558,29 @@ public class Team {
 		ProtectedRegion region = mgr.getRegion(_chestRegion);
 		if (region != null) {
                     region.getMembers().addPlayer(_plugin.getServer().getOfflinePlayer(playerName).getUniqueId());
+		}
+
+		// Force recomputation of the message highlighting regexp.
+		_memberNamesPattern = null;
+	}
+
+	/**
+	 * Remove the specified player from the team.
+	 *
+	 * Called by the {@link TeamManager} only.
+	 *
+	 * @param playerName the player.
+	 */
+	void removeMember(String playerName) {
+		_members.remove(playerName);
+
+		// Remove the player from the team's "chest region" used as a group to
+		// protect chests.
+		World overworld = Bukkit.getWorlds().get(0);
+		RegionManager mgr = _plugin.getWorldGuard().getRegionManager(overworld);
+		ProtectedRegion region = mgr.getRegion(_chestRegion);
+		if (region != null) {
+			region.getMembers().removePlayer(_plugin.getServer().getOfflinePlayer(playerName).getUniqueId());
 		}
 
 		// Force recomputation of the message highlighting regexp.
