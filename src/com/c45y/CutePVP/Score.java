@@ -100,6 +100,16 @@ public class Score {
 
 		// --------------------------------------------------------------------
 		/**
+		 * Set the count to the specified value.
+		 *
+		 * @param count the new count
+		 */
+		public void set(int count) {
+			_count = count;
+		}
+
+		// --------------------------------------------------------------------
+		/**
 		 * Return the current count.
 		 * 
 		 * @return the current count.

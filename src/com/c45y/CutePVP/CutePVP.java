@@ -334,6 +334,7 @@ public class CutePVP extends JavaPlugin {
 				sender.sendMessage("/cutepvp flag set <team> <id> [value]");
 				sender.sendMessage("/cutepvp buff list");
 				sender.sendMessage("/cutepvp buff set <id>");
+				sender.sendMessage("/cutepvp score set <team> <score>");
 				sender.sendMessage("/cutepvp player add <player> <team>");
 				sender.sendMessage("/cutepvp player remove <player>");
 				sender.sendMessage("/cutepvp broadcast <team> <message>");
@@ -357,6 +358,8 @@ public class CutePVP extends JavaPlugin {
 	 * <li>/cutepvp buff list - list team buff locations</li>
 	 * <li>/cutepvp buff set &lt;id&gt; - set the location of the buff with the
 	 * specified ID.</li>
+	 * <li>/cutepvp score set &lt;team&gt; &lt;score&gt; - set the specified
+	 * team's score to the specified value.</li>
 	 * <li>/cutepvp player add &lt;player&gt; &lt;team&gt; - add the player to
 	 * the specified team.</li>
 	 * <li>/cutepvp player remove &lt;player&gt; - remove the player from their
@@ -383,35 +386,31 @@ public class CutePVP extends JavaPlugin {
 			}
 			return true;
 		} else if (args[0].equalsIgnoreCase("setspawn")) {
-			if (sender instanceof Player) {
-				if (args.length == 2) {
-					Player player = (Player) sender;
-					String teamId = args[1];
+            if (args.length == 2) {
+                Player player = (Player) sender;
+                String teamId = args[1];
 
-					// Set the main first join and non team spawns?
-					if (teamId.equals("firstjoin")) {
-						Messages.success(sender, Messages.PREFIX, "First join spawn location set.");
-						getConfiguration().FIRST_JOIN_SPAWN_LOCATION = player.getLocation();
-						getConfiguration().save();
-					} else if (teamId.equals("nonteam")) {
-						Messages.success(sender, Messages.PREFIX, "Non-team respawn location set.");
-						getConfiguration().NON_TEAM_RESPAWN_LOCATION = player.getLocation();
-						getConfiguration().save();
-					} else {
-						Team team = getTeamManager().getTeam(teamId);
-						if (team == null) {
-							Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
-						} else {
-							Messages.success(sender, Messages.PREFIX, team.getName() + " spawn set.");
-							team.setSpawn(player.getLocation());
-						}
-					}
-				} else {
-					Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp setspawn <team>");
-				}
-			} else {
-				Messages.failure(sender, Messages.PREFIX, "You need to be in game to set team spawns.");
-			}
+                // Set the main first join and non team spawns?
+                if (teamId.equals("firstjoin")) {
+                    Messages.success(sender, Messages.PREFIX, "First join spawn location set.");
+                    getConfiguration().FIRST_JOIN_SPAWN_LOCATION = player.getLocation();
+                    getConfiguration().save();
+                } else if (teamId.equals("nonteam")) {
+                    Messages.success(sender, Messages.PREFIX, "Non-team respawn location set.");
+                    getConfiguration().NON_TEAM_RESPAWN_LOCATION = player.getLocation();
+                    getConfiguration().save();
+                } else {
+                    Team team = getTeamManager().getTeam(teamId);
+                    if (team == null) {
+                        Messages.failure(sender, Messages.PREFIX, teamId + " is not a valid team ID.");
+                    } else {
+                        Messages.success(sender, Messages.PREFIX, team.getName() + " spawn set.");
+                        team.setSpawn(player.getLocation());
+                    }
+                }
+            } else {
+                Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp setspawn <team>");
+            }
 			return true;
 		} else if (args[0].equalsIgnoreCase("flag")) {
 			if (args.length > 1) {
@@ -518,6 +517,35 @@ public class CutePVP extends JavaPlugin {
 						}
 					} else {
 						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp buff set <id>");
+					}
+					return true;
+				}
+			}
+		} else if (args[0].equalsIgnoreCase("score")) {
+			if (args.length > 1) {
+				if (args[1].equalsIgnoreCase("set")) {
+					if (args.length == 4) {
+						Team team = getTeamManager().getTeam(args[2]);
+						if (team == null) {
+							Messages.failure(sender, Messages.PREFIX, "Invalid team. Available teams: "
+									+ StringUtils.join(getTeamManager().iterator(), ", ") + ".");
+						} else {
+							try {
+								int score = Integer.parseInt(args[3]);
+								if (score >= 0) {
+									team.getScore().score.set(score);
+									getScoreboardManager().refreshTeamScore(team);
+									Messages.success(sender, Messages.PREFIX, team.getName()
+											+ "'s score has been set to " + score + ".");
+								} else {
+									Messages.failure(sender, Messages.PREFIX, "Score must be a non-negative integer.");
+								}
+							} catch (NumberFormatException e) {
+								Messages.failure(sender, Messages.PREFIX, "Score must be a non-negative integer.");
+							}
+						}
+					} else {
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp score set <team> <score>");
 					}
 					return true;
 				}
