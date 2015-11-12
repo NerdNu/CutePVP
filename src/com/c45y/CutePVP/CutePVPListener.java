@@ -340,15 +340,19 @@ public class CutePVPListener implements Listener {
 							loc.getWorld().playSound(loc, _plugin.getConfiguration().FLAG_RETURN_SOUND, Constants.SOUND_RANGE, 1);
 						}
 					} else if (flag.isHome() && teamPlayer.isCarryingFlag()) {
+						Flag carriedFlag = teamPlayer.getCarriedFlag();
+
 						// Capturing an opposition team's flag.
 						teamPlayer.getScore().captures.increment();
 						teamPlayer.getTeam().getScore().captures.increment();
-						_plugin.getScoreboardManager().refreshTeamCaptures(teamPlayer.getTeam());
+						teamPlayer.getTeam().getScore().score.increment(carriedFlag.getValue());
+						_plugin.getScoreboardManager().refreshTeamScore(teamPlayer.getTeam());
 
-						Flag carriedFlag = teamPlayer.getCarriedFlag();
 						carriedFlag.doReturn();
 						Messages.broadcast(player.getDisplayName() + Messages.BROADCAST_COLOR + " captured " +
-											carriedFlag.getTeam().getName() + "'s " + carriedFlag.getName() + " flag.");
+											carriedFlag.getTeam().getName() + "'s " + carriedFlag.getName() +
+											" flag for " + carriedFlag.getValue() +
+											(carriedFlag.getValue() == 1 ? " point." : " points."));
 						if (_plugin.getConfiguration().FLAG_CAPTURE_SOUND != null) {
 							loc.getWorld().playSound(loc, _plugin.getConfiguration().FLAG_CAPTURE_SOUND, Constants.SOUND_RANGE, 1);
 						}

@@ -288,12 +288,12 @@ public class CutePVP extends JavaPlugin {
 		} else if (command.getName().equalsIgnoreCase("score")) {
 			for (Team team : getTeamManager()) {
 				sender.sendMessage(team.encodeTeamColor(team.getName()) + ":");
-				sender.sendMessage(team.getScore().toString());
+				sender.sendMessage(team.getScore().getLines());
 			}
 			TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 			if (teamPlayer != null) {
 				sender.sendMessage(player.getDisplayName() + ":");
-				sender.sendMessage(teamPlayer.getScore().toString());
+				sender.sendMessage(teamPlayer.getScore().getLines());
 			}
 			return true;
 		} else if (command.getName().equalsIgnoreCase("flag")) {
@@ -331,7 +331,7 @@ public class CutePVP extends JavaPlugin {
 				sender.sendMessage("/cutepvp save");
 				sender.sendMessage("/cutepvp setspawn <team>");
 				sender.sendMessage("/cutepvp flag list");
-				sender.sendMessage("/cutepvp flag set <team> <id>");
+				sender.sendMessage("/cutepvp flag set <team> <id> [value]");
 				sender.sendMessage("/cutepvp buff list");
 				sender.sendMessage("/cutepvp buff set <id>");
 				sender.sendMessage("/cutepvp player add <player> <team>");
@@ -352,8 +352,8 @@ public class CutePVP extends JavaPlugin {
 	 * <li>/cutepvp save - save configuration</li>
 	 * <li>/cutepvp setspawn &lt;team&gt; - set spawn of team</li>
 	 * <li>/cutepvp flag list - list flag locations</li>
-	 * <li>/cutepvp flag set &lt;team&gt; &lt;id&gt; - set the location of the
-	 * flag with the specified ID.</li>
+	 * <li>/cutepvp flag set &lt;team&gt; &lt;id&gt; [value] - set the location
+	 * of the flag with the specified ID.</li>
 	 * <li>/cutepvp buff list - list team buff locations</li>
 	 * <li>/cutepvp buff set &lt;id&gt; - set the location of the buff with the
 	 * specified ID.</li>
@@ -419,10 +419,11 @@ public class CutePVP extends JavaPlugin {
 					if (args.length == 2) {
 						for (Team team : getTeamManager()) {
 							StringBuilder message = new StringBuilder();
-							message.append(team.getName()).append(' ').append("flags: ");
+							message.append(team.getName()).append(' ').append("flags:");
 							for (Flag flag : team.getFlags()) {
-								message.append(" ").append(flag.getId()).append(" \"").append(flag.getName());
-								message.append("\" @ ").append(Messages.formatIntegerXYZ(flag.getLocation()));
+								message.append("\n ").append(flag.getId()).append(" \"").append(flag.getName());
+								message.append("\" [").append(flag.getValue()).append("] @ ");
+								message.append(Messages.formatIntegerXYZ(flag.getLocation()));
 							}
 							Messages.success(sender, Messages.PREFIX, message.toString());
 						}
@@ -431,7 +432,7 @@ public class CutePVP extends JavaPlugin {
 					}
 					return true;
 				} else if (args[1].equalsIgnoreCase("set")) {
-					if (args.length == 4) {
+					if (args.length == 4 || args.length == 5) {
 						String teamId = args[2];
 						Team team = getTeamManager().getTeam(teamId);
 						if (team == null) {
@@ -442,15 +443,29 @@ public class CutePVP extends JavaPlugin {
 							if (flag == null) {
 								Messages.failure(sender, Messages.PREFIX, team.getName() + " doesn't have a flag with the ID " + flagId + ".");
 							} else {
+								int value = flag.getValue();
+								if (args.length == 5) {
+									try {
+										value = Integer.parseInt(args[4]);
+										if (value <= 0) {
+											Messages.failure(sender, Messages.PREFIX, "Value must be a positive integer.");
+											return true;
+										}
+									} catch (NumberFormatException e) {
+										Messages.failure(sender, Messages.PREFIX, "Value must be a positive integer.");
+										return true;
+									}
+								}
 								if (sender instanceof Player) {
 									Player player = (Player) sender;
 									List<Block> inSight = player.getLastTwoTargetBlocks((HashSet<Byte>) null, 50);
 									Block target = inSight.get(1);
 									if (team.isTeamBlock(target)) {
 										flag.setHomeLocation(target.getLocation());
+										flag.setValue(value);
 										Messages.success(sender, Messages.PREFIX,
 												team.getName() + " flag " + flag.getId() + " (\"" + flag.getName() + "\") home set to " +
-														Messages.formatIntegerXYZ(flag.getLocation()));
+														Messages.formatIntegerXYZ(flag.getLocation()) + " for " + value + " points.");
 
 									} else {
 										Messages.failure(sender, Messages.PREFIX, "The flag needs to be of the team's block type.");
@@ -461,7 +476,7 @@ public class CutePVP extends JavaPlugin {
 							}
 						}
 					} else {
-						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp flag set <team> <id>");
+						Messages.failure(sender, Messages.PREFIX, "Usage: /cutepvp flag set <team> <id> [value]");
 					}
 					return true;
 				}

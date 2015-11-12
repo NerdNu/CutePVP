@@ -103,6 +103,7 @@ teams:
     flags:
       one:
         description: west
+        value: 1
         home:
           x: -7
           y: 64
@@ -117,6 +118,7 @@ teams:
         drop_time: 0
       two:
         description: east
+        value: 1
         home:
           x: 33
           y: 64
@@ -135,6 +137,7 @@ teams:
       returns: 0
       captures: 0
       buffs: 0
+      score: 0
     members: {}
   blue:
     name: Blue Team
@@ -155,6 +158,7 @@ teams:
     flags:
       one:
         description: west
+        value: 1
         home:
           x: -7
           y: 64
@@ -169,6 +173,7 @@ teams:
         drop_time: 0
       two:
         description: east
+        value: 1
         home:
           x: 33
           y: 64
@@ -187,5 +192,6 @@ teams:
       returns: 0
       captures: 0
       buffs: 0
+      score: 0
     members: {}
 

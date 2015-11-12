@@ -37,6 +37,7 @@ public class Flag {
 			flag._homeLocation = config.loadLocation(section, "home");
 			flag._dropLocation = (section.contains("current")) ? config.loadLocation(section, "current") : flag._homeLocation.clone();
 			flag._name = section.getString("description", team.getName() + "'s flag");
+			flag._value = section.getInt("value", 1);
 			flag._stealTime = section.getLong("steal_time");
 			Configuration configuration = team.getPlugin().getConfiguration();
 			long warningTime = flag._stealTime + 60 * 1000 * (configuration.FLAG_CAPTURE_MINUTES - configuration.FLAG_WARNING_MINUTES);
@@ -57,6 +58,7 @@ public class Flag {
 	 * @param logger logs messages.
 	 */
 	public void save(ConfigurationSection section, Logger logger) {
+		section.set("value", _value);
 		ConfigHelper helper = new ConfigHelper(logger);
 		ConfigurationSection currentSection = section.getConfigurationSection("current");
 		ConfigurationSection homeSection = section.getConfigurationSection("home");
@@ -71,8 +73,7 @@ public class Flag {
 	 * Signify that the flag has been stolen by a player from the specified
 	 * team.
 	 * 
-	 * @param player the player touching the flag.
-	 * @param team that player's team.
+	 * @param teamPlayer the player touching the flag.
 	 */
 	public void stealBy(TeamPlayer teamPlayer) {
 		if (!isCarried() && teamPlayer.getTeam() != _team) {
@@ -224,6 +225,28 @@ public class Flag {
 	}
 
 	// ------------------------------------------------------------------------
+
+	/**
+	 * Set the number of points this flag awards.
+	 *
+	 * @param value the number of points this flag should award.
+	 */
+	public void setValue(int value) {
+		_value = value;
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Return the number of points this flag awards.
+	 *
+	 * @return the number of points this flag awards.
+	 */
+	public int getValue() {
+		return _value;
+	}
+
+	// ------------------------------------------------------------------------
 	/**
 	 * Return true if the flag is at its home location.
 	 * 
@@ -344,6 +367,11 @@ public class Flag {
 	 * The name of this flag used in messages.
 	 */
 	private String _name;
+
+	/**
+	 * The number of points this flag is worth.
+	 */
+	private int _value;
 
 	/**
 	 * The opposition team player who is currently carrying this flag, or null

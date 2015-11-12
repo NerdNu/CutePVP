@@ -392,7 +392,7 @@ public class TeamManager implements Iterable<Team> {
 		for (Team team : _teams.values()) {
 			// Yes, I know that getMembers() includes the online ones. :)
 			// The intent is that neither figure should dominate the decision.
-			double teamAdvantage = team.getOnlineMembers().size() + team.getMembers().size() + 2.0 * team.getScore().captures.get();
+			double teamAdvantage = team.getOnlineMembers().size() + team.getMembers().size() + 2.0 * team.getScore().score.get();
 			totalWeight += teamAdvantage;
 			advantage.put(team, teamAdvantage);
 		}

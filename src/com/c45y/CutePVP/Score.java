@@ -46,6 +46,11 @@ public class Score {
 	 */
 	public Count buffs = new Count("Buffs");
 
+	/**
+	 * The team's overall score; primarily affected by captures.
+	 */
+	public Count score = new Count("Score");
+
 	// ------------------------------------------------------------------------
 	/**
 	 * Represents one counted (integer) property as a public field of Score.
@@ -55,7 +60,6 @@ public class Score {
 		/**
 		 * Constructor.
 		 * 
-		 * @param id the persistent ID of the property in the config file.
 		 * @param name the name of the property presented to players in score
 		 *        messages.
 		 */
@@ -82,6 +86,16 @@ public class Score {
 		 */
 		public void increment() {
 			++_count;
+		}
+
+		// --------------------------------------------------------------------
+
+		/**
+		 * Increment the count by the given amount.
+		 * @param amount the amount by which to increment the count.
+		 */
+		public void increment(int amount) {
+			_count += amount;
 		}
 
 		// --------------------------------------------------------------------
@@ -124,6 +138,11 @@ public class Score {
 		 */
 		public void save(ConfigurationSection section) {
 			section.set(_id, _count);
+		}
+
+		@Override
+		public String toString() {
+			return ChatColor.GOLD + getName() + ": " + ChatColor.WHITE + get();
 		}
 
 		// --------------------------------------------------------------------
@@ -176,10 +195,16 @@ public class Score {
 	public String toString() {
 		StringBuilder message = new StringBuilder();
 		for (Count count : _counts) {
-			message.append(ChatColor.GOLD).append(" ").append(count.getName()).append(": ");
-			message.append(ChatColor.WHITE).append(count.get());
+			message.append(' ').append(count);
 		}
 		return message.toString();
+	}
+
+	public String[] getLines() {
+		return new String[]{
+				" " + kills + " " + deaths + " " + buffs,
+				" " + steals + " " + captures + " " + returns + " " + score
+		};
 	}
 
 	// ------------------------------------------------------------------------
@@ -187,5 +212,5 @@ public class Score {
 	 * A list of all Count fields, used to automate load(), save() and
 	 * toString().
 	 */
-	private Count[] _counts = new Count[] { kills, deaths, steals, captures, returns, buffs };
+	private Count[] _counts = new Count[] { kills, deaths, steals, captures, returns, buffs, score };
 } // class Score

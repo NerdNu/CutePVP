@@ -66,15 +66,15 @@ public class ScoreboardManager {
     }
 
     /**
-     * Refresh the number of captures for the given team.
+     * Refresh the score of the given team.
      *
      * @param team the team.
      */
-    public void refreshTeamCaptures(Team team) {
+    public void refreshTeamScore(Team team) {
         if (_enabled) {
             ScoreboardTeam sTeam = _teams.get(team);
             if (sTeam != null) {
-                sTeam.refreshCaptures();
+                sTeam.refreshScore();
             }
         }
     }
@@ -166,11 +166,11 @@ public class ScoreboardManager {
             _team = team;
             _teamScore = _scoreObjective.getScore(_team.getTeamChatColor().toString() + ChatColor.BOLD.toString()
                     + _team.getName());
-            _capturesScore = null;
+            _scoreScore = null;
             _playersScore = null;
             _effectsScores = new ArrayList<Score>();
             _emptyScore = first ? null : _scoreObjective.getScore(_team.getTeamChatColor().toString());
-            refreshCaptures();
+            refreshScore();
             refreshPlayers();
             refreshEffects();
         }
@@ -189,24 +189,24 @@ public class ScoreboardManager {
                 _effectsScores.get(_effectsScores.size() - i - 1).setScore(index++);
             }
             _playersScore.setScore(index++);
-            _capturesScore.setScore(index++);
+            _scoreScore.setScore(index++);
             _teamScore.setScore(index++);
             return index;
         }
 
         /**
-         * Refresh the number of captures the team has.
+         * Refresh the team's overall score.
          */
-        public void refreshCaptures() {
-            _captures = _team.getScore().captures.get();
+        public void refreshScore() {
+            _score = _team.getScore().score.get();
             int line = 0;
-            if (_capturesScore != null) {
-                line = _capturesScore.getScore();
-                _scoreboard.resetScores(_capturesScore.getEntry());
+            if (_scoreScore != null) {
+                line = _scoreScore.getScore();
+                _scoreboard.resetScores(_scoreScore.getEntry());
             }
-            _capturesScore = _scoreObjective.getScore(_team.getTeamChatColor().toString() + ChatColor.WHITE.toString()
-                    + "Captures: " + _captures);
-            _capturesScore.setScore(line);
+            _scoreScore = _scoreObjective.getScore(_team.getTeamChatColor().toString() + ChatColor.WHITE.toString()
+                    + "Score: " + _score);
+            _scoreScore.setScore(line);
         }
 
         /**
@@ -269,7 +269,7 @@ public class ScoreboardManager {
          * Refresh all team properties.
          */
         public void refresh() {
-            refreshCaptures();
+            refreshScore();
             refreshPlayers();
             refreshEffects();
         }
@@ -286,14 +286,14 @@ public class ScoreboardManager {
         private Score _teamScore;
 
         /**
-         * The number of captures the team has.
+         * The team's overall score.
          */
-        private int _captures;
+        private int _score;
 
         /**
-         * The Score representing the number of captures the team has.
+         * The Score representing the team's overall score.
          */
-        private Score _capturesScore;
+        private Score _scoreScore;
 
         /**
          * The number of online players the team has.
