@@ -88,6 +88,7 @@ teams:
     name: Red Team
     chat_color: red
     material: wool
+    helmet_material: wool
     data: 14
     chest_region: red
     regions:
@@ -143,6 +144,7 @@ teams:
     name: Blue Team
     chat_color: aqua
     material: wool
+    helmet_material: wool
     data: 11
     chest_region: blue
     regions:

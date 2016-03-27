@@ -62,6 +62,13 @@ public class Team {
 			logger.severe("Team " + getId() + " has an invalid team block.");
 		}
 
+		if (teamSection.getString("helmet_material", "").equalsIgnoreCase("glass")) {
+			byte data = (byte) (teamSection.getInt("data") & 0xF);
+			_helmetItemStack = new ItemStack(Material.STAINED_GLASS, 1, data);
+		} else {
+			_helmetItemStack = _materialData.toItemStack(1);
+		}
+
 		_spawn = config.loadLocation(teamSection, "spawn");
 		_chestRegion = teamSection.getString("chest_region", "");
 		_regions = new HashSet<String>();
@@ -201,9 +208,8 @@ public class Team {
 	/**
 	 * Return the MaterialData of the team's block.
 	 * 
-	 * The team block is the type of block that players wear on their heads as a
-	 * helmet. It also imparts negative potion effects to enemies who walk on
-	 * it.
+	 * The team block is the type of block that imparts negative potion
+	 * effects to enemies who walk on it.
 	 * 
 	 * @return the MaterialData of the team's block.
 	 */
@@ -219,6 +225,20 @@ public class Team {
 	 */
 	public ItemStack getTeamItemStack() {
 		return _materialData.toItemStack(1);
+	}
+
+	/**
+	 * Return an item stack containing a single team helmet block.
+	 *
+	 * The helmet block is the type of block that players wear on their heads as a
+	 * helmet. If not explicitly set in the config, it will fall back to the
+	 * team block.
+	 *
+	 * @return an item stack containing a single team helmet block.
+	 */
+	public ItemStack getTeamHelmetItemStack() {
+		//return _helmetMaterialData.toItemStack(1);
+		return _helmetItemStack;
 	}
 
 	// ------------------------------------------------------------------------
@@ -335,7 +355,7 @@ public class Team {
 			if (inventory == null) {
 				logger.severe("Player " + player.getName() + "'s inventory was unexpectedly null in setTeamAttributes().");
 			} else {
-				inventory.setHelmet(getTeamItemStack());
+				inventory.setHelmet(getTeamHelmetItemStack());
 			}
 		}
 	}
@@ -650,6 +670,11 @@ public class Team {
 	 * The Material and data value of the team's block.
 	 */
 	private MaterialData _materialData;
+
+	/**
+	 * The team's helmet block
+	 */
+	private ItemStack _helmetItemStack;
 
 	/**
 	 * Spawn location.

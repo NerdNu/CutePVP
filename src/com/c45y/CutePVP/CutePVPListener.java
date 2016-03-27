@@ -466,7 +466,7 @@ public class CutePVPListener implements Listener {
 			ItemStack teamBlockStack = null;
 			for (Iterator<ItemStack> it = event.getDrops().iterator(); it.hasNext();) {
 				ItemStack stack = it.next();
-				if (stack.getData().equals(teamPlayer.getTeam().getMaterialData())) {
+				if (stack.getType().equals(teamPlayer.getTeam().getTeamHelmetItemStack().getType())) {
 					it.remove();
 					teamBlockStack = stack;
 					break;

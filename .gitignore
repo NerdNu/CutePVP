@@ -6,3 +6,5 @@
 bin/
 target/
 config.yml.*
+*.iml
+.idea/
