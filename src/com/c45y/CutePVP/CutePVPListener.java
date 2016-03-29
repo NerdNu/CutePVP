@@ -60,7 +60,9 @@ public class CutePVPListener implements Listener {
 		Player player = (Player) event.getWhoClicked();
 		if (event.getSlotType() == SlotType.ARMOR &&
 			!_plugin.getTeamManager().isExempted(player) && event.getSlot() == 39) {
-			event.setCancelled(true);
+			if (_plugin.getConfiguration().CHECK_HELMET) {
+				event.setCancelled(true);
+			}
 		}
 	}
 
