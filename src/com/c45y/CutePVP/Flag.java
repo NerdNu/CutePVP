@@ -90,6 +90,7 @@ public class Flag {
 			getLocation().getBlock().setType(Material.AIR);
 			_carrier = teamPlayer;
 			_carrier.setCarriedFlag(this);
+			_carrier.getPlayer().setGlowing(true);
 		}
 	}
 
@@ -123,6 +124,7 @@ public class Flag {
 			MaterialData teamBlock = getTeam().getMaterialData();
 			_dropLocation.getBlock().setTypeIdAndData(teamBlock.getItemTypeId(), teamBlock.getData(), false);
 			_carrier.setCarriedFlag(null);
+			_carrier.getPlayer().setGlowing(false);
 			_carrier = null;
 		}
 	}
@@ -181,6 +183,7 @@ public class Flag {
 	public void doReturn() {
 		if (isCarried()) {
 			_carrier.setCarriedFlag(null);
+			_carrier.getPlayer().setGlowing(false);
 			_carrier = null;
 		} else {
 			// Flag may be at home, but if this method was called, then perhaps
