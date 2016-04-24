@@ -27,10 +27,10 @@ protections:
   can_attack_in_enemy_base: false
   can_edit_enemy_base: false
 sounds:
-  steal: ambience_thunder
-  return: orb_pickup
-  capture: level_up
-  buff: wither_spawn
+  steal: entity_lightning_thunder
+  return: entity_experience_orb_pickup
+  capture: entity_player_levelup
+  buff: entity_wither_spawn
 scoreboard:
   enable: true
 alerts:

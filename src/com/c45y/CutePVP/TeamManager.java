@@ -287,7 +287,6 @@ public class TeamManager implements Iterable<Team> {
 		ArrayList<Player> onlineStaff = getOnlineStaff();
 		Player[] sortedStaff = new Player[onlineStaff.size()];
 		Arrays.sort(onlineStaff.toArray(sortedStaff), new Comparator<Player>() {
-			@Override
 			public int compare(Player a, Player b) {
 				return a.getName().compareTo(b.getName());
 			}

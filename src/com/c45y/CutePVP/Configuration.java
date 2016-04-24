@@ -180,10 +180,10 @@ public class Configuration {
 		NON_TEAM_RESPAWN_LOCATION = helper.loadLocation(spawn, "non_team");
 
 		ConfigurationSection sounds = _plugin.getConfig().getConfigurationSection("sounds");
-		FLAG_STEAL_SOUND = helper.loadSound(sounds, "steal", Sound.AMBIENCE_THUNDER, true);
-		FLAG_RETURN_SOUND = helper.loadSound(sounds, "return", Sound.ORB_PICKUP, true);
-		FLAG_CAPTURE_SOUND = helper.loadSound(sounds, "capture", Sound.LEVEL_UP, true);
-		TEAM_BUFF_SOUND = helper.loadSound(sounds, "buff", Sound.WITHER_SPAWN, true);
+		FLAG_STEAL_SOUND = helper.loadSound(sounds, "steal", Sound.ENTITY_LIGHTNING_THUNDER, true);
+		FLAG_RETURN_SOUND = helper.loadSound(sounds, "return", Sound.ENTITY_EXPERIENCE_ORB_PICKUP, true);
+		FLAG_CAPTURE_SOUND = helper.loadSound(sounds, "capture", Sound.ENTITY_PLAYER_LEVELUP, true);
+		TEAM_BUFF_SOUND = helper.loadSound(sounds, "buff", Sound.ENTITY_WITHER_SPAWN, true);
 
 		SCOREBOARD_ENABLE = _plugin.getConfig().getBoolean("scoreboard.enable", true);
 

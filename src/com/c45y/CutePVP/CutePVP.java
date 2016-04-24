@@ -183,7 +183,6 @@ public class CutePVP extends JavaPlugin {
 		getServer().getScheduler().scheduleSyncRepeatingTask(this, new Runnable() {
 			// Save the configuration, with backups at 10 minute intervals.
 			// Log team membership and total scores.
-			@Override
 			public void run() {
 				getConfiguration().save();
 				for (Team team : getTeamManager()) {

@@ -35,7 +35,6 @@ public abstract class Alert {
         int offset = _config.getInt("offset", period);
         if (!_messages.isEmpty()) {
             _task = _plugin.getServer().getScheduler().scheduleSyncRepeatingTask(_plugin, new Runnable() {
-                @Override
                 public void run() {
                     nextAlert();
                 }
