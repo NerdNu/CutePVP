@@ -61,6 +61,13 @@ public class BuffManager implements Iterable<TeamBuff> {
 		_friendPotions = helper.loadPotions(_plugin.getConfig().getConfigurationSection("buffs.friend"), "", true);
 		_enemyPotions = helper.loadPotions(_plugin.getConfig().getConfigurationSection("buffs.enemy"), "", true);
 
+		// Load the losing buff
+		ConfigurationSection losingBuffSection = _plugin.getConfig().getConfigurationSection("buffs.losing");
+		if (losingBuffSection != null) {
+			_losingBuff = new LosingBuff(_plugin);
+			_losingBuff.load(losingBuffSection, _plugin.getLogger());
+		}
+
 		// Load the floor block buffs.
 		ConfigurationSection floorBuffsSection = _plugin.getConfig().getConfigurationSection("buffs.block");
 		if (floorBuffsSection != null) {
@@ -168,6 +175,15 @@ public class BuffManager implements Iterable<TeamBuff> {
 		}
 	}
 
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Apply the losing buff to the relevant team if one is disproportionately
+	 * behind in points.
+	 */
+	public void applyLosingBuff() {
+		_losingBuff.update();
+	}
 	// ------------------------------------------------------------------------
 	/**
 	 * Apply a buff to the player when they walk on a block.
@@ -281,6 +297,11 @@ public class BuffManager implements Iterable<TeamBuff> {
 	 * The {@link TeamBuff}s.
 	 */
 	private ArrayList<TeamBuff> _teamBuffs = new ArrayList<TeamBuff>();
+
+	/**
+	 * The {@link LosingBuff}
+	 */
+	private LosingBuff _losingBuff;
 
 	/**
 	 * The set of all Materials used in floor buffs whose data value can be set

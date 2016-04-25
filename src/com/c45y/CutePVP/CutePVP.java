@@ -143,6 +143,7 @@ public class CutePVP extends JavaPlugin {
 						// minigames area in The End.
 						if (isInMatchArea(player)) {
 							applyFloorBuffs(teamPlayer);
+							getBuffManager().applyLosingBuff();
 						}
 					}
 				}

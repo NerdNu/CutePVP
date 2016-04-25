@@ -83,6 +83,12 @@ buffs:
     wither:
       amplifier: 0
       duration: 120
+  losing:
+    disparity: 10
+    potions:
+      regeneration:
+        amplifier: 1
+        duration: 1200
 teams:
   red:
     name: Red Team
