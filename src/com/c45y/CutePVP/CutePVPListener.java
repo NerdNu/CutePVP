@@ -152,6 +152,7 @@ public class CutePVPListener implements Listener {
 			event.setJoinMessage(player.getDisplayName() + " joined the game.");
 			_plugin.getLogger().info(player.getName() + " rejoined " + team.getName() + ".");
 			_plugin.getScoreboardManager().incrementTeamPlayers(team);
+			_plugin.getScoreboardManager().addPlayer(player, team);
 			_plugin.getScoreboardManager().assignPlayer(player);
 		}
 
@@ -181,6 +182,7 @@ public class CutePVPListener implements Listener {
 		if (teamPlayer != null) {
 			Team team = teamPlayer.getTeam();
 			_plugin.getScoreboardManager().decrementTeamPlayers(team);
+			_plugin.getScoreboardManager().removePlayer(player, team);
 			if (teamPlayer.isCarryingFlag()) {
 				teamPlayer.getCarriedFlag().drop();
 			}

@@ -66,6 +66,32 @@ public class ScoreboardManager {
     }
 
     /**
+     * Add the player to a Bukkit scoreboard team for colorization
+     * @param player the player to ad
+     */
+    public void addPlayer(Player player, Team team) {
+        if (_enabled) {
+            ScoreboardTeam sTeam = _teams.get(team);
+            if (sTeam != null) {
+                sTeam.addPlayer(player);
+            }
+        }
+    }
+
+    /**
+     * Remove the player from a Bukkit scoreboard
+     * @param player the player to ad
+     */
+    public void removePlayer(Player player, Team team) {
+        if (_enabled) {
+            ScoreboardTeam sTeam = _teams.get(team);
+            if (sTeam != null) {
+                sTeam.removePlayer(player);
+            }
+        }
+    }
+
+    /**
      * Refresh the score of the given team.
      *
      * @param team the team.
@@ -164,6 +190,9 @@ public class ScoreboardManager {
          */
         public ScoreboardTeam(Team team, boolean first) {
             _team = team;
+            _bukkitTeam = _scoreboard.registerNewTeam(_team.getId());
+            _bukkitTeam.setDisplayName(_team.getName());
+            _bukkitTeam.setPrefix(team.getTeamChatColor() + "");
             _teamScore = _scoreObjective.getScore(_team.getTeamChatColor().toString() + ChatColor.BOLD.toString()
                     + _team.getName());
             _scoreScore = null;
@@ -274,11 +303,24 @@ public class ScoreboardManager {
             refreshEffects();
         }
 
+        public void addPlayer(Player player) {
+            _bukkitTeam.addPlayer(player);
+        }
+
+        public void removePlayer(Player player) {
+            _bukkitTeam.removePlayer(player);
+        }
+
         // -------------------------------------------------------------------
         /**
          * The associated {@link Team}.
          */
         private final Team _team;
+
+        /**
+         * Bukkit scoreboard team object for colorization
+         */
+        private org.bukkit.scoreboard.Team _bukkitTeam;
 
         /**
          * The Score displaying the team's name.

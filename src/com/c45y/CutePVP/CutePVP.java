@@ -566,6 +566,7 @@ public class CutePVP extends JavaPlugin {
 											+ StringUtils.join(getTeamManager().iterator(), ", ") + ".");
 								} else {
 									if (getTeamManager().assignTeam(player, team) != null) {
+										getScoreboardManager().addPlayer(player, team);
 										Messages.success(sender, Messages.PREFIX, player.getName() + " is now on "
 												+ team.getName() + ".");
 									}
@@ -585,6 +586,7 @@ public class CutePVP extends JavaPlugin {
 						if (teamPlayer == null) {
 							Messages.failure(sender, Messages.PREFIX, "That player is not currently on a team.");
 						} else {
+							getScoreboardManager().removePlayer(teamPlayer.getPlayer(), teamPlayer.getTeam());
 							Messages.failure(sender, Messages.PREFIX, args[2] + " has been removed from "
 									+ teamPlayer.getTeam().getName() + ".");
 						}

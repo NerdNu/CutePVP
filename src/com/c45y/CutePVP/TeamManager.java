@@ -153,6 +153,7 @@ public class TeamManager implements Iterable<Team> {
 			if (player != null) {
 				player.sendMessage("You have been removed from " + teamPlayer.getTeam().getName() + ".");
 				_plugin.getScoreboardManager().decrementTeamPlayers(teamPlayer.getTeam());
+				_plugin.getScoreboardManager().removePlayer(player, teamPlayer.getTeam());
 				player.teleport(_plugin.getConfiguration().NON_TEAM_RESPAWN_LOCATION);
 				player.setScoreboard(_plugin.getServer().getScoreboardManager().getMainScoreboard());
 			}
@@ -230,6 +231,7 @@ public class TeamManager implements Iterable<Team> {
 			_plugin.getLogger().info(player.getName() + " was assigned to " + team.getName() + ".");
 			_plugin.getScoreboardManager().incrementTeamPlayers(team);
 			_plugin.getScoreboardManager().assignPlayer(player);
+			_plugin.getScoreboardManager().addPlayer(player, team);
 			return teamPlayer;
 		}
 		return null;
