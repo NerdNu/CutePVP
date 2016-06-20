@@ -131,6 +131,8 @@ public class CutePVP extends JavaPlugin {
 					team.updateCompasses();
 				}
 
+				_scoreboardManager.refresh();
+
 				for (Player player : Bukkit.getOnlinePlayers()) {
 					TeamPlayer teamPlayer = getTeamManager().getTeamPlayer(player);
 					if (teamPlayer != null) {

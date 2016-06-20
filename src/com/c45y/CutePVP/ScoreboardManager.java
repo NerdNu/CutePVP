@@ -153,6 +153,17 @@ public class ScoreboardManager {
         }
     }
 
+    /**
+     * Refresh all the things!
+     */
+    public void refresh() {
+        if (_enabled) {
+            for (ScoreboardTeam t : _teams.values()) {
+                t.refresh();
+            }
+        }
+    }
+
     // ------------------------------------------------------------------------
     /**
      * The owning plugin.
