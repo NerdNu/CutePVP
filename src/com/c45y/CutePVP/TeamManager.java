@@ -155,7 +155,6 @@ public class TeamManager implements Iterable<Team> {
 				_plugin.getScoreboardManager().decrementTeamPlayers(teamPlayer.getTeam());
 				_plugin.getScoreboardManager().removePlayer(player, teamPlayer.getTeam());
 				player.teleport(_plugin.getConfiguration().NON_TEAM_RESPAWN_LOCATION);
-				player.setScoreboard(_plugin.getServer().getScoreboardManager().getMainScoreboard());
 			}
 		}
 		return teamPlayer;
