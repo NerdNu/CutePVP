@@ -2,6 +2,8 @@ package com.c45y.CutePVP;
 
 import java.util.Iterator;
 
+import nu.nerd.nerdboard.NerdBoardUpdatedEntriesEvent;
+import nu.nerd.nerdboard.UpdateReason;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -562,6 +564,25 @@ public class CutePVPListener implements Listener {
 			!allowBlockEdit(player, event.getBlock().getLocation())) {
 			event.setCancelled(true);
 			return;
+		}
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * Ensure the player is put back on their team after exiting ModMode
+	 */
+	@EventHandler
+	public void onNerdBoardUpdatedEntries(NerdBoardUpdatedEntriesEvent event) {
+		if (event.getReason().equals(UpdateReason.ADD_ENTRY) && event.getPlayer() != null) {
+			if (event.getPlayer().getPlayer() == null) return; //ensure OfflinePlayer is a valid Player
+			if (event.getTeam().getName().equalsIgnoreCase("default")) {
+				TeamManager tm = _plugin.getTeamManager();
+				TeamPlayer teamPlayer = tm.getTeamPlayer(event.getPlayer().getPlayer());
+				if (teamPlayer != null) {
+					_plugin.getScoreboardManager().addPlayer(teamPlayer.getPlayer(), teamPlayer.getTeam());
+				}
+			}
 		}
 	}
 

@@ -4,6 +4,7 @@ package com.c45y.CutePVP;
 
 import com.c45y.CutePVP.buff.TeamBuff;
 import com.c45y.CutePVP.util.Util;
+import nu.nerd.nerdboard.NerdBoard;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
@@ -31,6 +32,10 @@ public class ScoreboardManager {
     public ScoreboardManager(CutePVP plugin) {
         _plugin = plugin;
         _teams = new LinkedHashMap<Team, ScoreboardTeam>();
+        _nerdBoard = (NerdBoard) _plugin.getServer().getPluginManager().getPlugin("NerdBoard");
+        if (_nerdBoard == null) {
+            _plugin.getLogger().severe("NerdBoard is required for Scoreboard functions. http://github.com/nerdnu/NerdBoard");
+        }
     }
 
     /**
@@ -39,8 +44,8 @@ public class ScoreboardManager {
     public void enable() {
         if (!_enabled) {
             _enabled = true;
-            _scoreboard = _plugin.getServer().getScoreboardManager().getNewScoreboard();
-            _scoreObjective = _scoreboard.registerNewObjective("score", "dummy");
+            _scoreboard = _nerdBoard.getScoreboard();
+            _scoreObjective = _scoreboard.registerNewObjective("ctfscore", "dummy");
             _scoreObjective.setDisplaySlot(DisplaySlot.SIDEBAR);
             _scoreObjective.setDisplayName(ChatColor.BOLD + "Score");
             boolean first = true;
@@ -174,6 +179,11 @@ public class ScoreboardManager {
      */
     private Map<Team, ScoreboardTeam> _teams;
 
+    /**
+     * The NerdBoard instance, for compatibility with ModMode
+     */
+    private NerdBoard _nerdBoard;
+
 
     // -----------------------------------------------------------------------
     /**
@@ -304,11 +314,11 @@ public class ScoreboardManager {
         }
 
         public void addPlayer(Player player) {
-            _bukkitTeam.addPlayer(player);
+            _nerdBoard.addPlayerToTeam(_bukkitTeam, player);
         }
 
         public void removePlayer(Player player) {
-            _bukkitTeam.removePlayer(player);
+            _nerdBoard.removePlayerFromTeam(_bukkitTeam, player);
         }
 
         // -------------------------------------------------------------------

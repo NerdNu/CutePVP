@@ -1,6 +1,7 @@
 name: CutePVP
 main: com.c45y.CutePVP.CutePVP
 version: 2.0
+depend: [NerdBoard]
 softdepend: [WorldGuard]
 
 permissions:
