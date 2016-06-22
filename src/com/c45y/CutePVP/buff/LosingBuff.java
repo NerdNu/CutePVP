@@ -2,6 +2,7 @@ package com.c45y.CutePVP.buff;
 
 
 import com.c45y.CutePVP.CutePVP;
+import com.c45y.CutePVP.Messages;
 import com.c45y.CutePVP.Team;
 import com.c45y.CutePVP.TeamManager;
 import com.c45y.CutePVP.util.ConfigHelper;
@@ -19,6 +20,7 @@ public class LosingBuff extends Buff {
 
     private CutePVP plugin;
     private Integer disparity;
+    private Team lastLosingTeam = null;
 
 
     public LosingBuff(CutePVP plugin) {
@@ -57,6 +59,7 @@ public class LosingBuff extends Buff {
                 apply(player);
             }
         }
+        broadcast();
     }
 
 
@@ -84,6 +87,24 @@ public class LosingBuff extends Buff {
             }
         }
         return losing;
+    }
+
+
+    /**
+     * Broadcast that the losing buff has been applied
+     */
+    private void broadcast() {
+        TeamManager teamManager = plugin.getTeamManager();
+        Team losingTeam = getLosingTeam(teamManager);
+        if (losingTeam != null) {
+            if (lastLosingTeam == null) {
+                String team = String.format("%s%s", losingTeam.getTeamChatColor(), losingTeam.getName());
+                Messages.broadcast(team + Messages.BROADCAST_COLOR + " is making a heroic comeback!");
+                lastLosingTeam = losingTeam;
+            }
+        } else {
+            lastLosingTeam = null;
+        }
     }
 
 
